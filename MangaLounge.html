@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>MangaLounge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F6F2E9; --surface: #FFFFFF; --surface-2: #EFE9DC; --border: #DAD2C0;
+  --text: #241F19; --text-secondary: #6B6255; --text-muted: #948A78;
+  --accent: #A6392A; --accent-ink: #FFFFFF; --gold: #8A6A1E; --danger: #A6392A; --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #16130F; --surface: #1E1A15; --surface-2: #262019; --border: #383126;
+    --text: #EDE6D8; --text-secondary: #A89D8A; --text-muted: #6F6656; --danger: #C1503C;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #16130F; --surface: #1E1A15; --surface-2: #262019; --border: #383126;
+  --text: #EDE6D8; --text-secondary: #A89D8A; --text-muted: #6F6656; --danger: #C1503C;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  -webkit-tap-highlight-color: transparent;
+}
+.wrap { max-width: 640px; margin: 0 auto; padding: 0 18px; }
+header.top {
+  position: sticky; top: env(safe-area-inset-top, 0px);
+  background: var(--bg); z-index: 5; padding: 18px 0 12px; border-bottom: 1px solid var(--border);
+}
+.title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+h1 { font-family: 'Zilla Slab', Georgia, serif; font-weight: 600; font-size: 28px; margin: 0 0 2px; letter-spacing: -0.01em; }
+.count { font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; }
+.controls { display: flex; gap: 8px; }
+input[type="text"], input[type="url"], input[type="number"], select {
+  width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--radius); padding: 10px 12px; font-size: 15px; font-family: inherit;
+}
+input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+button { font-family: inherit; font-size: 14px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); padding: 10px 14px; cursor: pointer; }
+button:active { transform: scale(0.98); }
+.btn-accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 500; white-space: nowrap; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); padding: 8px 10px; }
+.btn-danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+.btn-icon { width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border-color: var(--border); flex-shrink: 0; font-size: 16px; }
+.btn-plus1 { background: var(--surface-2); border-color: var(--gold); color: var(--gold); font-weight: 600; padding: 8px 12px; flex-shrink: 0; }
+
+.filters { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.chip-row { display: flex; gap: 6px; overflow-x: auto; }
+.chip { border: 1px solid var(--border); background: transparent; color: var(--text-secondary);
+  padding: 6px 12px; border-radius: 999px; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+.chip.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+.list { margin-top: 10px; }
+.card { border-bottom: 1px solid var(--border); padding: 12px 0; display: flex; gap: 12px; align-items: flex-start; }
+.cover {
+  width: 52px; height: 70px; border-radius: 6px; background: var(--surface-2); flex-shrink: 0;
+  object-fit: cover; border: 1px solid var(--border); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Zilla Slab', Georgia, serif; font-size: 18px; color: var(--gold); overflow: hidden;
+}
+.card-body { flex: 1; min-width: 0; }
+.card-top { display: flex; justify-content: space-between; gap: 8px; }
+.card-title { font-family: 'Zilla Slab', Georgia, serif; font-size: 16px; font-weight: 500; line-height: 1.3; cursor: pointer; }
+.card-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.card-notes { font-size: 12px; color: var(--text-secondary); margin-top: 2px; word-break: break-word; }
+.card-notes a { color: var(--accent); }
+.card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.tag-pill { font-size: 11px; color: var(--gold); background: var(--surface-2); border-radius: 999px; padding: 2px 8px; }
+.card-row2 { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; gap: 8px; }
+.chapter-badge { color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 15px; white-space: nowrap; }
+
+.edit-panel { margin-top: 10px; padding: 12px; background: var(--surface-2); border-radius: 10px; display: grid; gap: 8px; }
+.field-label { font-size: 12px; color: var(--text-muted); margin-bottom: 2px; display: block; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.edit-actions { display: flex; justify-content: space-between; margin-top: 4px; }
+.edit-actions .right { display: flex; gap: 8px; }
+.cover-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cover-preview { width: 44px; height: 60px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); background: var(--surface); }
+
+.empty { padding: 48px 0; text-align: center; color: var(--text-secondary); }
+.empty h2 { font-family: 'Zilla Slab', Georgia, serif; font-weight: 500; font-size: 19px; margin: 0 0 6px; color: var(--text); }
+
+.add-panel { display: none; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-top: 12px; gap: 8px; }
+.add-panel.open { display: grid; }
+
+.hidden-file { display: none; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  transform: translateX(-50%) translateY(12px); background: var(--text); color: var(--bg);
+  padding: 10px 16px; border-radius: 999px; font-size: 13px; opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none; z-index: 20; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+canvas#compressCanvas { display: none; }
+
+.overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 30;
+  align-items: flex-end; justify-content: center;
+}
+.overlay.open { display: flex; }
+.sheet {
+  background: var(--bg); width: 100%; max-width: 640px; border-radius: 16px 16px 0 0;
+  padding: 18px 18px calc(env(safe-area-inset-bottom, 0px) + 24px); max-height: 85vh; overflow-y: auto;
+}
+.sheet h2 { font-family: 'Zilla Slab', Georgia, serif; font-weight: 500; font-size: 20px; margin: 0 0 14px; }
+.settings-block { margin-bottom: 20px; }
+.settings-block h3 { font-size: 13px; color: var(--text-muted); margin: 0 0 8px; font-weight: 500; }
+.segmented { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.segmented button { flex: 1; border: none; border-radius: 0; background: var(--surface); }
+.segmented button.active { background: var(--text); color: var(--bg); }
+.swatch-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.swatch { width: 44px; height: 44px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; }
+.swatch.active { border-color: var(--text); }
+.custom-color-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+input[type="color"] { width: 44px; height: 44px; padding: 0; border: 1px solid var(--border); border-radius: 50%; background: none; }
+.backup-row { display: flex; gap: 8px; }
+.sheet-close { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title-row">
+      <div>
+        <h1>MangaLounge</h1>
+        <p class="count" id="count"></p>
+      </div>
+      <button class="btn-icon" id="settingsToggle" aria-label="Einstellungen">\u2699</button>
+    </div>
+    <div class="controls">
+      <input type="text" id="search" placeholder="Titel suchen">
+      <button class="btn-accent" id="addToggle">Neu</button>
+    </div>
+    <div class="filters">
+      <div class="chip-row" id="statusFilters">
+        <button class="chip active" data-status="alle">Alle</button>
+        <button class="chip" data-status="aktiv">Aktive</button>
+        <button class="chip" data-status="pausiert">Pausiert</button>
+        <button class="chip" data-status="abgeschlossen">Abgeschlossen</button>
+      </div>
+      <div class="chip-row" id="tagFilters"></div>
+    </div>
+    <div class="add-panel" id="addPanel">
+      <div><label class="field-label" for="newTitle">Titel</label><input type="text" id="newTitle" placeholder="z. B. Nano Machine"></div>
+      <div class="field-row">
+        <div><label class="field-label" for="newChapter">Kapitel</label><input type="number" id="newChapter" placeholder="0" min="0" inputmode="numeric"></div>
+        <div><label class="field-label" for="newStatus">Status</label>
+          <select id="newStatus"><option value="aktiv">Aktiv</option><option value="pausiert">Pausiert</option><option value="abgeschlossen">Abgeschlossen</option></select>
+        </div>
+      </div>
+      <div><label class="field-label" for="newTags">Tags (Komma-getrennt)</label><input type="text" id="newTags" placeholder="z. B. Webtoon, Farbe"></div>
+      <div><label class="field-label" for="newNotes">Notiz (optional, Links werden automatisch klickbar)</label><input type="text" id="newNotes" placeholder="z. B. Staffel 2, https://..."></div>
+      <div><label class="field-label" for="newUrl">Link zur Quelle (optional)</label><input type="url" id="newUrl" placeholder="https://..."></div>
+      <div><label class="field-label">Cover</label>
+        <div class="cover-row">
+          <img class="cover-preview" id="newCoverPreview" style="display:none;">
+          <button class="btn-ghost" type="button" id="newCoverSearch">Cover suchen</button>
+          <button class="btn-ghost" type="button" id="newCoverUploadBtn">Bild w\u00e4hlen</button>
+          <input type="file" id="newCoverFile" class="hidden-file" accept="image/*">
+        </div>
+      </div>
+      <div class="edit-actions"><button class="btn-ghost" id="cancelAdd">Abbrechen</button><button class="btn-accent" id="saveAdd">Speichern</button></div>
+    </div>
+  </header>
+
+  <div class="list" id="list"></div>
+  <div class="empty" id="emptyState" style="display:none;">
+    <h2>Nichts gefunden</h2>
+    <p>Andere Suche/Filter versuchen oder eine neue Reihe anlegen.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<canvas id="compressCanvas"></canvas>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <div class="sheet-close"><button class="btn-ghost" id="settingsClose">Fertig</button></div>
+    <h2>Einstellungen</h2>
+
+    <div class="settings-block">
+      <h3>Erscheinungsbild</h3>
+      <div class="segmented" id="modeSegmented">
+        <button data-mode="system">System</button>
+        <button data-mode="light">Hell</button>
+        <button data-mode="dark">Dunkel</button>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Farbthema</h3>
+      <div class="swatch-row" id="themeSwatches">
+        <button class="swatch" data-theme="gold" style="background:#A6392A" aria-label="Classic Gold/Rot"></button>
+        <button class="swatch" data-theme="ocean" style="background:#2B6CA3" aria-label="Ocean Blau"></button>
+        <button class="swatch" data-theme="matcha" style="background:#5C8A46" aria-label="Matcha Gr\u00fcn"></button>
+        <button class="swatch" data-theme="sakura" style="background:#C45A82" aria-label="Sakura Pink"></button>
+        <button class="swatch" data-theme="custom" id="customSwatch" style="background:conic-gradient(from 0deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)" aria-label="Eigene Farbe"></button>
+      </div>
+      <div class="custom-color-row" id="customColorRow" style="display:none;">
+        <input type="color" id="customColorPicker" value="#A6392A">
+        <span class="status">Eigene Akzentfarbe</span>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Backup</h3>
+      <div class="backup-row">
+        <button class="btn-ghost" id="exportBtn">Backup sichern (JSON)</button>
+        <button class="btn-ghost" id="importBtn">Backup wiederherstellen</button>
+      </div>
+      <input type="file" id="importFile" class="hidden-file" accept="application/json">
+      <p class="status" id="savedStatus"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+var STORAGE_KEY = "manga_tracker_v1";
+var SETTINGS_KEY = "mangalounge_settings_v1";
+
+var THEMES = {
+  gold:   { accent: "#A6392A", accentDark: "#C1503C", gold: "#8A6A1E", goldDark: "#CE9E4D" },
+  ocean:  { accent: "#2B6CA3", accentDark: "#5B9CD6", gold: "#1F5C73", goldDark: "#6FBAD6" },
+  matcha: { accent: "#4C7A3A", accentDark: "#7BAE5F", gold: "#6B7A2E", goldDark: "#A3B85C" },
+  sakura: { accent: "#C45A82", accentDark: "#E48AAA", gold: "#A8577A", goldDark: "#E7ACC4" }
+};
+
+// -----------------------------------------------------------------------
+// Alte Beispieldaten (nur falls noch nie etwas gespeichert wurde).
+// -----------------------------------------------------------------------
+var seedDataLegacy = [
+["Nano Machine","280",""],["Omniscient Reader's Viewpoint","135",""],
+["Magic Emperor","464",""],["Infinite Mage","148",""],
+["Delivery Man From Murim","107",""],["Bones","3",""],
+["Apotheosis","1301",""],["Level Up with the Gods","142",""],
+["I Am an Evil God","543",""],["Ominous Viewer Viewpoint","135",""],
+["Star-Embracing Swordmaster","69",""],["Mountains of Corpses and Seas of Blood","13",""],
+["The Greatest Estate Developer","203",""],["The Legend of the Northern Blade","fertig",""],
+["Return of the Blossoming Blade","152",""],["A Returner's Magic Should Be Special","100+?",""],
+["Reincarnated Murim","102",""],["Revenge of the Baskerville Bloodhound","Season 2",""],
+["Myst, Might, Mayhem","100",""],["Yong Heng Zhi Zun","",""],
+["SSS-Class Revival Hunter","151",""],["Chronicles of Heavenly Demon","252 (fertig)",""],
+["Return of the Mad Demon","189",""],["Log-in Murim","248",""],
+["Book of Eater","114",""],["Moskito War's","",""],
+["Primal Hunter","106",""],["Hardcore Leveling Warrior S2","79",""],
+["Gul","",""],["I Am the Sorcerer King","fertig",""],
+["Infinite Leveling Murim","S2 120",""],["Swordmaster's Youngest Son","201",""],
+["Champion's Path to Murim","50",""],["The Lazy Lord Master's Sword","133",""],
+["Damn Reincarnation","81",""],["+99 Wooden Stick","85",""],
+["Pick Me Up: Infinite Gacha","",""],["Hell Mode","",""],
+["Gushing Over Magical Girls","",""],["Dungeon Odyssey","157",""],
+["Art of Reincarnation","56",""],["Demon Devourer","139",""],
+["The Boxer","68",""],["Kagurabachi","52",""],
+["Return of the Disaster-Class Hero","172",""],["Wistoria: Wand and Sword","",""],
+["Cultivation vs Superhero","90",""],["Evolution from a Tree","",""],
+["Eternal Supreme","546",""],
+["Lucky Me: I Secretly Cultivated for 1,000 Years","214","https://mangadex.org/title/c089b50c-beeb-434a-ab8d-2676dc026564/lucky-me-i-secretly-cultivated-for-1-000-years"],
+["Spirit Blade Mountain","",""],["Witch Hat Atelier","45",""],
+["I Am the Fated Villain","288",""],["World Apocalypse Online","265",""],
+["Absolute Sword Sense","",""],["Volcanic Age","",""]
+];
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+function parseLegacyProgress(str) {
+  str = String(str || "").trim();
+  var match = str.match(/\d+/);
+  var chapter = match ? parseInt(match[0], 10) : null;
+  var notes = match ? (str.slice(0, match.index) + str.slice(match.index + match[0].length)).replace(/[()]/g, "").trim() : str;
+  return { chapter: chapter, notes: notes };
+}
+
+// Migriert v1 ({title, progress, url}) und v2 (chapter/notes ohne tags/history)
+// gleichermassen in das v3-Format.
+function migrateItem(raw, fallbackTime) {
+  var isLegacyV1 = raw.chapter === undefined && raw.progress !== undefined;
+  var base;
+  if (isLegacyV1) {
+    var parsed = parseLegacyProgress(raw.progress);
+    base = {
+      id: raw.id || uid(), title: raw.title || "", chapter: parsed.chapter, notes: parsed.notes,
+      url: raw.url || "", coverBase64: "", status: "aktiv", lastUpdated: fallbackTime, createdAt: fallbackTime
+    };
+  } else {
+    base = {
+      id: raw.id || uid(), title: raw.title || "",
+      chapter: (raw.chapter === undefined || raw.chapter === null || raw.chapter === "") ? null : Number(raw.chapter),
+      notes: raw.notes || "", url: raw.url || "", coverBase64: raw.coverBase64 || "",
+      status: raw.status || "aktiv", lastUpdated: raw.lastUpdated || fallbackTime, createdAt: raw.createdAt || fallbackTime
+    };
+  }
+  base.tags = Array.isArray(raw.tags) ? raw.tags : [];
+  base.readHistory = Array.isArray(raw.readHistory) ? raw.readHistory : [];
+  return base;
+}
+
+function loadState() {
+  var now = new Date().toISOString();
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      return parsed.map(function (item) { return migrateItem(item, now); });
+    }
+  } catch (e) {}
+  return seedDataLegacy.map(function (r, i) {
+    var parsed = parseLegacyProgress(r[1]);
+    var t = new Date(Date.now() - i * 1000).toISOString();
+    return { id: uid(), title: r[0], chapter: parsed.chapter, notes: parsed.notes, url: r[2] || "",
+      coverBase64: "", status: "aktiv", tags: [], readHistory: [], lastUpdated: t, createdAt: t };
+  });
+}
+
+function loadSettings() {
+  var defaults = { mode: "system", theme: "gold", customAccent: "#A6392A" };
+  try {
+    var raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) { var parsed = JSON.parse(raw); return Object.assign(defaults, parsed); }
+  } catch (e) {}
+  return defaults;
+}
+
+var state = loadState();
+var settings = loadSettings();
+saveState(true);
+
+var openEditId = null;
+var searchTerm = "";
+var activeStatus = "alle";
+var activeTag = "alle";
+
+function saveState(silent) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (!silent) setStatus("Gespeichert auf diesem Ger\u00e4t");
+  } catch (e) { setStatus("Speichern fehlgeschlagen \u2013 Speicher evtl. voll"); }
+}
+function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {} }
+function setStatus(text) { var el = document.getElementById("savedStatus"); if (el) el.textContent = text; }
+function showToast(text) {
+  var t = document.getElementById("toast");
+  t.textContent = text; t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function () { t.classList.remove("show"); }, 1800);
+}
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+// Wandelt rohe URLs innerhalb eines (bereits escapten) Notiz-Texts in
+// klickbare Links um.
+function linkifyNotes(text) {
+  var escaped = escapeHtml(text);
+  return escaped.replace(/(https?:\/\/[^\s]+)/g, function (url) {
+    return '<a href="' + url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">' + url + '</a>';
+  });
+}
+
+// -----------------------------------------------------------------------
+// Bild-Komprimierung.
+// Jedes Cover (Upload wie auch manuell nachgeladenes Bild) wird NIE roh
+// gespeichert, sondern immer durch diese Funktion geschleust:
+// 1. Bild in ein Offscreen-<canvas> zeichnen, dabei proportional auf
+//    maximal 150px Breite herunterskalieren (Hoehe folgt dem Seiten-
+//    verhaeltnis automatisch).
+// 2. Canvas-Inhalt als JPEG mit niedriger Qualitaet (0.6) exportieren.
+// So bleibt jedes Cover im Bereich weniger KB statt mehrerer MB, damit
+// auch viele Cover zusammen unter dem 5MB-Limit von localStorage bleiben.
+// -----------------------------------------------------------------------
+function compressImageToBase64(dataUrl) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onload = function () {
+      var maxWidth = 150;
+      var scale = Math.min(1, maxWidth / img.width);
+      var w = Math.max(1, Math.round(img.width * scale));
+      var h = Math.max(1, Math.round(img.height * scale));
+      var canvas = document.getElementById("compressCanvas");
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      try { resolve(canvas.toDataURL("image/jpeg", 0.6)); } catch (e) { reject(e); }
+    };
+    img.onerror = function () { reject(new Error("Bild konnte nicht geladen werden")); };
+    img.src = dataUrl;
+  });
+}
+function readFileAsDataUrl(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function () { resolve(reader.result); };
+    reader.onerror = function () { reject(reader.error); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function allTags() {
+  var set = {};
+  state.forEach(function (item) { (item.tags || []).forEach(function (t) { set[t] = true; }); });
+  return Object.keys(set).sort();
+}
+
+function filteredSortedItems() {
+  var term = searchTerm.trim().toLowerCase();
+  var items = state.filter(function (item) {
+    if (activeStatus !== "alle" && item.status !== activeStatus) return false;
+    if (activeTag !== "alle" && (item.tags || []).indexOf(activeTag) === -1) return false;
+    if (term && item.title.toLowerCase().indexOf(term) === -1) return false;
+    return true;
+  });
+  items.sort(function (a, b) { return new Date(b.lastUpdated) - new Date(a.lastUpdated); });
+  return items;
+}
+
+function formatDate(iso) {
+  try { return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }); }
+  catch (e) { return ""; }
+}
+
+function coverMarkup(item) {
+  if (item.coverBase64) return '<img class="cover" data-open="' + item.id + '" src="' + item.coverBase64 + '" alt="">';
+  var initial = escapeHtml((item.title || "?").trim().charAt(0).toUpperCase());
+  return '<div class="cover" data-open="' + item.id + '">' + initial + '</div>';
+}
+
+function renderTagFilters() {
+  var tags = allTags();
+  var el = document.getElementById("tagFilters");
+  if (tags.length === 0) { el.innerHTML = ""; return; }
+  var html = '<button class="chip' + (activeTag === "alle" ? " active" : "") + '" data-tag="alle">Alle Tags</button>';
+  tags.forEach(function (t) {
+    html += '<button class="chip' + (activeTag === t ? " active" : "") + '" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</button>';
+  });
+  el.innerHTML = html;
+}
+
+function render() {
+  var items = filteredSortedItems();
+  var list = document.getElementById("list");
+  var empty = document.getElementById("emptyState");
+  document.getElementById("count").textContent = state.length + (state.length === 1 ? " Titel" : " Titel");
+  renderTagFilters();
+
+  if (items.length === 0) { list.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+
+  var html = "";
+  items.forEach(function (item) {
+    var isOpen = item.id === openEditId;
+    var chapterLabel = (item.chapter === null || item.chapter === undefined || item.chapter === "") ? "\u2014" : item.chapter;
+    html += '<div class="card" data-id="' + item.id + '">';
+    html += coverMarkup(item);
+    html += '<div class="card-body">';
+    html += '<div class="card-top"><div><div class="card-title" data-open="' + item.id + '">' + escapeHtml(item.title) + '</div>';
+    html += '<div class="card-meta">' + (item.lastUpdated ? "Aktualisiert " + formatDate(item.lastUpdated) : "") + '</div>';
+    if (item.notes) html += '<div class="card-notes">' + linkifyNotes(item.notes) + '</div>';
+    if (item.tags && item.tags.length) {
+      html += '<div class="card-tags">' + item.tags.map(function (t) { return '<span class="tag-pill">' + escapeHtml(t) + '</span>'; }).join("") + '</div>';
+    }
+    html += '</div>';
+    html += '<button class="btn-icon" data-edit="' + item.id + '" aria-label="Bearbeiten">\u270e</button>';
+    html += '</div>';
+    html += '<div class="card-row2"><span class="chapter-badge">Kapitel ' + chapterLabel + '</span>';
+    html += '<button class="btn-plus1" data-plus1="' + item.id + '">+1</button></div>';
+    html += '</div>';
+
+    if (isOpen) {
+      html += '<div class="edit-panel">';
+      html += '<div><label class="field-label">Titel</label><input type="text" class="f-title" value="' + escapeHtml(item.title) + '"></div>';
+      html += '<div class="field-row">';
+      html += '<div><label class="field-label">Kapitel</label><input type="number" class="f-chapter" min="0" inputmode="numeric" value="' + (item.chapter === null ? "" : item.chapter) + '"></div>';
+      html += '<div><label class="field-label">Status</label><select class="f-status">';
+      ["aktiv", "pausiert", "abgeschlossen"].forEach(function (s) {
+        var label = s === "aktiv" ? "Aktiv" : (s === "pausiert" ? "Pausiert" : "Abgeschlossen");
+        html += '<option value="' + s + '"' + (item.status === s ? " selected" : "") + '>' + label + '</option>';
+      });
+      html += '</select></div></div>';
+      html += '<div><label class="field-label">Tags (Komma-getrennt)</label><input type="text" class="f-tags" value="' + escapeHtml((item.tags || []).join(", ")) + '"></div>';
+      html += '<div><label class="field-label">Notiz</label><input type="text" class="f-notes" value="' + escapeHtml(item.notes) + '"></div>';
+      html += '<div><label class="field-label">Link zur Quelle</label><input type="url" class="f-url" value="' + escapeHtml(item.url) + '" placeholder="https://..."></div>';
+      html += '<div><label class="field-label">Cover</label><div class="cover-row">';
+      html += '<img class="cover-preview" src="' + (item.coverBase64 || "") + '" style="' + (item.coverBase64 ? "" : "display:none;") + '">';
+      html += '<button class="btn-ghost" type="button" data-cover-search="' + item.id + '">Cover suchen</button>';
+      html += '<button class="btn-ghost" type="button" data-cover-upload="' + item.id + '">Bild w\u00e4hlen</button>';
+      if (item.coverBase64) html += '<button class="btn-ghost" type="button" data-cover-remove="' + item.id + '">Entfernen</button>';
+      html += '<input type="file" class="hidden-file f-cover-file" accept="image/*">';
+      html += '</div></div>';
+      html += '<div class="edit-actions"><button class="btn-danger" data-delete="' + item.id + '">L\u00f6schen</button>';
+      html += '<div class="right"><button class="btn-ghost" data-close="' + item.id + '">Schlie\u00dfen</button><button class="btn-accent" data-save="' + item.id + '">Sichern</button></div></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  list.innerHTML = html;
+  wireRowEvents(list);
+}
+
+function findItem(id) { return state.find(function (s) { return s.id === id; }); }
+function pushHistory(item, chapter) {
+  item.readHistory = item.readHistory || [];
+  item.readHistory.push({ date: new Date().toISOString(), chapter: chapter });
+  if (item.readHistory.length > 30) item.readHistory = item.readHistory.slice(-30);
+}
+
+function wireRowEvents(list) {
+  list.querySelectorAll("[data-open]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var item = findItem(el.getAttribute("data-open"));
+      if (item && item.url) window.open(item.url, "_blank", "noopener");
+      else showToast("Kein Link hinterlegt \u2013 Stift zum Bearbeiten antippen");
+    });
+  });
+  list.querySelectorAll("[data-plus1]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var item = findItem(el.getAttribute("data-plus1"));
+      item.chapter = (item.chapter === null || item.chapter === undefined || isNaN(item.chapter)) ? 1 : item.chapter + 1;
+      item.lastUpdated = new Date().toISOString();
+      pushHistory(item, item.chapter);
+      saveState(); render(); showToast("Kapitel " + item.chapter);
+    });
+  });
+  list.querySelectorAll("[data-edit]").forEach(function (el) {
+    el.addEventListener("click", function () { var id = el.getAttribute("data-edit"); openEditId = openEditId === id ? null : id; render(); });
+  });
+  list.querySelectorAll("[data-close]").forEach(function (el) {
+    el.addEventListener("click", function () { openEditId = null; render(); });
+  });
+  list.querySelectorAll("[data-delete]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var id = el.getAttribute("data-delete");
+      state = state.filter(function (s) { return s.id !== id; });
+      openEditId = null; saveState(); render(); showToast("Gel\u00f6scht");
+    });
+  });
+  list.querySelectorAll("[data-save]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var id = el.getAttribute("data-save");
+      var card = list.querySelector('.card[data-id="' + id + '"]');
+      var panel = card.nextElementSibling;
+      var title = panel.querySelector(".f-title").value.trim();
+      if (!title) { showToast("Titel darf nicht leer sein"); return; }
+      var item = findItem(id);
+      var chapterVal = panel.querySelector(".f-chapter").value;
+      var newChapter = chapterVal === "" ? null : Math.max(0, parseInt(chapterVal, 10) || 0);
+      if (newChapter !== item.chapter && newChapter !== null) pushHistory(item, newChapter);
+      item.title = title; item.chapter = newChapter;
+      item.status = panel.querySelector(".f-status").value;
+      item.tags = panel.querySelector(".f-tags").value.split(",").map(function (t) { return t.trim(); }).filter(Boolean);
+      item.notes = panel.querySelector(".f-notes").value.trim();
+      item.url = panel.querySelector(".f-url").value.trim();
+      item.lastUpdated = new Date().toISOString();
+      saveState(); openEditId = null; render(); showToast("Aktualisiert");
+    });
+  });
+  list.querySelectorAll("[data-cover-search]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var item = findItem(el.getAttribute("data-cover-search"));
+      window.open("https://anilist.co/search/manga?search=" + encodeURIComponent(item.title || ""), "_blank", "noopener");
+      showToast("Bild in neuem Tab speichern, dann \u201eBild w\u00e4hlen\u201c");
+    });
+  });
+  list.querySelectorAll("[data-cover-remove]").forEach(function (el) {
+    el.addEventListener("click", function () { var item = findItem(el.getAttribute("data-cover-remove")); item.coverBase64 = ""; saveState(); render(); });
+  });
+  list.querySelectorAll("[data-cover-upload]").forEach(function (el) {
+    el.addEventListener("click", function () { el.closest(".edit-panel").querySelector(".f-cover-file").click(); });
+  });
+  list.querySelectorAll(".f-cover-file").forEach(function (input) {
+    input.addEventListener("change", function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var panel = e.target.closest(".edit-panel");
+      var id = panel.previousElementSibling.getAttribute("data-id");
+      readFileAsDataUrl(file).then(compressImageToBase64).then(function (compressed) {
+        var item = findItem(id); item.coverBase64 = compressed;
+        saveState(); render(); showToast("Cover gespeichert");
+      }).catch(function () { showToast("Cover konnte nicht verarbeitet werden"); });
+      e.target.value = "";
+    });
+  });
+}
+
+document.getElementById("search").addEventListener("input", function (e) { searchTerm = e.target.value; render(); });
+document.getElementById("statusFilters").addEventListener("click", function (e) {
+  var btn = e.target.closest(".chip"); if (!btn) return;
+  document.querySelectorAll("#statusFilters .chip").forEach(function (c) { c.classList.remove("active"); });
+  btn.classList.add("active"); activeStatus = btn.getAttribute("data-status"); render();
+});
+document.getElementById("tagFilters").addEventListener("click", function (e) {
+  var btn = e.target.closest(".chip"); if (!btn) return;
+  activeTag = btn.getAttribute("data-tag"); render();
+});
+
+var addPanel = document.getElementById("addPanel");
+var newCoverBase64 = "";
+document.getElementById("addToggle").addEventListener("click", function () {
+  addPanel.classList.toggle("open");
+  if (addPanel.classList.contains("open")) document.getElementById("newTitle").focus();
+});
+function resetAddForm() {
+  ["newTitle", "newChapter", "newTags", "newNotes", "newUrl"].forEach(function (id) { document.getElementById(id).value = ""; });
+  document.getElementById("newStatus").value = "aktiv";
+  newCoverBase64 = "";
+  var prev = document.getElementById("newCoverPreview"); prev.src = ""; prev.style.display = "none";
+}
+document.getElementById("cancelAdd").addEventListener("click", function () { addPanel.classList.remove("open"); resetAddForm(); });
+document.getElementById("newCoverSearch").addEventListener("click", function () {
+  var q = encodeURIComponent(document.getElementById("newTitle").value.trim());
+  if (!q) { showToast("Erst Titel eingeben"); return; }
+  window.open("https://anilist.co/search/manga?search=" + q, "_blank", "noopener");
+  showToast("Bild speichern, dann \u201eBild w\u00e4hlen\u201c");
+});
+document.getElementById("newCoverUploadBtn").addEventListener("click", function () { document.getElementById("newCoverFile").click(); });
+document.getElementById("newCoverFile").addEventListener("change", function (e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  readFileAsDataUrl(file).then(compressImageToBase64).then(function (compressed) {
+    newCoverBase64 = compressed;
+    var prev = document.getElementById("newCoverPreview"); prev.src = compressed; prev.style.display = "block";
+  }).catch(function () { showToast("Cover konnte nicht verarbeitet werden"); });
+  e.target.value = "";
+});
+document.getElementById("saveAdd").addEventListener("click", function () {
+  var title = document.getElementById("newTitle").value.trim();
+  if (!title) { showToast("Titel darf nicht leer sein"); return; }
+  var chapterVal = document.getElementById("newChapter").value;
+  var chapter = chapterVal === "" ? null : Math.max(0, parseInt(chapterVal, 10) || 0);
+  var now = new Date().toISOString();
+  var item = {
+    id: uid(), title: title, chapter: chapter,
+    tags: document.getElementById("newTags").value.split(",").map(function (t) { return t.trim(); }).filter(Boolean),
+    notes: document.getElementById("newNotes").value.trim(),
+    url: document.getElementById("newUrl").value.trim(),
+    coverBase64: newCoverBase64, status: document.getElementById("newStatus").value,
+    readHistory: chapter !== null ? [{ date: now, chapter: chapter }] : [],
+    lastUpdated: now, createdAt: now
+  };
+  state.unshift(item);
+  saveState(); addPanel.classList.remove("open"); resetAddForm();
+  searchTerm = ""; document.getElementById("search").value = "";
+  render(); showToast("Hinzugef\u00fcgt");
+});
+
+// --- Backup ---
+document.getElementById("exportBtn").addEventListener("click", function () {
+  try {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "mangalounge-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    showToast("Backup erstellt \u2013 in \u201eDateien\u201c sichern m\u00f6glich");
+  } catch (e) { showToast("Backup fehlgeschlagen"); }
+});
+document.getElementById("importBtn").addEventListener("click", function () { document.getElementById("importFile").click(); });
+document.getElementById("importFile").addEventListener("change", function (e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () {
+    try {
+      var parsed = JSON.parse(reader.result);
+      if (!Array.isArray(parsed)) throw new Error("bad format");
+      var now = new Date().toISOString();
+      state = parsed.map(function (item) { return migrateItem(item, now); }).filter(function (item) { return item.title; });
+      saveState(); render(); showToast("Wiederhergestellt");
+    } catch (err) { showToast("Datei konnte nicht gelesen werden"); }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+// --- Theming ---
+function effectiveDark() {
+  if (settings.mode === "dark") return true;
+  if (settings.mode === "light") return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function applyTheme() {
+  var dark = effectiveDark();
+  var palette = THEMES[settings.theme] || THEMES.gold;
+  var accent, gold;
+  if (settings.theme === "custom") { accent = settings.customAccent; gold = settings.customAccent; }
+  else { accent = dark ? palette.accentDark : palette.accent; gold = dark ? palette.goldDark : palette.gold; }
+  document.documentElement.style.setProperty("--accent", accent);
+  document.documentElement.style.setProperty("--gold", gold);
+  if (settings.mode === "system") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", settings.mode);
+}
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+  if (settings.mode === "system") applyTheme();
+});
+function renderSettingsUI() {
+  document.querySelectorAll("#modeSegmented button").forEach(function (b) {
+    b.classList.toggle("active", b.getAttribute("data-mode") === settings.mode);
+  });
+  document.querySelectorAll("#themeSwatches .swatch").forEach(function (b) {
+    b.classList.toggle("active", b.getAttribute("data-theme") === settings.theme);
+  });
+  document.getElementById("customColorRow").style.display = settings.theme === "custom" ? "flex" : "none";
+  document.getElementById("customColorPicker").value = settings.customAccent;
+}
+document.getElementById("modeSegmented").addEventListener("click", function (e) {
+  var btn = e.target.closest("button"); if (!btn) return;
+  settings.mode = btn.getAttribute("data-mode"); saveSettings(); applyTheme(); renderSettingsUI();
+});
+document.getElementById("themeSwatches").addEventListener("click", function (e) {
+  var btn = e.target.closest(".swatch"); if (!btn) return;
+  settings.theme = btn.getAttribute("data-theme"); saveSettings(); applyTheme(); renderSettingsUI();
+});
+document.getElementById("customColorPicker").addEventListener("input", function (e) {
+  settings.customAccent = e.target.value; settings.theme = "custom";
+  saveSettings(); applyTheme(); renderSettingsUI();
+});
+document.getElementById("settingsToggle").addEventListener("click", function () {
+  document.getElementById("settingsOverlay").classList.add("open"); renderSettingsUI();
+});
+document.getElementById("settingsClose").addEventListener("click", function () {
+  document.getElementById("settingsOverlay").classList.remove("open");
+});
+document.getElementById("settingsOverlay").addEventListener("click", function (e) {
+  if (e.target.id === "settingsOverlay") e.currentTarget.classList.remove("open");
+});
+
+applyTheme();
+render();
+</script>
+</body>
+</html>
