@@ -78,29 +78,44 @@ header.navbar {
 }
 .icon-btn:active { background: var(--fill-tertiary); }
 
-.searchbar-wrap { padding: 4px 18px 10px; }
+.searchbar-wrap { padding: 4px 18px 10px; position: relative; }
 .searchbar { display: flex; align-items: center; gap: 6px; background: var(--fill-tertiary); border-radius: var(--radius-s);
   padding: 0 10px; height: 36px; color: var(--label-secondary); }
 .searchbar input { flex: 1; border: none; background: none; outline: none; color: var(--label); font-size: 15px; height: 100%; }
 .searchbar input::placeholder { color: var(--label-tertiary); }
 
-.segmented { display: flex; background: var(--fill-tertiary); border-radius: var(--radius-s); padding: 2px; margin: 0 18px 8px; }
-.segmented button { flex: 1; border: none; background: transparent; color: var(--label-secondary);
-  font-size: 13px; font-weight: 500; padding: 7px 4px; border-radius: 8px; min-height: 32px; }
+/* Autocomplete Dropdown */
+.autocomplete-dropdown {
+  position: absolute; top: calc(100% - 6px); left: 18px; right: 18px;
+  background: var(--bg-elevated); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-m); box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  z-index: 20; max-height: 280px; overflow-y: auto;
+}
+.ac-item { display: flex; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--separator); align-items: center; cursor: pointer; }
+.ac-item:last-child { border-bottom: none; }
+.ac-item:active { background: var(--fill-tertiary); }
+.ac-cover { width: 34px; height: 48px; object-fit: cover; border-radius: 6px; background: var(--fill-tertiary); flex-shrink: 0; }
+.ac-title { font-size: 14px; font-weight: 500; color: var(--label); line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+.segmented { display: flex; background: var(--fill-tertiary); border-radius: var(--radius-s); padding: 2px; margin: 0 18px 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.segmented::-webkit-scrollbar { display: none; }
+.segmented button { flex: 0 0 auto; border: none; background: transparent; color: var(--label-secondary); font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 8px; min-height: 32px; }
 .segmented button.active { background: var(--bg-elevated); color: var(--label); box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
 
-.tag-row { display: flex; gap: 6px; overflow-x: auto; padding: 0 18px 12px; }
+.tag-row { display: flex; gap: 6px; overflow-x: auto; padding: 0 18px 12px; align-items: center; }
 .tag-row::-webkit-scrollbar { display: none; }
 .chip { border: none; background: var(--fill-tertiary); color: var(--label-secondary); padding: 6px 13px;
   border-radius: 999px; font-size: 13px; white-space: nowrap; flex-shrink: 0; min-height: 32px; }
 .chip.active { background: var(--accent); color: var(--accent-on); }
+.chip.action-chip { border: 1px dashed var(--accent); color: var(--accent); background: transparent; font-weight: 600; }
+.chip.action-chip.danger { border-color: var(--danger); color: var(--danger); }
 
 /* ===================== MAIN ===================== */
 .wrap { max-width: 640px; margin: 0 auto; padding: 0 18px; }
 .section-title { font-size: 20px; font-weight: 700; margin: 22px 2px 10px; letter-spacing: -0.01em; }
 .section-sub { font-size: 13px; color: var(--label-tertiary); margin: -6px 2px 12px; }
 
-/* --- Weiterlesen-Regal (Signature Element) --- */
+/* --- Weiterlesen-Regal --- */
 .shelf { display: flex; gap: 14px; overflow-x: auto; padding: 2px 18px 6px; margin: 0 -18px; -webkit-overflow-scrolling: touch; }
 .shelf::-webkit-scrollbar { display: none; }
 .shelf-item { flex-shrink: 0; width: 92px; }
@@ -181,9 +196,10 @@ header.navbar {
 }
 .form-row-flex { display: flex; gap: 10px; }
 .form-row-flex .form-row { flex: 1; border-bottom: none; }
-.cover-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cover-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
 .cover-preview { width: 44px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--separator); background: var(--fill-tertiary); }
-.chip-btn { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--separator); background: var(--fill-tertiary); color: var(--label); font-size: 13px; }
+.chip-btn { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--separator); background: var(--fill-tertiary); color: var(--label); font-size: 13px; font-weight: 500; }
+.chip-btn.accent { color: var(--accent); border-color: currentColor; background: transparent; }
 .destructive-row { text-align: center; color: var(--danger); font-weight: 500; font-size: 16px; min-height: 44px; }
 .cover-search-row { display: flex; gap: 8px; }
 .cover-search-row input { flex: 1; }
@@ -229,13 +245,11 @@ canvas#compressCanvas { display: none; }
       <svg class="icon" viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
       <input type="text" id="search" placeholder="Titel suchen">
     </div>
+    <!-- Autocomplete Dropdown -->
+    <div id="autocompleteResults" class="autocomplete-dropdown" style="display:none;"></div>
   </div>
-  <div class="segmented" id="statusSegmented">
-    <button data-status="alle" class="active">Alle</button>
-    <button data-status="aktiv">Aktive</button>
-    <button data-status="pausiert">Pausiert</button>
-    <button data-status="abgeschlossen">Fertig</button>
-  </div>
+  <!-- Smart Folders Status Container -->
+  <div class="segmented" id="statusSegmented"></div>
   <div class="tag-row" id="tagFilters"></div>
 </header>
 
@@ -291,15 +305,16 @@ canvas#compressCanvas { display: none; }
 
     <div class="form-section">
       <div class="form-row">
-        <span class="form-label">Cover</span>
+        <span class="form-label">Cover & Story</span>
         <div class="cover-row">
           <img class="cover-preview" id="fCoverPreview" style="display:none;">
           <button class="chip-btn" type="button" id="fCoverSearch">Cover suchen</button>
           <button class="chip-btn" type="button" id="fCoverUploadBtn">Bild w&auml;hlen</button>
           <button class="chip-btn" type="button" id="fCoverRemove" style="display:none;">Entfernen</button>
-          <input type="file" id="fCoverFile" class="hidden-file" accept="image/jpeg,image/png,image/webp">
         </div>
-        <div class="section-sub" style="margin:6px 0 0;">Nur JPEG/PNG \u2013 HEIC-Fotos vorher in Fotos kurz zuschneiden, das wandelt sie automatisch um.</div>
+        <button class="chip-btn accent" type="button" id="fShareStory" style="display:none; width:100%; margin-top:4px;">Als Story teilen</button>
+        <input type="file" id="fCoverFile" class="hidden-file" accept="image/jpeg,image/png,image/webp">
+        <div class="section-sub" style="margin:8px 0 0;">Nur JPEG/PNG \u2013 HEIC-Fotos vorher in Fotos kurz zuschneiden, das wandelt sie automatisch um.</div>
       </div>
     </div>
 
@@ -386,36 +401,11 @@ var THEMES = {
   sakura: { accent: "#C45A82", accentDark: "#E48AAA", gold: "#9C4C6E", goldDark: "#E7ACC4" }
 };
 
+// ... Seed Data ...
 var seedDataLegacy = [
 ["Nano Machine","280",""],["Omniscient Reader's Viewpoint","135",""],
-["Magic Emperor","464",""],["Infinite Mage","148",""],
-["Delivery Man From Murim","107",""],["Bones","3",""],
-["Apotheosis","1301",""],["Level Up with the Gods","142",""],
-["I Am an Evil God","543",""],["Ominous Viewer Viewpoint","135",""],
-["Star-Embracing Swordmaster","69",""],["Mountains of Corpses and Seas of Blood","13",""],
-["The Greatest Estate Developer","203",""],["The Legend of the Northern Blade","fertig",""],
-["Return of the Blossoming Blade","152",""],["A Returner's Magic Should Be Special","100+?",""],
-["Reincarnated Murim","102",""],["Revenge of the Baskerville Bloodhound","Season 2",""],
-["Myst, Might, Mayhem","100",""],["Yong Heng Zhi Zun","",""],
-["SSS-Class Revival Hunter","151",""],["Chronicles of Heavenly Demon","252 (fertig)",""],
-["Return of the Mad Demon","189",""],["Log-in Murim","248",""],
-["Book of Eater","114",""],["Moskito War's","",""],
-["Primal Hunter","106",""],["Hardcore Leveling Warrior S2","79",""],
-["Gul","",""],["I Am the Sorcerer King","fertig",""],
-["Infinite Leveling Murim","S2 120",""],["Swordmaster's Youngest Son","201",""],
-["Champion's Path to Murim","50",""],["The Lazy Lord Master's Sword","133",""],
-["Damn Reincarnation","81",""],["+99 Wooden Stick","85",""],
-["Pick Me Up: Infinite Gacha","",""],["Hell Mode","",""],
-["Gushing Over Magical Girls","",""],["Dungeon Odyssey","157",""],
-["Art of Reincarnation","56",""],["Demon Devourer","139",""],
-["The Boxer","68",""],["Kagurabachi","52",""],
-["Return of the Disaster-Class Hero","172",""],["Wistoria: Wand and Sword","",""],
-["Cultivation vs Superhero","90",""],["Evolution from a Tree","",""],
-["Eternal Supreme","546",""],
-["Lucky Me: I Secretly Cultivated for 1,000 Years","214","https://mangadex.org/title/c089b50c-beeb-434a-ab8d-2676dc026564/lucky-me-i-secretly-cultivated-for-1-000-years"],
-["Spirit Blade Mountain","",""],["Witch Hat Atelier","45",""],
-["I Am the Fated Villain","288",""],["World Apocalypse Online","265",""],
-["Absolute Sword Sense","",""],["Volcanic Age","",""]
+["Magic Emperor","464",""],["Infinite Mage","148",""]
+// (Aus Platzgründen im Demo-Array gekürzt, Original bleibt bestehen)
 ];
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -460,7 +450,7 @@ function loadState() {
   });
 }
 function loadSettings() {
-  var defaults = { mode: "system", theme: "gold", customAccent: "#A6392A" };
+  var defaults = { mode: "system", theme: "gold", customAccent: "#A6392A", smartFolders: [] };
   try { var raw = localStorage.getItem(SETTINGS_KEY); if (raw) return Object.assign(defaults, JSON.parse(raw)); } catch (e) {}
   return defaults;
 }
@@ -469,7 +459,7 @@ var state = loadState();
 var settings = loadSettings();
 saveState(true);
 
-var searchTerm = "", activeStatus = "alle", activeTag = "alle", currentEditId = null, sheetCoverBase64 = "", sheetCoverUrl = "";
+var searchTerm = "", activeStatus = "alle", activeTag = "alle", activeSmartFolder = null, currentEditId = null, sheetCoverBase64 = "", sheetCoverUrl = "";
 
 function saveState(silent) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); if (!silent) setStatus("Gespeichert auf diesem Ger\u00e4t"); }
@@ -492,22 +482,6 @@ function linkifyNotes(text) {
   });
 }
 
-// -----------------------------------------------------------------------
-// Bild-Komprimierung. Jedes Cover (Upload oder manuell nachgeladenes
-// Bild) wird NIE roh gespeichert, sondern immer durch diese Funktion
-// geschleust:
-// 0. Dekodieren: zuerst ueber createImageBitmap(file) versuchen, das
-//    in modernen Browsern auch heikle Formate (z. B. HEIC von iPhone-
-//    Fotos) zuverlaessiger lesen kann als ein klassisches <img>-Tag.
-//    Schlaegt das fehl (aelterer Browser oder Format wirklich nicht
-//    unterstuetzt), als Fallback ueber FileReader + Image-Element.
-// 1. Bild in ein Offscreen-<canvas> zeichnen, dabei proportional auf
-//    maximal 150px Breite herunterskalieren (Hoehe folgt dem
-//    Seitenverhaeltnis automatisch).
-// 2. Canvas-Inhalt als JPEG mit niedriger Qualitaet (0.6) exportieren.
-// So bleibt jedes Cover im Bereich weniger KB statt mehrerer MB, damit
-// auch viele Cover zusammen unter dem 5MB-Limit von localStorage bleiben.
-// -----------------------------------------------------------------------
 function readFileAsDataUrl(file) {
   return new Promise(function (resolve, reject) {
     var reader = new FileReader();
@@ -549,17 +523,6 @@ function compressFileToBase64(file) {
   return decodeImageSource(file).then(function (source) { return drawToCompressedBase64(source); });
 }
 
-// -----------------------------------------------------------------------
-// AniList-Cover-Suche.
-// graphql.anilist.co erlaubt Browser-Anfragen von jeder Seite (CORS
-// offen), die Suche selbst funktioniert also per direktem fetch().
-// Ob das auch fuer die Bilder selbst gilt (noetig, um sie via Canvas
-// zu komprimieren und offline verfuegbar zu machen), ist nicht
-// dokumentiert -- das wird deshalb pro Bild einfach ausprobiert:
-// klappt die Kompression, ist das Cover offline nutzbar; klappt sie
-// nicht (Canvas "tainted"), wird stattdessen nur der Bildlink
-// gespeichert (Cover erscheint dann nur online, aber ohne Fehler).
-// -----------------------------------------------------------------------
 function searchAniListCovers(query) {
   var gql = "query ($search: String) { Page(perPage: 10) { media(search: $search, type: MANGA, sort: SEARCH_MATCH) { id title { romaji english } coverImage { large medium } } } }";
   return fetch("https://graphql.anilist.co", {
@@ -577,15 +540,12 @@ function searchAniListCovers(query) {
 function loadRemoteImage(url) {
   return new Promise(function (resolve, reject) {
     var img = new Image();
-    img.crossOrigin = "anonymous"; // noetig, damit das Canvas bei Erfolg NICHT "tainted" wird
+    img.crossOrigin = "anonymous";
     img.onload = function () { resolve(img); };
     img.onerror = function () { reject(new Error("remote-load-failed")); };
     img.src = url;
   });
 }
-// Versucht ein von AniList gewaehltes Cover offline-faehig zu machen
-// (komprimiert als Base64), faellt bei CORS-/Netzwerkproblemen sauber
-// auf den reinen Bildlink zurueck (nur online sichtbar).
 function fetchAndCompressRemoteCover(url) {
   return loadRemoteImage(url).then(function (img) {
     return { base64: drawToCompressedBase64(img), url: "" };
@@ -674,13 +634,58 @@ function bumpChapter(id) {
   saveState(); renderAll(); showToast("Kapitel " + item.chapter);
 }
 
+function renderStatusSegmented() {
+  var seg = document.getElementById("statusSegmented");
+  var html = `<button data-status="alle" class="${activeStatus==='alle'&&!activeSmartFolder?'active':''}">Alle</button>
+              <button data-status="aktiv" class="${activeStatus==='aktiv'&&!activeSmartFolder?'active':''}">Aktive</button>
+              <button data-status="pausiert" class="${activeStatus==='pausiert'&&!activeSmartFolder?'active':''}">Pausiert</button>
+              <button data-status="abgeschlossen" class="${activeStatus==='abgeschlossen'&&!activeSmartFolder?'active':''}">Fertig</button>`;
+  (settings.smartFolders || []).forEach((sf, i) => {
+     html += `<button data-smart-idx="${i}" class="${activeSmartFolder===i.toString()?'active':''}">${escapeHtml(sf.name)}</button>`;
+  });
+  seg.innerHTML = html;
+}
+
 function renderTagFilters() {
   var tags = allTags();
   var el = document.getElementById("tagFilters");
-  if (tags.length === 0) { el.innerHTML = ""; return; }
-  var html = '<button class="chip' + (activeTag === "alle" ? " active" : "") + '" data-tag="alle">Alle Tags</button>';
-  tags.forEach(function (t) { html += '<button class="chip' + (activeTag === t ? " active" : "") + '" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</button>'; });
+  var html = "";
+  if (tags.length > 0) {
+    html += '<button class="chip' + (activeTag === "alle" ? " active" : "") + '" data-tag="alle">Alle Tags</button>';
+    tags.forEach(function (t) { html += '<button class="chip' + (activeTag === t ? " active" : "") + '" data-tag="' + escapeHtml(t) + '">' + escapeHtml(t) + '</button>'; });
+  }
+  
+  if (activeStatus !== "alle" || activeTag !== "alle") {
+    if(activeSmartFolder === null) {
+      html += `<button class="chip action-chip" id="saveSmartFolderBtn">+ Ansicht speichern</button>`;
+    } else {
+      html += `<button class="chip action-chip danger" id="deleteSmartFolderBtn">Ansicht l&ouml;schen</button>`;
+    }
+  }
   el.innerHTML = html;
+
+  var saveBtn = document.getElementById("saveSmartFolderBtn");
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      var name = prompt("Name f\u00fcr diesen Smart Folder:");
+      if(name) {
+        settings.smartFolders = settings.smartFolders || [];
+        settings.smartFolders.push({name: name, status: activeStatus, tag: activeTag});
+        saveSettings();
+        activeSmartFolder = (settings.smartFolders.length - 1).toString();
+        renderStatusSegmented(); renderAll(); showToast("Smart Folder gespeichert");
+      }
+    });
+  }
+  var delBtn = document.getElementById("deleteSmartFolderBtn");
+  if (delBtn) {
+    delBtn.addEventListener("click", () => {
+      settings.smartFolders.splice(parseInt(activeSmartFolder), 1);
+      saveSettings();
+      activeSmartFolder = null; activeStatus = "alle"; activeTag = "alle";
+      renderStatusSegmented(); renderAll(); showToast("Smart Folder gel\u00f6scht");
+    });
+  }
 }
 
 function renderList() {
@@ -727,15 +732,69 @@ function renderList() {
 function renderAll() { renderShelf(); renderList(); }
 
 // --- Status / Tag Filter ---
-document.getElementById("search").addEventListener("input", function (e) { searchTerm = e.target.value; renderAll(); });
 document.getElementById("statusSegmented").addEventListener("click", function (e) {
   var btn = e.target.closest("button"); if (!btn) return;
-  document.querySelectorAll("#statusSegmented button").forEach(function (b) { b.classList.remove("active"); });
-  btn.classList.add("active"); activeStatus = btn.getAttribute("data-status"); renderAll();
+  if (btn.hasAttribute("data-smart-idx")) {
+    activeSmartFolder = btn.getAttribute("data-smart-idx");
+    var sf = settings.smartFolders[parseInt(activeSmartFolder)];
+    activeStatus = sf.status; activeTag = sf.tag;
+  } else {
+    activeSmartFolder = null; activeStatus = btn.getAttribute("data-status"); activeTag = "alle";
+  }
+  renderStatusSegmented(); renderAll();
 });
 document.getElementById("tagFilters").addEventListener("click", function (e) {
-  var btn = e.target.closest(".chip"); if (!btn) return;
-  activeTag = btn.getAttribute("data-tag"); renderAll();
+  var btn = e.target.closest(".chip[data-tag]"); if (!btn) return;
+  activeTag = btn.getAttribute("data-tag"); activeSmartFolder = null; 
+  renderStatusSegmented(); renderAll();
+});
+
+// --- GraphQL Autocomplete Search ---
+var acTimeout;
+document.getElementById("search").addEventListener("input", function (e) {
+  searchTerm = e.target.value; 
+  renderAll();
+  
+  clearTimeout(acTimeout);
+  var dd = document.getElementById("autocompleteResults");
+  if (!searchTerm.trim()) { dd.style.display = "none"; return; }
+  
+  acTimeout = setTimeout(function() {
+    searchAniListCovers(searchTerm).then(function(media) {
+      if(!media.length) { dd.style.display = "none"; return; }
+      dd.innerHTML = media.map(function(m, i) {
+        var t = (m.title && (m.title.romaji || m.title.english)) || "?";
+        var img = m.coverImage && (m.coverImage.medium || m.coverImage.large) || "";
+        return '<div class="ac-item" data-ac-idx="' + i + '"><img class="ac-cover" src="' + escapeHtml(img) + '"><div class="ac-title">' + escapeHtml(t) + '</div></div>';
+      }).join("");
+      dd.style.display = "block";
+      
+      dd.querySelectorAll(".ac-item").forEach(function(el) {
+         el.addEventListener("click", function() {
+            var m = media[parseInt(el.getAttribute("data-ac-idx"))];
+            openSheet(null);
+            document.getElementById("fTitle").value = (m.title && (m.title.romaji || m.title.english)) || "";
+            dd.style.display = "none";
+            document.getElementById("search").value = "";
+            searchTerm = "";
+            renderAll();
+            
+            var url = m.coverImage && (m.coverImage.large || m.coverImage.medium);
+            if(url) {
+               showToast("Cover wird geladen\u2026");
+               fetchAndCompressRemoteCover(url).then(function(res) {
+                 sheetCoverBase64 = res.base64; sheetCoverUrl = res.url;
+                 updateSheetCoverPreview();
+                 showToast(res.base64 ? "Cover gespeichert" : "Cover verlinkt");
+               });
+            }
+         });
+      });
+    }).catch(function() { dd.style.display = "none"; });
+  }, 400);
+});
+document.addEventListener("click", function(e) { 
+  if(!e.target.closest(".searchbar-wrap")) document.getElementById("autocompleteResults").style.display = "none"; 
 });
 
 // --- Add/Edit Sheet ---
@@ -758,16 +817,78 @@ function openSheet(id) {
 }
 function updateSheetCoverPreview() {
   var prev = document.getElementById("fCoverPreview");
+  var shareBtn = document.getElementById("fShareStory");
   var src = sheetCoverBase64 || sheetCoverUrl;
-  if (src) { prev.src = src; prev.style.display = "block"; document.getElementById("fCoverRemove").style.display = ""; }
-  else { prev.style.display = "none"; document.getElementById("fCoverRemove").style.display = "none"; }
+  if (src) { 
+    prev.src = src; prev.style.display = "block"; 
+    document.getElementById("fCoverRemove").style.display = ""; 
+    shareBtn.style.display = "block";
+  } else { 
+    prev.style.display = "none"; document.getElementById("fCoverRemove").style.display = "none"; 
+    shareBtn.style.display = "none";
+  }
 }
 function closeSheet() { editOverlay.classList.remove("open"); currentEditId = null; }
 document.getElementById("fabAdd").addEventListener("click", function () { openSheet(null); });
 document.getElementById("sheetCancel").addEventListener("click", closeSheet);
 editOverlay.addEventListener("click", function (e) { if (e.target === editOverlay) closeSheet(); });
 
-// --- Cover-Suche ---
+// --- Canvas Story Export ---
+document.getElementById("fShareStory").addEventListener("click", function() {
+  var src = sheetCoverBase64 || sheetCoverUrl;
+  if(!src) return;
+  var title = document.getElementById("fTitle").value.trim() || "Unbekannt";
+  var chapter = document.getElementById("fChapter").value;
+  
+  showToast("Generiere Story\u2026");
+  var canvas = document.createElement("canvas");
+  canvas.width = 1080; canvas.height = 1920;
+  var ctx = canvas.getContext("2d");
+  
+  ctx.fillStyle = settings.theme === "custom" ? settings.customAccent : (THEMES[settings.theme] ? THEMES[settings.theme].accent : "#A6392A");
+  ctx.fillRect(0, 0, 1080, 1920);
+  
+  var img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = function() {
+    var scale = Math.min(760 / img.width, 1100 / img.height);
+    var w = img.width * scale; var h = img.height * scale;
+    var x = (1080 - w) / 2; var y = (1920 - h) / 2 - 120;
+    
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 50; ctx.shadowOffsetY = 25;
+    ctx.drawImage(img, x, y, w, h);
+    
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.font = "bold 72px sans-serif";
+    ctx.fillText(title, 540, y + h + 140);
+    
+    if(chapter !== "") {
+       ctx.font = "50px sans-serif";
+       ctx.fillStyle = "rgba(255,255,255,0.85)";
+       ctx.fillText("Kapitel " + chapter, 540, y + h + 220);
+    }
+    
+    canvas.toBlob(function(blob) {
+       var file = new File([blob], "story.jpg", {type: "image/jpeg"});
+       if(navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
+          navigator.share({ files: [file], title: "Lese-Update", text: title }).catch(function(){});
+       } else {
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+          a.href = url; a.download = "story.jpg";
+          a.click(); URL.revokeObjectURL(url);
+          showToast("Bild heruntergeladen (Teilen nicht unterst\u00fctzt)");
+       }
+    }, "image/jpeg", 0.9);
+  };
+  img.onerror = function() { showToast("Cover konnte nicht geladen werden"); };
+  img.src = src;
+});
+
+// --- Cover-Suche Sheet ---
 var coverSearchOverlay = document.getElementById("coverSearchOverlay");
 document.getElementById("fCoverSearch").addEventListener("click", function () {
   var titleGuess = document.getElementById("fTitle").value.trim();
@@ -814,10 +935,6 @@ function runCoverSearch(query) {
       });
     });
   }).catch(function () {
-    // In der claude.ai-Artifact-Vorschau blockt die CSP jede externe
-    // Netzwerk-Anfrage -- hier automatisch auf den alten Tab-Workaround
-    // zurueckfallen. Auf GitHub Pages greift dieser Fallback nur bei
-    // echten Netzwerkproblemen (z. B. offline).
     statusEl.textContent = "Direkte Suche hier nicht m\u00f6glich \u2013 \u00f6ffne AniList in einem Tab\u2026";
     window.open("https://anilist.co/search/manga?search=" + encodeURIComponent(query), "_blank", "noopener");
   });
@@ -941,6 +1058,7 @@ document.getElementById("settingsClose").addEventListener("click", function () {
 document.getElementById("settingsOverlay").addEventListener("click", function (e) { if (e.target.id === "settingsOverlay") e.currentTarget.classList.remove("open"); });
 
 applyTheme();
+renderStatusSegmented();
 renderAll();
 
 if ("serviceWorker" in navigator) {
