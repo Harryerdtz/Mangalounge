@@ -5,7 +5,7 @@
 // WICHTIG: Wenn du index.html spaeter aenderst/aktualisierst, erhoehe
 // die Versionsnummer unten (v1 -> v2 usw.), sonst liefert der Service
 // Worker weiter die alte, zwischengespeicherte Version aus.
-var CACHE_NAME = "mangalounge-cache-v2";
+var CACHE_NAME = "mangalounge-cache-v3";
 var APP_SHELL = [
   "./",
   "./index.html",
