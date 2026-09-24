@@ -1494,8 +1494,10 @@ var readerTitle = document.getElementById("readerTitle");
 var readerChapterSelect = document.getElementById("readerChapterSelect");
 var readerChapterList = [];
 var readerChapterIndex = -1;
+var readerPageIndex = 0;
 var readerItem = null;
 var readerSaveTimer = null;
+var readerRequestId = 0;
 function showReaderStatus(text) {
   readerStatus.textContent = text;
   readerStatus.style.display = "block";
@@ -1548,7 +1550,6 @@ function renderReaderPages(chapter, payload) {
     });
     readerPages.appendChild(img);
   });
-  updateReaderPageVisibility();
   if (readerItem) {
     readerItem.mdChapterUrl = "https://mangadex.org/chapter/" + chapter.id;
     readerItem.mdChapterNumber = chapter.number;
@@ -1560,6 +1561,7 @@ function renderReaderPages(chapter, payload) {
       if (resumePage) resumePage.scrollIntoView({ block: "start" });
     }, 100);
   }
+  updateReaderPageVisibility();
 }
 function loadReaderChapter(index) {
   if (index < 0 || index >= readerChapterList.length) {
@@ -1569,6 +1571,7 @@ function loadReaderChapter(index) {
   readerChapterIndex = index;
   document.getElementById("readerNext").disabled = index >= readerChapterList.length - 1;
   var chapter = readerChapterList[index];
+  var requestId = ++readerRequestId;
   readerChapterSelect.value = String(index);
   if (readerItem) {
     var chapterChanged = String(readerItem.readerChapterNumber) !== String(chapter.number);
@@ -1580,16 +1583,20 @@ function loadReaderChapter(index) {
   showReaderStatus("Kapitel " + chapter.number + " wird geladen...");
   readerPages.innerHTML = "";
   mdApi("/at-home/server/" + encodeURIComponent(chapter.id)).then(function (payload) {
+    if (requestId !== readerRequestId) return;
     renderReaderPages(chapter, payload);
   }).catch(function (err) {
+    if (requestId !== readerRequestId) return;
     showReaderStatus("Reader konnte dieses Kapitel nicht laden: " + ((err && err.message) || "Netzwerkfehler"));
   });
 }
 function openInAppReader(item) {
   if (!item) return;
+  var requestId = ++readerRequestId;
   readerItem = item;
   readerOverlay.classList.add("open");
   readerOverlay.setAttribute("aria-hidden", "false");
+  readerOverlay.scrollTop = 0;
   readerTitle.textContent = item.title;
   readerPages.innerHTML = "";
   showReaderStatus("MangaDex-Kapitel werden geladen...");
@@ -1600,6 +1607,7 @@ function openInAppReader(item) {
       return mdGetChapterList(resolvedItem.mdId, []);
     });
   }).then(function (list) {
+    if (requestId !== readerRequestId) return;
     if (!list.length) throw new Error("Keine übersetzten Kapitel gefunden");
     readerChapterList = list;
     readerItem = item;
@@ -1620,8 +1628,10 @@ document.getElementById("detailReadInside").addEventListener("click", function (
   openInAppReader(findItem(currentDetailId));
 });
 document.getElementById("readerClose").addEventListener("click", function () {
+  readerRequestId++;
   readerOverlay.classList.remove("open");
   readerOverlay.setAttribute("aria-hidden", "true");
+  readerOverlay.scrollTop = 0;
   readerPages.innerHTML = "";
 });
 document.getElementById("readerNext").addEventListener("click", function () { loadReaderChapter(readerChapterIndex + 1); });
@@ -2717,7 +2727,7 @@ renderAll();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js?v=12").catch(function () {});
+    navigator.serviceWorker.register("sw.js?v=23").catch(function () {});
   });
 }
 </script>
