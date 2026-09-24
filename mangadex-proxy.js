@@ -28,7 +28,10 @@ export default {
 
     const target = API_ORIGIN + incoming.pathname + incoming.search;
     const response = await fetch(target, {
-      headers: { Accept: "application/json" }
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "MangaLounge/1.0 (https://harryerdtz.github.io/Mangalounge/)"
+      }
     });
     const headers = new Headers(response.headers);
     Object.entries(corsHeaders(origin)).forEach(([key, value]) => headers.set(key, value));
