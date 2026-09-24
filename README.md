@@ -1,10 +1,12 @@
 # MangaLounge selbst hosten (GitHub Pages)
 
-Diese fünf Dateien sind alles, was du brauchst:
+Diese Dateien sind alles, was du brauchst:
 
 - `index.html` – die App
 - `manifest.json` – macht sie zur installierbaren PWA
 - `sw.js` – Service Worker, sorgt für echtes Offline-Funktionieren
+- `config.js` – URL des optionalen MangaDex-Proxys
+- `mangadex-proxy.js` – Cloudflare-Worker für den integrierten Reader
 - `icon-180.png`, `icon-512.png`, `favicon-32.png` – App-Icons
 
 ## 1. Repository anlegen
@@ -17,7 +19,7 @@ Diese fünf Dateien sind alles, was du brauchst:
 ## 2. Dateien hochladen
 
 1. Im neuen Repo auf **Add file → Upload files**.
-2. Alle fünf Dateien aus diesem Ordner reinziehen.
+2. Alle Dateien aus diesem Ordner reinziehen.
 3. Unten **Commit changes**.
 
 ## 3. GitHub Pages aktivieren
@@ -68,3 +70,16 @@ deines iPhones, nicht in den Dateien selbst, und werden von einem Update der
   AniLists Bilder-Server keine Bilder für Fremd-Domains freigibt) – sag Bescheid,
   wenn ich das für dich nachrüsten soll, dann baue ich es gezielt für die
   gehostete Version.
+
+## MangaDex-Reader auf GitHub Pages
+
+GitHub Pages kann die MangaDex-API wegen CORS nicht direkt aus dem Browser aufrufen.
+Für den integrierten Reader liegt deshalb `mangadex-proxy.js` als Cloudflare-Worker bereit.
+
+1. Bei Cloudflare Workers einen neuen Worker anlegen.
+2. Den Inhalt von `mangadex-proxy.js` in den Worker kopieren und deployen.
+3. Die Worker-URL in `config.js` eintragen:
+   `window.MANGADEX_PROXY_URL = "https://DEIN-WORKER.workers.dev";`
+4. `index.html`, `config.js` und `sw.js` zusammen mit den übrigen Dateien auf GitHub Pages hochladen.
+
+Danach läuft der integrierte Reader über den Worker. Der externe MangaDex-Link bleibt als Fallback verfügbar.

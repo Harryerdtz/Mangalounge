@@ -812,6 +812,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
 var STORAGE_KEY = "manga_tracker_v1";
 var SETTINGS_KEY = "mangalounge_settings_v1";
@@ -1446,6 +1447,11 @@ function showReaderStatus(text) {
   readerStatus.textContent = text;
   readerStatus.style.display = "block";
 }
+function showReaderFallback(item) {
+  var url = item && item.mdId ? "https://mangadex.org/title/" + encodeURIComponent(item.mdId) : "https://mangadex.org/search?q=" + encodeURIComponent((item && item.title) || "");
+  readerStatus.innerHTML = "Der integrierte Reader wird von GitHub Pages durch MangaDex-CORS blockiert. <a href=\"" + escapeHtml(url) + "\" target=\"_blank\" rel=\"noopener\" style=\"color:#e6b866;\">Auf MangaDex öffnen</a>";
+  readerStatus.style.display = "block";
+}
 function renderReaderPages(chapter, payload) {
   var data = payload && payload.chapter;
   var files = data && (Array.isArray(data.data) ? data.data : data.dataSaver);
@@ -1495,7 +1501,8 @@ function openInAppReader(item) {
     if (index < 0) index = list.findIndex(function (chapter) { return parseFloat(chapter.number) > target; });
     loadReaderChapter(index < 0 ? 0 : index);
   }).catch(function (err) {
-    showReaderStatus((err && err.message) || "Der MangaDex-Reader konnte nicht geladen werden.");
+    if (err && err.message && err.message.indexOf("MangaDex nicht erreichbar") === 0) showReaderFallback(item);
+    else showReaderStatus((err && err.message) || "Der MangaDex-Reader konnte nicht geladen werden.");
   });
 }
 document.getElementById("detailReadInside").addEventListener("click", function () {
@@ -2374,7 +2381,7 @@ document.getElementById("checkUpdatesBtn").addEventListener("click", function ()
 // =========================================================================
 // MODUL 10: MangaDex v5 API Integration
 // =========================================================================
-var MANGADEX_API = "https://api.mangadex.org";
+var MANGADEX_API = window.MANGADEX_PROXY_URL || "https://api.mangadex.org";
 function mdApi(endpoint, opts) {
   opts = opts || {};
   var url = MANGADEX_API + endpoint;
