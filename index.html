@@ -392,7 +392,25 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .reader-toolbar button { border: 0; background: transparent; color: inherit; min-height: 44px; padding: 8px 10px; font-size: 14px; }
 .reader-toolbar select { max-width: 150px; min-width: 92px; min-height: 36px; padding: 6px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: #262626; color: #f5f1e8; font-size: 13px; }
 .reader-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; text-align: center; }
+.reader-options { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px 16px; padding: 10px 14px; background: #1d1d1d; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.reader-options label { display: flex; align-items: center; gap: 8px; color: #c8c0b3; font-size: 13px; }
+.reader-options select { min-height: 34px; border: 1px solid rgba(255,255,255,0.2); border-radius: 7px; background: #292929; color: #f5f1e8; padding: 5px 7px; }
 .reader-pages { display: grid; justify-items: center; gap: 12px; width: min(100%, 900px); margin: 0 auto; padding: 16px 10px 40px; }
+.reader-pages.width-compact { max-width: 620px; }
+.reader-pages.width-wide { max-width: 900px; }
+.reader-pages.width-full { max-width: none; }
+.reader-pages.single-page img { display: none; }
+.reader-pages.single-page img.reader-visible { display: block; }
+.reader-page-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 12px 32px; color: #c8c0b3; font-size: 13px; }
+.reader-page-controls button { min-height: 40px; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: #262626; color: #f5f1e8; }
+@media (max-width: 600px) {
+  .reader-toolbar { gap: 4px; padding-left: 8px; padding-right: 8px; }
+  .reader-toolbar button { padding-left: 6px; padding-right: 6px; font-size: 12px; }
+  .reader-toolbar select { min-width: 78px; max-width: 104px; font-size: 12px; }
+  .reader-title { flex: 1 1 80px; font-size: 13px; }
+  .reader-page-controls { gap: 6px; }
+  .reader-page-controls button { padding-left: 8px; padding-right: 8px; font-size: 12px; }
+}
 .reader-pages img { display: block; width: auto; max-width: 100%; height: auto; min-height: 120px; background: #222; object-fit: contain; }
 .reader-pages img.reader-page-error { min-height: 180px; border: 1px solid #9a5b50; opacity: 0.8; cursor: pointer; }
 .reader-status { color: #c8c0b3; text-align: center; padding: 28px 18px; }
@@ -577,11 +595,21 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
     <button type="button" id="readerClose">Schließen</button>
     <select id="readerChapterSelect" aria-label="Kapitel auswählen"></select>
     <span class="reader-title" id="readerTitle">MangaDex-Reader</span>
+    <button type="button" id="readerOptionsToggle" aria-label="Reader-Einstellungen">Optionen</button>
     <button type="button" id="readerReload" aria-label="Kapitel neu laden">Reload</button>
     <button type="button" id="readerNext">Weiter</button>
   </div>
+  <div class="reader-options" id="readerOptionsPanel" hidden>
+    <label>Darstellung <select id="readerModeSelect"><option value="webtoon">Scroll</option><option value="single">Einzelseite</option></select></label>
+    <label>Seitenbreite <select id="readerWidthSelect"><option value="compact">Kompakt</option><option value="wide">Breit</option><option value="full">Vollbreite</option></select></label>
+  </div>
   <div class="reader-status" id="readerStatus">Kapitel wird geladen...</div>
   <div class="reader-pages" id="readerPages"></div>
+  <div class="reader-page-controls" id="readerPageControls">
+    <button type="button" id="readerPagePrev">Vorherige Seite</button>
+    <span id="readerPageCount">Seite 1</span>
+    <button type="button" id="readerPageNext">Nächste Seite</button>
+  </div>
 </div>
 
 <!-- Add/Edit Sheet (gemeinsam genutzt) -->
@@ -934,7 +962,7 @@ function loadState() {
 }
 function loadSettings() {
   var defaults = { mode: "system", theme: "gold", customAccent: "#A6392A", preferredPlatform: "MangaDex", customPlatformTemplate: "",
-    layout: "list", startTab: "continue", oledBlack: false };
+    layout: "list", startTab: "continue", oledBlack: false, readerMode: "webtoon", readerWidth: "wide" };
   try {
     var raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
@@ -1252,8 +1280,7 @@ function renderShelf() {
 
   document.querySelectorAll("[data-shelf-open]").forEach(function (el) {
     el.addEventListener("click", function () {
-      var item = findItem(el.getAttribute("data-shelf-open"));
-      openReadLink(item);
+      openInAppReader(findItem(el.getAttribute("data-shelf-open")));
     });
   });
   document.querySelectorAll("[data-shelf-edit]").forEach(function (el) {
@@ -1461,6 +1488,18 @@ function showReaderFallback(item) {
   readerStatus.innerHTML = "Der integrierte Reader wird von GitHub Pages durch MangaDex-CORS blockiert. <a href=\"" + escapeHtml(url) + "\" target=\"_blank\" rel=\"noopener\" style=\"color:#e6b866;\">Auf MangaDex öffnen</a>";
   readerStatus.style.display = "block";
 }
+function updateReaderPageVisibility() {
+  var single = settings.readerMode === "single";
+  readerPages.classList.toggle("single-page", single);
+  readerPages.classList.toggle("width-compact", settings.readerWidth === "compact");
+  readerPages.classList.toggle("width-wide", settings.readerWidth === "wide");
+  readerPages.classList.toggle("width-full", settings.readerWidth === "full");
+  Array.prototype.forEach.call(readerPages.children, function (img, index) { img.classList.toggle("reader-visible", !single || index === readerPageIndex); });
+  document.getElementById("readerPageControls").style.display = single && readerPages.children.length ? "flex" : "none";
+  document.getElementById("readerPagePrev").disabled = readerPageIndex <= 0;
+  document.getElementById("readerPageNext").disabled = readerPageIndex >= readerPages.children.length - 1;
+  document.getElementById("readerPageCount").textContent = readerPages.children.length ? "Seite " + (readerPageIndex + 1) + " / " + readerPages.children.length : "Seite 0";
+}
 function renderReaderPages(chapter, payload) {
   var data = payload && payload.chapter;
   var files = data && (Array.isArray(data.data) ? data.data : data.dataSaver);
@@ -1491,10 +1530,12 @@ function renderReaderPages(chapter, payload) {
     });
     readerPages.appendChild(img);
   });
+  updateReaderPageVisibility();
   if (readerItem) {
     readerItem.mdChapterUrl = "https://mangadex.org/chapter/" + chapter.id;
     readerItem.mdChapterNumber = chapter.number;
     readerItem.readerPageIndex = Math.max(0, Number(readerItem.readerPageIndex) || 0);
+    readerPageIndex = readerItem.readerPageIndex;
     saveState(true);
     setTimeout(function () {
       var resumePage = readerPages.children[readerItem.readerPageIndex];
@@ -1512,8 +1553,9 @@ function loadReaderChapter(index) {
   var chapter = readerChapterList[index];
   readerChapterSelect.value = String(index);
   if (readerItem) {
+    var chapterChanged = String(readerItem.readerChapterNumber) !== String(chapter.number);
     readerItem.readerChapterNumber = chapter.number;
-    readerItem.readerPageIndex = 0;
+    if (chapterChanged) readerItem.readerPageIndex = 0;
     readerItem.mdChapterUrl = "";
     saveState(true);
   }
@@ -1530,6 +1572,9 @@ function openInAppReader(item) {
   readerItem = item;
   readerOverlay.classList.add("open");
   readerOverlay.setAttribute("aria-hidden", "false");
+  document.getElementById("readerOptionsPanel").hidden = true;
+  document.getElementById("readerModeSelect").value = settings.readerMode;
+  document.getElementById("readerWidthSelect").value = settings.readerWidth;
   readerTitle.textContent = item.title;
   readerPages.innerHTML = "";
   showReaderStatus("MangaDex-Kapitel werden geladen...");
@@ -1567,6 +1612,13 @@ document.getElementById("readerClose").addEventListener("click", function () {
 document.getElementById("readerNext").addEventListener("click", function () { loadReaderChapter(readerChapterIndex + 1); });
 readerChapterSelect.addEventListener("change", function () { loadReaderChapter(parseInt(readerChapterSelect.value, 10)); });
 document.getElementById("readerReload").addEventListener("click", function () { loadReaderChapter(readerChapterIndex); });
+document.getElementById("readerOptionsToggle").addEventListener("click", function () {
+  var panel = document.getElementById("readerOptionsPanel"); panel.hidden = !panel.hidden;
+});
+document.getElementById("readerModeSelect").addEventListener("change", function (e) { settings.readerMode = e.target.value; saveSettings(); updateReaderPageVisibility(); });
+document.getElementById("readerWidthSelect").addEventListener("change", function (e) { settings.readerWidth = e.target.value; saveSettings(); updateReaderPageVisibility(); });
+document.getElementById("readerPagePrev").addEventListener("click", function () { if (readerPageIndex > 0) { readerPageIndex--; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); } });
+document.getElementById("readerPageNext").addEventListener("click", function () { if (readerPageIndex < readerPages.children.length - 1) { readerPageIndex++; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); } });
 readerOverlay.addEventListener("scroll", function () {
   if (!readerItem || readerChapterIndex < 0) return;
   clearTimeout(readerSaveTimer);
@@ -1574,7 +1626,7 @@ readerOverlay.addEventListener("scroll", function () {
     var page = Array.prototype.findIndex.call(readerPages.children, function (img) {
       return img.offsetTop + img.offsetHeight / 2 >= readerOverlay.scrollTop + 70;
     });
-    if (page >= 0) { readerItem.readerPageIndex = page; saveState(true); }
+    if (page >= 0) { readerPageIndex = page; readerItem.readerPageIndex = page; updateReaderPageVisibility(); saveState(true); }
   }, 250);
 });
 
@@ -1638,8 +1690,7 @@ function renderList() {
 
   list.querySelectorAll("[data-open-url]").forEach(function (el) {
     el.addEventListener("click", function () {
-      var item = findItem(el.getAttribute("data-open-url"));
-      openReadLink(item);
+      openInAppReader(findItem(el.getAttribute("data-open-url")));
     });
   });
   list.querySelectorAll("[data-edit]").forEach(function (el) {
@@ -2120,7 +2171,7 @@ function renderGrid(items) {
   }).join("");
   grid.innerHTML = html;
   grid.querySelectorAll("[data-grid-open]").forEach(function (el) {
-    el.addEventListener("click", function () { openReadLink(findItem(el.getAttribute("data-grid-open"))); });
+    el.addEventListener("click", function () { openInAppReader(findItem(el.getAttribute("data-grid-open"))); });
   });
   grid.querySelectorAll("[data-grid-edit]").forEach(function (el) {
     el.addEventListener("click", function (e) {
