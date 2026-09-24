@@ -5,7 +5,7 @@
 // WICHTIG: Wenn du index.html spaeter aenderst/aktualisierst, erhoehe
 // die Versionsnummer unten (v1 -> v2 usw.), sonst liefert der Service
 // Worker weiter die alte, zwischengespeicherte Version aus.
-var CACHE_NAME = "mangalounge-cache-v9";
+var CACHE_NAME = "mangalounge-cache-v12";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -40,15 +40,12 @@ self.addEventListener("fetch", function (event) {
   if (url.origin !== location.origin) return;
 
   event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      var networkFetch = fetch(event.request).then(function (response) {
-        if (response && response.status === 200) {
-          var copy = response.clone();
-          caches.open(CACHE_NAME).then(function (cache) { cache.put(event.request, copy); });
-        }
-        return response;
-      }).catch(function () { return cached; });
-      return cached || networkFetch;
-    })
+    fetch(event.request).then(function (response) {
+      if (response && response.status === 200) {
+        var copy = response.clone();
+        caches.open(CACHE_NAME).then(function (cache) { cache.put(event.request, copy); });
+      }
+      return response;
+    }).catch(function () { return caches.match(event.request); })
   );
 });

@@ -386,6 +386,14 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .detail-link-btn.primary { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 .detail-notes { font-size: 14px; color: var(--label-secondary); margin-top: 6px; }
 .detail-notes a { color: var(--accent); }
+.reader-overlay { position: fixed; inset: 0; z-index: 60; display: none; background: #111; color: #f5f1e8; overflow-y: auto; }
+.reader-overlay.open { display: block; }
+.reader-toolbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: env(safe-area-inset-top, 0px) 14px 0; background: rgba(17,17,17,0.94); border-bottom: 1px solid rgba(255,255,255,0.12); }
+.reader-toolbar button { border: 0; background: transparent; color: inherit; min-height: 44px; padding: 8px 10px; font-size: 14px; }
+.reader-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; text-align: center; }
+.reader-pages { display: grid; justify-items: center; gap: 12px; width: min(100%, 900px); margin: 0 auto; padding: 16px 10px 40px; }
+.reader-pages img { display: block; width: auto; max-width: 100%; height: auto; min-height: 120px; background: #222; object-fit: contain; }
+.reader-status { color: #c8c0b3; text-align: center; padding: 28px 18px; }
 .reading-history { display: grid; gap: 6px; }
 .history-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px; border: 1px solid var(--separator); border-radius: var(--radius-s); background: var(--fill-tertiary); }
 .history-chapter { color: var(--label); font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -544,6 +552,10 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
             <svg class="icon" viewBox="0 0 24 24" width="18" height="18"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
             Auf MangaDex lesen
           </a>
+          <button class="detail-link-btn" id="detailReadInside" type="button">
+            <svg class="icon" viewBox="0 0 24 24" width="18" height="18"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 014 16.5z"/><path d="M4 5.5v13M8 7h8M8 11h8"/></svg>
+            In der App lesen
+          </button>
           <a class="detail-link-btn" id="detailReaderLink" target="_blank" rel="noopener" style="display:none;">
             <svg class="icon" viewBox="0 0 24 24" width="18" height="18"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
             Lesen &ouml;ffnen
@@ -556,6 +568,16 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
       </div>
     </div>
   </div>
+</div>
+
+<div class="reader-overlay" id="readerOverlay" aria-hidden="true">
+  <div class="reader-toolbar">
+    <button type="button" id="readerClose">Schließen</button>
+    <span class="reader-title" id="readerTitle">MangaDex-Reader</span>
+    <button type="button" id="readerNext">Weiter</button>
+  </div>
+  <div class="reader-status" id="readerStatus">Kapitel wird geladen...</div>
+  <div class="reader-pages" id="readerPages"></div>
 </div>
 
 <!-- Add/Edit Sheet (gemeinsam genutzt) -->
@@ -761,25 +783,6 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
     </div>
 
     <div class="settings-block">
-      <h3>MangaDex</h3>
-      <div class="form-section" style="margin:0;">
-        <div class="form-row"><span class="form-label">Benutzername / Account</span>
-          <input type="text" id="mdAccount" placeholder="z. B. manga_fan_42">
-        </div>
-        <div class="form-row"><span class="form-label">Passwort (f&uuml;r Login, wird nicht dauerhaft gespeichert)</span>
-          <input type="password" id="mdToken" placeholder="......" autocomplete="new-password">
-        </div>
-        <div class="settings-row"><span>Verbindungsstatus</span>
-          <span id="mdStatus" style="font-size:14px;color:var(--label-tertiary);">Nicht verbunden</span>
-        </div>
-        <div class="settings-row" style="padding:0;"><span>Login testen</span><button class="btn-ghost" id="mdLoginTestBtn" type="button">Testen</button></div>
-        <div class="settings-row" style="padding:0;"><span>Follow-Liste importieren</span><button class="btn-ghost" id="mdImportFollowsBtn" type="button">Importieren</button></div>
-        <div class="settings-row" style="padding:0;"><span>Session ausloggen</span><button class="btn-ghost" id="mdLogoutBtn" type="button">Logout</button></div>
-      </div>
-      <p class="section-sub" id="mdStatusText" style="margin:8px 0 0;">Deine Zugangsdaten werden auf diesem Gerät verschlüsselt – nur der temporäre Login-Token bleibt im LocalStorage für Kapitel-Syncs.</p>
-    </div>
-
-    <div class="settings-block">
       <h3>Statistik</h3>
       <div class="form-section insights-grid" style="margin:0;">
         <div class="insight-cell"><span class="insight-num" id="insightWeek">0</span><span class="insight-label">Updates diese Woche</span></div>
@@ -893,6 +896,8 @@ function migrateItem(raw, fallbackTime) {
   base.hasUpdate = !!raw.hasUpdate;
   // Modul 10: MangaDex-Integration
   base.mdId = raw.mdId || null;
+  base.mdChapterUrl = raw.mdChapterUrl || "";
+  base.mdChapterNumber = raw.mdChapterNumber === undefined ? null : raw.mdChapterNumber;
   base.mdSyncedChapter = raw.mdSyncedChapter || 0;
   base.mdLastSyncAt = raw.mdLastSyncAt || "";
   // mdId ggf. aus vorhandener MangaDex readerUrl / url extrahieren
@@ -922,18 +927,21 @@ function loadState() {
 }
 function loadSettings() {
   var defaults = { mode: "system", theme: "gold", customAccent: "#A6392A", preferredPlatform: "MangaDex", customPlatformTemplate: "",
-    layout: "list", startTab: "continue", oledBlack: false, mdAccount: "", mdToken: "",
-    mdAccessToken: "", mdRefreshToken: "", mdTokenExpiresAt: 0 };
-  try { var raw = localStorage.getItem(SETTINGS_KEY); if (raw) return Object.assign(defaults, JSON.parse(raw)); } catch (e) {}
+    layout: "list", startTab: "continue", oledBlack: false };
+  try {
+    var raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) {
+      var loaded = Object.assign(defaults, JSON.parse(raw));
+      delete loaded.mdAccount; delete loaded.mdToken; delete loaded.mdAccessToken;
+      delete loaded.mdRefreshToken; delete loaded.mdTokenExpiresAt;
+      return loaded;
+    }
+  } catch (e) {}
   return defaults;
 }
 
 var state = loadState();
 var settings = loadSettings();
-if (settings.mdToken) {
-  settings.mdToken = "";
-  saveSettings();
-}
 saveState(true);
 
 var searchTerm = "", activeStatus = "alle", activeTags = [], activeType = "alle", sortMode = "updated", currentEditId = null, sheetCoverBase64 = "", sheetCoverUrl = "";
@@ -949,7 +957,6 @@ function saveState(silent) {
 function saveSettings() {
   try {
     var persisted = Object.assign({}, settings);
-    delete persisted.mdToken;
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(persisted));
   } catch (e) {}
 }
@@ -1265,14 +1272,6 @@ function bumpChapter(id) {
   if (currentDetailId === id) renderDetailContent(item);
   showToast("Kapitel " + item.chapter);
   // Optional: Background-Sync zu MangaDex
-  if (item.mdId && mdCanAuthenticate()) {
-    mdSyncProgress(item, item.chapter).then(function (synced) {
-      if (synced && synced !== -1) {
-        saveState(true);
-        // stiller Erfolg (kein weiterer Toast, um nicht zu nerven)
-      }
-    });
-  }
 }
 
 // --- Detail Overlay ---
@@ -1409,6 +1408,9 @@ document.getElementById("detailReadMangaDex").addEventListener("click", function
   item.lastReadMangaDex = new Date().toISOString(); saveState(true);
   var fallBack = el.getAttribute("href");
   function go(url) { window.location.href = url || fallBack; }
+  if (item.mdChapterUrl && parseFloat(item.mdChapterNumber) === parseFloat(item.chapter)) {
+    go(item.mdChapterUrl); return;
+  }
   var lookup = mdResolveMangaForItem(item).then(function (resolvedItem) {
     if (!resolvedItem || !resolvedItem.mdId) return fallBack;
     return mdGetChapterList(resolvedItem.mdId);
@@ -1423,11 +1425,88 @@ document.getElementById("detailReadMangaDex").addEventListener("click", function
       for (var j = 0; j < list.length; j++) { if (parseFloat(list[j].number) > target) { chosen = list[j]; break; } }
     }
     if (!chosen) chosen = list[list.length - 1];
-    return chosen && chosen.id ? "https://mangadex.org/chapter/" + chosen.id : fallBack;
+    if (!chosen || !chosen.id) return fallBack;
+    var chapterUrl = "https://mangadex.org/chapter/" + chosen.id;
+    item.mdChapterUrl = chapterUrl;
+    item.mdChapterNumber = chosen.number;
+    saveState(true);
+    return chapterUrl;
   });
   var timeout = new Promise(function (resolve) { setTimeout(function () { resolve(fallBack); }, 5000); });
   Promise.race([lookup, timeout]).then(go).catch(function () { go(fallBack); });
 });
+
+var readerOverlay = document.getElementById("readerOverlay");
+var readerPages = document.getElementById("readerPages");
+var readerStatus = document.getElementById("readerStatus");
+var readerTitle = document.getElementById("readerTitle");
+var readerChapterList = [];
+var readerChapterIndex = -1;
+function showReaderStatus(text) {
+  readerStatus.textContent = text;
+  readerStatus.style.display = "block";
+}
+function renderReaderPages(chapter, payload) {
+  var data = payload && payload.chapter;
+  var files = data && (Array.isArray(data.data) ? data.data : data.dataSaver);
+  if (!Array.isArray(files)) files = [];
+  if (!data || !data.hash || !files.length) throw new Error("Keine Seiten gefunden");
+  readerTitle.textContent = "Kapitel " + chapter.number;
+  readerStatus.style.display = "none";
+  readerPages.innerHTML = files.map(function (file) {
+    var src = payload.baseUrl + "/data/" + data.hash + "/" + encodeURIComponent(file);
+    return '<img src="' + escapeHtml(src) + '" alt="Kapitel ' + escapeHtml(chapter.number) + '" loading="lazy">';
+  }).join("");
+}
+function loadReaderChapter(index) {
+  if (index < 0 || index >= readerChapterList.length) {
+    document.getElementById("readerNext").disabled = true;
+    return;
+  }
+  readerChapterIndex = index;
+  document.getElementById("readerNext").disabled = index >= readerChapterList.length - 1;
+  var chapter = readerChapterList[index];
+  showReaderStatus("Kapitel " + chapter.number + " wird geladen...");
+  readerPages.innerHTML = "";
+  mdApi("/at-home/server/" + encodeURIComponent(chapter.id)).then(function (payload) {
+    renderReaderPages(chapter, payload);
+  }).catch(function (err) {
+    showReaderStatus("Reader konnte dieses Kapitel nicht laden: " + ((err && err.message) || "Netzwerkfehler"));
+  });
+}
+function openInAppReader(item) {
+  if (!item) return;
+  readerOverlay.classList.add("open");
+  readerOverlay.setAttribute("aria-hidden", "false");
+  readerTitle.textContent = item.title;
+  readerPages.innerHTML = "";
+  showReaderStatus("MangaDex-Kapitel werden geladen...");
+  mdResolveMangaForItem(item).then(function (resolvedItem) {
+    if (!resolvedItem || !resolvedItem.mdId) throw new Error("Manga nicht auf MangaDex gefunden");
+    return mdGetChapterList(resolvedItem.mdId, ["de", "en"]).then(function (list) {
+      if (list.length) return list;
+      return mdGetChapterList(resolvedItem.mdId, []);
+    });
+  }).then(function (list) {
+    if (!list.length) throw new Error("Keine übersetzten Kapitel gefunden");
+    readerChapterList = list;
+    var target = item.chapter === null || item.chapter === undefined ? 0 : parseFloat(item.chapter);
+    var index = list.findIndex(function (chapter) { return parseFloat(chapter.number) === target; });
+    if (index < 0) index = list.findIndex(function (chapter) { return parseFloat(chapter.number) > target; });
+    loadReaderChapter(index < 0 ? 0 : index);
+  }).catch(function (err) {
+    showReaderStatus((err && err.message) || "Der MangaDex-Reader konnte nicht geladen werden.");
+  });
+}
+document.getElementById("detailReadInside").addEventListener("click", function () {
+  openInAppReader(findItem(currentDetailId));
+});
+document.getElementById("readerClose").addEventListener("click", function () {
+  readerOverlay.classList.remove("open");
+  readerOverlay.setAttribute("aria-hidden", "true");
+  readerPages.innerHTML = "";
+});
+document.getElementById("readerNext").addEventListener("click", function () { loadReaderChapter(readerChapterIndex + 1); });
 
 function renderTagFilters() {
   var tags = allTags();
@@ -1816,9 +1895,6 @@ document.getElementById("sheetSave").addEventListener("click", function () {
     item.readerUrl = sheetReaderUrl; item.userRating = sheetUserRating; item.releaseDay = releaseDay;
     showToast("Aktualisiert");
     // MangaDex Fortschritt syncen, wenn Kapitel geändert wurde
-    if (chapter !== null && item.mdId && mdCanAuthenticate()) {
-      mdSyncProgress(item, chapter);
-    }
   } else {
     state.unshift({
       id: uid(), title: title, chapter: chapter, status: status, tags: tags, notes: notes, url: url,
@@ -1839,7 +1915,6 @@ document.getElementById("sheetSave").addEventListener("click", function () {
       var m = urlTest.match(mdRegex);
       if (m) { justAdded.mdId = m[1]; saveState(true); }
       // Automatisch MD-Fortschritt syncen
-      if (justAdded.mdId && chapter !== null && mdCanAuthenticate()) mdSyncProgress(justAdded, chapter);
     }
   }
   saveState(); closeSheet(); renderAll();
@@ -1919,15 +1994,6 @@ function renderSettingsUI() {
   document.getElementById("oledBlackToggle").checked = !!settings.oledBlack;
   document.querySelectorAll("#layoutSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-layout") === settings.layout); });
   document.querySelectorAll("#startTabSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-starttab") === settings.startTab); });
-  // MangaDex
-  document.getElementById("mdAccount").value = settings.mdAccount || "";
-  // Token (Passwort) NICHT mehr ins Feld zurueckschreiben -- aus Sicherheitsgruenden leer lassen
-  document.getElementById("mdToken").value = "";
-  var s = document.getElementById("mdStatus");
-  if (mdIsAuthed()) { s.textContent = "Eingeloggt als " + (settings.mdAccount || "User"); s.style.color = "var(--accent-2)"; }
-  else if (settings.mdAccessToken) { s.textContent = "Session abgelaufen"; s.style.color = "var(--label-secondary)"; }
-  else if (settings.mdAccount) { s.textContent = "Account: " + settings.mdAccount + " (nicht eingeloggt)"; s.style.color = "var(--label-secondary)"; }
-  else { s.textContent = "Nicht verbunden"; s.style.color = "var(--label-tertiary)"; }
   renderInsights();
 }
 document.getElementById("oledBlackToggle").addEventListener("change", function (e) {
@@ -1946,90 +2012,6 @@ document.getElementById("preferredPlatform").addEventListener("change", function
 });
 document.getElementById("customPlatformTemplate").addEventListener("input", function (e) {
   settings.customPlatformTemplate = e.target.value; saveSettings();
-});
-document.getElementById("mdAccount").addEventListener("input", function (e) {
-  settings.mdAccount = e.target.value.trim(); saveSettings(); renderSettingsUI();
-});
-document.getElementById("mdToken").addEventListener("input", function (e) {
-  settings.mdToken = e.target.value; saveSettings();
-});
-document.getElementById("mdLoginTestBtn").addEventListener("click", function () {
-  if (window.location.protocol === "file:") {
-    showToast("Login benötigt http://localhost oder eine HTTPS-Adresse");
-    return;
-  }
-  showToast("Login bei MangaDex...");
-  mdClearTokens();
-  mdEnsureAuth().then(function () {
-    renderSettingsUI(); showToast("Login erfolgreich!");
-  }).catch(function (err) {
-    renderSettingsUI(); showToast("Login fehlgeschlagen: " + mdErrorMessage(err));
-  });
-});
-document.getElementById("mdLogoutBtn").addEventListener("click", function () {
-  mdClearTokens();
-  settings.mdAccount = ""; settings.mdToken = ""; saveSettings();
-  renderSettingsUI(); showToast("Ausgeloggt");
-});
-document.getElementById("mdImportFollowsBtn").addEventListener("click", function () {
-  var importButton = this;
-  if (mdImportInProgress) return;
-  if (!mdCanAuthenticate()) { showToast("Bitte zuerst bei MangaDex einloggen"); return; }
-  mdImportInProgress = true;
-  importButton.disabled = true;
-  showToast("Hole Follow-Liste...");
-  var done = 0, created = 0, matched = 0;
-  var addPromises = [];
-  function onProgress(c, t) { showToast("Follow-Liste: " + c + (t ? "/" + t : "") + " geladen..."); }
-  mdGetFollows(onProgress).then(function (list) {
-    var total = list.length;
-    if (total === 0) {
-      mdImportInProgress = false; importButton.disabled = false;
-      showToast("Keine Follows gefunden"); return;
-    }
-    function proc(idx) {
-      if (idx >= total) {
-        mdImportInProgress = false; importButton.disabled = false;
-        saveState(); renderAll();
-        showToast("Fertig! " + created + " hinzugefügt, " + matched + " aktualisiert");
-        return;
-      }
-      var entry = list[idx]; var m = entry.data || entry; var attr = m.attributes || {};
-      var title = mdTitleOf({ attributes: attr }) || ("MangaDex " + m.id);
-      // Match: suche nach gleichem Title in state (case-insensitive) oder mdId
-      var existing = state.find(function (s) {
-        if (s.mdId === m.id) return true;
-        if (s.title && s.title.toLowerCase() === title.toLowerCase()) return true;
-        return false;
-      });
-      if (existing) {
-        mdLinkItem(existing, m);
-        matched++;
-      } else {
-        var cover = mdCoverFor(m, "");
-        var desc = (attr.description && (attr.description.de || attr.description.en)) || "";
-        var n = new Date().toISOString();
-        var newItem = {
-          id: uid(), title: title, chapter: 0, status: "aktiv", tags: [], notes: "",
-          url: "https://mangadex.org/title/" + m.id, coverBase64: "", coverUrl: cover,
-          readHistory: [], lastUpdated: n, createdAt: n, aniListId: null,
-          totalChapters: attr.lastChapter ? Number(attr.lastChapter) : null,
-          originType: computeOriginType({ countryOfOrigin: attr.publicationDemographic === "manhwa" ? "KR" : "" }),
-          description: cleanDescription(desc), averageScore: null, genres: Array.isArray(attr.tags) ? attr.tags.map(function (t) { return t.attributes && t.attributes.name && (t.attributes.name.en || t.attributes.name.ja) || ""; }).filter(Boolean).slice(0, 6) : [],
-          readerUrl: "https://mangadex.org/title/" + m.id, userRating: 0, releaseDay: "", hasUpdate: false,
-          mdId: m.id, mdSyncedChapter: 0, mdLastSyncAt: ""
-        };
-        state.unshift(newItem);
-        created++;
-      }
-      showToast((matched + created) + "/" + total + " (" + created + " neu)");
-      setTimeout(function () { proc(idx + 1); }, 30);
-    }
-    proc(0);
-  }).catch(function (err) {
-    mdImportInProgress = false; importButton.disabled = false;
-    showToast("Import fehlgeschlagen: " + mdErrorMessage(err));
-  });
 });
 document.getElementById("modeSegmented").addEventListener("click", function (e) {
   var btn = e.target.closest("button"); if (!btn) return;
@@ -2393,84 +2375,21 @@ document.getElementById("checkUpdatesBtn").addEventListener("click", function ()
 // MODUL 10: MangaDex v5 API Integration
 // =========================================================================
 var MANGADEX_API = "https://api.mangadex.org";
-var mdAuthInProgress = null;
-var mdImportInProgress = false;
-
-function mdCanAuthenticate() {
-  return !!(settings.mdRefreshToken || (settings.mdAccount && settings.mdToken));
-}
-function mdErrorMessage(err) {
-  var message = (err && err.message) || String(err || "Unbekannter Fehler");
-  if (message.indexOf("md-network:") === 0 || message === "Failed to fetch" || message === "NetworkError when attempting to fetch resource.") {
-    return "MangaDex nicht erreichbar oder vom Browser blockiert. App über HTTPS/localhost öffnen";
-  }
-  if (message === "md-unauth" || message.indexOf("md-http-401") === 0) return "MangaDex-Session abgelaufen";
-  if (message.indexOf("md-http-429") === 0) return "MangaDex-Rate-Limit erreicht, bitte später erneut versuchen";
-  if (message.indexOf("md-http-5") === 0) return "MangaDex ist momentan nicht erreichbar";
-  return message.replace(/^md-http-\d+:\s*/, "").slice(0, 120);
-}
-
-function mdSaveTokens(resp) {
-  var token = resp && (resp.token || (resp.data && resp.data.token));
-  if (!token || !token.session) throw new Error("Ungueltige MangaDex-Token-Antwort");
-  settings.mdAccessToken = token.session;
-  if (token.refresh) settings.mdRefreshToken = token.refresh;
-  settings.mdTokenExpiresAt = Date.now() + 14 * 60 * 1000; // ca. 15 Min Lebenszeit
-  saveSettings();
-}
-function mdClearTokens() {
-  settings.mdAccessToken = ""; settings.mdRefreshToken = ""; settings.mdTokenExpiresAt = 0; saveSettings();
-}
-function mdIsAuthed() {
-  return !!(settings.mdAccessToken && settings.mdTokenExpiresAt > Date.now() + 60 * 1000);
-}
 function mdApi(endpoint, opts) {
   opts = opts || {};
   var url = MANGADEX_API + endpoint;
   var headers = Object.assign({ "Content-Type": "application/json", "Accept": "application/json" }, opts.headers || {});
-  if (mdIsAuthed()) headers["Authorization"] = "Bearer " + settings.mdAccessToken;
   return fetch(url, {
     method: opts.method || "GET",
     headers: headers,
     body: opts.body ? JSON.stringify(opts.body) : undefined
   }).then(function (r) {
-    if (r.status === 401) { mdClearTokens(); throw new Error("md-unauth"); }
+    if (r.status === 401) throw new Error("md-http-401");
     if (!r.ok) return r.text().then(function (t) { throw new Error("md-http-" + r.status + ": " + t.slice(0, 200)); });
     return r.json();
   }).catch(function (err) {
-    if (err && err.message && err.message.indexOf("md-") === 0) throw err;
-    throw new Error("md-network: " + ((err && err.message) || "Failed to fetch"));
+    throw new Error("MangaDex nicht erreichbar: " + ((err && err.message) || "Netzwerkfehler"));
   });
-}
-function mdEnsureAuth() {
-  if (mdIsAuthed()) return Promise.resolve(true);
-  if (mdAuthInProgress) return mdAuthInProgress;
-  mdAuthInProgress = (function () {
-    var refresh = settings.mdRefreshToken ? mdApi("/auth/refresh", {
-      method: "POST",
-      body: { token: settings.mdRefreshToken }
-    }).then(function (resp) {
-      mdSaveTokens(resp);
-      return true;
-    }) : Promise.reject(new Error("Kein Refresh-Token"));
-    return refresh.catch(function () {
-      if (!settings.mdAccount || !settings.mdToken) throw new Error("Keine MangaDex-Zugangsdaten in den Einstellungen");
-      return mdApi("/auth/login", {
-        method: "POST",
-        body: { username: settings.mdAccount, password: settings.mdToken }
-      }).then(function (resp) {
-        mdSaveTokens(resp);
-        return true;
-      });
-    }).then(function (result) {
-      mdAuthInProgress = null;
-      return result;
-    }).catch(function (err) {
-      mdAuthInProgress = null;
-      throw err;
-    });
-  })();
-  return mdAuthInProgress;
 }
 // Cover-Art-URL aus MangaDex Response extrahieren
 function mdCoverFor(manga, quality) {
@@ -2515,25 +2434,11 @@ function mdResolveMangaForItem(item) {
     return item;
   });
 }
-// Followed Manga (paginiert, holt alles)
-function mdGetFollows(onProgress) {
-  var collected = [];
-  function loop(offset) {
-    return mdApi("/user/follows/manga?includes[]=cover_art&limit=100&offset=" + (offset || 0)).then(function (res) {
-      var results = (res && (res.data || res.results)) || [];
-      collected = collected.concat(results);
-      if (onProgress) onProgress(collected.length, res && res.total ? res.total : collected.length);
-      if (res && res.total && collected.length < res.total && results.length > 0) return loop(collected.length);
-      return collected;
-    });
-  }
-  return mdEnsureAuth().then(function () { return loop(0); });
-}
 // Alle Feed-Chapters eines Manga (aggregate: holt Kapitel Nummer-Liste)
 function mdGetChapterList(mdId, langPriority) {
   var lang = langPriority || ["de", "en"];
   var qp = lang.map(function (l) { return "translatedLanguage[]=" + l; }).join("&");
-  return mdApi("/manga/" + mdId + "/aggregate?" + qp).then(function (res) {
+  return mdApi("/manga/" + mdId + "/aggregate" + (qp ? "?" + qp : "")).then(function (res) {
     var vols = (res && res.volumes) || {};
     var list = [];
     Object.keys(vols).forEach(function (vk) {
@@ -2545,22 +2450,6 @@ function mdGetChapterList(mdId, langPriority) {
     list.sort(function (a, b) { return parseFloat(a.number) - parseFloat(b.number); });
     return list;
   });
-}
-// Kapitel als gelesen markieren via /manga/{id}/read
-function mdMarkChapterRangeRead(mdId, upToChapterNr) {
-  return mdGetChapterList(mdId).then(function (list) {
-    if (!list.length) return [];
-    var ids = [];
-    for (var i = 0; i < list.length; i++) {
-      if (parseFloat(list[i].number) <= parseFloat(upToChapterNr) && list[i].id) ids.push(list[i].id);
-    }
-    if (!ids.length) return [];
-    return mdApi("/manga/" + mdId + "/read", { method: "POST", body: { chapterIdsRead: ids } }).then(function () { return ids; });
-  });
-}
-// Reading Status auf MangaDex setzen
-function mdSetReadingStatus(mdId, status) {
-  return mdApi("/manga/" + mdId + "/status", { method: "PUT", body: { status: status || "reading" } });
 }
 // Einzel-Sync für ein Item: MD-ID ermitteln + Cover/Beschreibung ziehen
 function mdLinkItem(item, mdManga) {
@@ -2586,27 +2475,6 @@ function mdLinkItem(item, mdManga) {
   }
   item.mdLastSyncAt = new Date().toISOString();
   return true;
-}
-// Bump Kapitel + Sync zu MD
-function mdSyncProgress(item, toChapter) {
-  if (!item.mdId) return Promise.resolve(false);
-  return mdEnsureAuth().then(function () {
-    var mapSt = { aktiv: "reading", pausiert: "on_hold", abgeschlossen: "completed" };
-    var mdSt = mapSt[item.status] || "reading";
-    if (item.status === "abgeschlossen" && item.totalChapters && toChapter >= item.totalChapters) mdSt = "completed";
-    return mdMarkChapterRangeRead(item.mdId, toChapter).then(function (ids) {
-      return mdSetReadingStatus(item.mdId, mdSt).then(function () {
-        item.mdSyncedChapter = toChapter;
-        item.mdLastSyncAt = new Date().toISOString();
-        saveState(true);
-        return ids.length;
-      });
-    });
-  }).catch(function (e) {
-    // Fehler tolerieren, aber im Item vermerken
-    console.warn("[MangaDex] Sync fehlgeschlagen:", e);
-    return -1;
-  });
 }
 // Direkter Link zum nächsten Kapitel
 function mdChapterUrl(mdId, chapterNr, lang) {
@@ -2680,7 +2548,7 @@ renderAll();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js").catch(function () {});
+    navigator.serviceWorker.register("sw.js?v=12").catch(function () {});
   });
 }
 </script>
