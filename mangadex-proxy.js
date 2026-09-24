@@ -26,7 +26,8 @@ export default {
       const imageUrl = incoming.searchParams.get("url");
       if (!imageUrl) return new Response("Missing image URL", { status: 400, headers: corsHeaders(origin) });
       const image = new URL(imageUrl);
-      if (image.protocol !== "https:" || !image.hostname.endsWith(".mangadex.network")) {
+      const allowedImageHost = image.hostname.endsWith(".mangadex.network") || image.hostname === "uploads.mangadex.org";
+      if (image.protocol !== "https:" || !allowedImageHost) {
         return new Response("Image host not allowed", { status: 403, headers: corsHeaders(origin) });
       }
       const response = await fetch(image.href, {
