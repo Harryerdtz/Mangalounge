@@ -71,6 +71,7 @@ header.navbar {
   border-bottom: 1px solid var(--glass-border);
 }
 .navbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px 4px; }
+.navbar-inner, .searchbar-wrap, .filter-dropdown-inner { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
 .large-title { font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 30px; letter-spacing: -0.01em; margin: 0; }
 .icon-btn {
   width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent;
@@ -288,8 +289,8 @@ input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid v
 .toast {
   position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 90px);
   transform: translateX(-50%) translateY(12px); background: var(--label); color: var(--bg);
-  padding: 10px 16px; border-radius: 999px; font-size: 13px; opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none; z-index: 40; white-space: nowrap;
+  max-width: calc(100vw - 32px); padding: 10px 16px; border-radius: 999px; font-size: 13px; opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none; z-index: 40; white-space: normal; text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
@@ -385,6 +386,11 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .detail-link-btn.primary { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 .detail-notes { font-size: 14px; color: var(--label-secondary); margin-top: 6px; }
 .detail-notes a { color: var(--accent); }
+.reading-history { display: grid; gap: 6px; }
+.history-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px; border: 1px solid var(--separator); border-radius: var(--radius-s); background: var(--fill-tertiary); }
+.history-chapter { color: var(--label); font-weight: 600; font-variant-numeric: tabular-nums; }
+.history-date { color: var(--label-tertiary); font-size: 12px; white-space: nowrap; }
+.history-empty { color: var(--label-tertiary); font-size: 13px; margin: 0; }
 </style>
 </head>
 <body>
@@ -509,6 +515,11 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
           <button class="bump-btn" id="detailMinus1" type="button" aria-label="Kapitel -1">&minus;1</button>
           <button class="bump-btn" id="detailPlus1" type="button" aria-label="Kapitel +1">+1</button>
         </div>
+      </div>
+
+      <div>
+        <div class="detail-section-title">Lesehistorie</div>
+        <div class="reading-history" id="detailReadingHistory"></div>
       </div>
 
       <div id="detailTagsWrap" style="display:none;">
@@ -1284,6 +1295,19 @@ function detailProgressText(item) {
   if (item.aniListId) return "Gelesen: <strong>" + read + "</strong> · Laufend";
   return "Gelesen: <strong>" + read + "</strong>";
 }
+function renderReadingHistory(item) {
+  var target = document.getElementById("detailReadingHistory");
+  var history = (item.readHistory || []).slice().sort(function (a, b) { return new Date(b.date) - new Date(a.date); }).slice(0, 8);
+  if (!history.length) {
+    target.innerHTML = '<p class="history-empty">Noch kein Verlauf vorhanden.</p>';
+    return;
+  }
+  target.innerHTML = history.map(function (entry) {
+    var date = new Date(entry.date);
+    var label = isNaN(date.getTime()) ? "Unbekanntes Datum" : date.toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" });
+    return '<div class="history-item"><span class="history-chapter">Kapitel ' + escapeHtml(entry.chapter) + '</span><span class="history-date">' + escapeHtml(label) + '</span></div>';
+  }).join("");
+}
 function renderDetailContent(item) {
   document.getElementById("detailTitle").textContent = item.title;
   var sp = document.getElementById("detailStatusPill");
@@ -1311,6 +1335,7 @@ function renderDetailContent(item) {
   document.getElementById("detailMetaRelease").innerHTML = item.releaseDay ? ("Release: <strong>" + (weekdayText[item.releaseDay] || item.releaseDay) + "</strong>") : "";
   // Progress
   document.getElementById("detailProgressValue").innerHTML = detailProgressText(item);
+  renderReadingHistory(item);
   // Tags
   var allItemTags = effectiveTags(item);
   var tagsWrap = document.getElementById("detailTagsWrap");
@@ -1378,35 +1403,30 @@ document.getElementById("detailMinus1").addEventListener("click", function(){
 document.getElementById("detailReadMangaDex").addEventListener("click", function(e){
   e.preventDefault();
   var el = this;
-  if (!currentDetailId) { try { window.open(el.href, "_blank", "noopener"); } catch (e2) {} return; }
+  if (!currentDetailId) { window.location.href = el.href; return; }
   var item = findItem(currentDetailId);
   if (!item) return;
   item.lastReadMangaDex = new Date().toISOString(); saveState(true);
   var fallBack = el.getAttribute("href");
-  // Synchron einen Tab oeffnen, damit Popup-Blocker nicht zuschlaegt
-  var win = window.open("about:blank", "_blank", "noopener");
-  function go(url) { try { if (win && win.location) win.location.href = url; else window.open(url, "_blank", "noopener"); } catch (err) { window.open(url, "_blank", "noopener"); } }
-  if (!item.mdId) { go(fallBack); return; }
-  mdGetChapterList(item.mdId).then(function (list) {
-    if (!list || !list.length) { go(fallBack); return; }
+  function go(url) { window.location.href = url || fallBack; }
+  var lookup = mdResolveMangaForItem(item).then(function (resolvedItem) {
+    if (!resolvedItem || !resolvedItem.mdId) return fallBack;
+    return mdGetChapterList(resolvedItem.mdId);
+  }).then(function (list) {
+    if (!list || !list.length) return fallBack;
     var target = (item.chapter === null || item.chapter === undefined) ? 0 : item.chapter;
-    // 1. Bevorzuge naechstes Kapitel (target + 1), falls verfuegbar
-    var wantNext = target + 1;
     var chosen = null;
-    // Genauer Match auf exakte Nummer
-    for (var i = 0; i < list.length; i++) { if (parseFloat(list[i].number) === wantNext) { chosen = list[i]; break; } }
+    // Open the chapter the user recorded, not the next chapter.
+    for (var i = 0; i < list.length; i++) { if (parseFloat(list[i].number) === parseFloat(target)) { chosen = list[i]; break; } }
     if (!chosen) {
-      // 2. Erstes Kapitel > target
+      // With no recorded chapter, use the first available chapter after the progress.
       for (var j = 0; j < list.length; j++) { if (parseFloat(list[j].number) > target) { chosen = list[j]; break; } }
     }
-    if (!chosen) {
-      // 3. Fallback: aktuelles Kapitel falls vorhanden, sonst letztes verfuegbares
-      for (var k = 0; k < list.length; k++) { if (parseFloat(list[k].number) === target) { chosen = list[k]; break; } }
-    }
     if (!chosen) chosen = list[list.length - 1];
-    if (chosen && chosen.id) go("https://mangadex.org/chapter/" + chosen.id);
-    else go(fallBack);
-  }).catch(function () { go(fallBack); });
+    return chosen && chosen.id ? "https://mangadex.org/chapter/" + chosen.id : fallBack;
+  });
+  var timeout = new Promise(function (resolve) { setTimeout(function () { resolve(fallBack); }, 5000); });
+  Promise.race([lookup, timeout]).then(go).catch(function () { go(fallBack); });
 });
 
 function renderTagFilters() {
@@ -1629,16 +1649,20 @@ editOverlay.addEventListener("click", function (e) { if (e.target === editOverla
 // Dropdown bleibt einfach leer -- auf GitHub Pages funktioniert es live.
 // -----------------------------------------------------------------------
 var titleDebounceTimer = null;
+var autocompleteRequestId = 0;
 var acDropdown = document.getElementById("autocompleteDropdown");
 document.getElementById("fTitle").addEventListener("input", function (e) {
   clearTimeout(titleDebounceTimer);
+  autocompleteRequestId++;
   var val = e.target.value.trim();
   if (val.length < 3) { hideAutocomplete(); return; }
   titleDebounceTimer = setTimeout(function () { runAutocomplete(val); }, 300);
 });
 function hideAutocomplete() { acDropdown.classList.remove("open"); acDropdown.innerHTML = ""; }
 function runAutocomplete(query) {
+  var requestId = autocompleteRequestId;
   searchAniListFull(query).then(function (media) {
+    if (requestId !== autocompleteRequestId || document.getElementById("fTitle").value.trim() !== query) return;
     if (!media.length) { hideAutocomplete(); return; }
     acDropdown.innerHTML = media.map(function (m, i) {
       var t = (m.title && (m.title.english || m.title.romaji)) || "?";
@@ -1880,7 +1904,10 @@ function applyTheme() {
     document.documentElement.style.removeProperty("--bg-elevated");
   }
 }
-window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { if (settings.mode === "system") applyTheme(); });
+var colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+function handleColorSchemeChange() { if (settings.mode === "system") applyTheme(); }
+if (colorSchemeQuery.addEventListener) colorSchemeQuery.addEventListener("change", handleColorSchemeChange);
+else if (colorSchemeQuery.addListener) colorSchemeQuery.addListener(handleColorSchemeChange);
 function renderSettingsUI() {
   document.querySelectorAll("#modeSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-mode") === settings.mode); });
   document.querySelectorAll("#themeSwatches .swatch").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-theme") === settings.theme); });
@@ -2472,14 +2499,28 @@ function mdSearch(title, limit) {
     "&limit=" + (limit || 5) +
     "&includes[]=cover_art&order[relevance]=desc" +
     "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic";
-  return mdApi("/manga" + params).then(function (res) { return (res && res.results) || []; });
+  return mdApi("/manga" + params).then(function (res) { return (res && (res.data || res.results)) || []; });
+}
+function mdResolveMangaForItem(item) {
+  if (!item || item.mdId) return Promise.resolve(item);
+  return mdSearch(item.title, 5).then(function (results) {
+    if (!results.length) return null;
+    var exact = results.find(function (entry) {
+      var manga = entry.data || entry;
+      return mdTitleOf(manga).toLowerCase() === (item.title || "").toLowerCase();
+    });
+    var manga = exact || results[0];
+    mdLinkItem(item, manga);
+    saveState(true);
+    return item;
+  });
 }
 // Followed Manga (paginiert, holt alles)
 function mdGetFollows(onProgress) {
   var collected = [];
   function loop(offset) {
     return mdApi("/user/follows/manga?includes[]=cover_art&limit=100&offset=" + (offset || 0)).then(function (res) {
-      var results = (res && res.results) || [];
+      var results = (res && (res.data || res.results)) || [];
       collected = collected.concat(results);
       if (onProgress) onProgress(collected.length, res && res.total ? res.total : collected.length);
       if (res && res.total && collected.length < res.total && results.length > 0) return loop(collected.length);
