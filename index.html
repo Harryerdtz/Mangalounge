@@ -390,9 +390,11 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .reader-overlay.open { display: block; }
 .reader-toolbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: env(safe-area-inset-top, 0px) 14px 0; background: rgba(17,17,17,0.94); border-bottom: 1px solid rgba(255,255,255,0.12); }
 .reader-toolbar button { border: 0; background: transparent; color: inherit; min-height: 44px; padding: 8px 10px; font-size: 14px; }
+.reader-toolbar select { max-width: 150px; min-width: 92px; min-height: 36px; padding: 6px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: #262626; color: #f5f1e8; font-size: 13px; }
 .reader-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; text-align: center; }
 .reader-pages { display: grid; justify-items: center; gap: 12px; width: min(100%, 900px); margin: 0 auto; padding: 16px 10px 40px; }
 .reader-pages img { display: block; width: auto; max-width: 100%; height: auto; min-height: 120px; background: #222; object-fit: contain; }
+.reader-pages img.reader-page-error { min-height: 180px; border: 1px solid #9a5b50; opacity: 0.8; cursor: pointer; }
 .reader-status { color: #c8c0b3; text-align: center; padding: 28px 18px; }
 .reading-history { display: grid; gap: 6px; }
 .history-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 11px; border: 1px solid var(--separator); border-radius: var(--radius-s); background: var(--fill-tertiary); }
@@ -573,7 +575,9 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 <div class="reader-overlay" id="readerOverlay" aria-hidden="true">
   <div class="reader-toolbar">
     <button type="button" id="readerClose">Schließen</button>
+    <select id="readerChapterSelect" aria-label="Kapitel auswählen"></select>
     <span class="reader-title" id="readerTitle">MangaDex-Reader</span>
+    <button type="button" id="readerReload" aria-label="Kapitel neu laden">Reload</button>
     <button type="button" id="readerNext">Weiter</button>
   </div>
   <div class="reader-status" id="readerStatus">Kapitel wird geladen...</div>
@@ -899,6 +903,8 @@ function migrateItem(raw, fallbackTime) {
   base.mdId = raw.mdId || null;
   base.mdChapterUrl = raw.mdChapterUrl || "";
   base.mdChapterNumber = raw.mdChapterNumber === undefined ? null : raw.mdChapterNumber;
+  base.readerChapterNumber = raw.readerChapterNumber === undefined ? null : raw.readerChapterNumber;
+  base.readerPageIndex = raw.readerPageIndex === undefined ? 0 : Math.max(0, Number(raw.readerPageIndex) || 0);
   base.mdSyncedChapter = raw.mdSyncedChapter || 0;
   base.mdLastSyncAt = raw.mdLastSyncAt || "";
   // mdId ggf. aus vorhandener MangaDex readerUrl / url extrahieren
@@ -1441,8 +1447,11 @@ var readerOverlay = document.getElementById("readerOverlay");
 var readerPages = document.getElementById("readerPages");
 var readerStatus = document.getElementById("readerStatus");
 var readerTitle = document.getElementById("readerTitle");
+var readerChapterSelect = document.getElementById("readerChapterSelect");
 var readerChapterList = [];
 var readerChapterIndex = -1;
+var readerItem = null;
+var readerSaveTimer = null;
 function showReaderStatus(text) {
   readerStatus.textContent = text;
   readerStatus.style.display = "block";
@@ -1455,14 +1464,41 @@ function showReaderFallback(item) {
 function renderReaderPages(chapter, payload) {
   var data = payload && payload.chapter;
   var files = data && (Array.isArray(data.data) ? data.data : data.dataSaver);
+  var fallbackFiles = data && (Array.isArray(data.dataSaver) ? data.dataSaver : []);
   if (!Array.isArray(files)) files = [];
   if (!data || !data.hash || !files.length) throw new Error("Keine Seiten gefunden");
   readerTitle.textContent = "Kapitel " + chapter.number;
   readerStatus.style.display = "none";
-  readerPages.innerHTML = files.map(function (file) {
+  readerPages.innerHTML = "";
+  files.forEach(function (file, index) {
     var src = payload.baseUrl + "/data/" + data.hash + "/" + encodeURIComponent(file);
-    return '<img src="' + escapeHtml(src) + '" alt="Kapitel ' + escapeHtml(chapter.number) + '" loading="lazy">';
-  }).join("");
+    var fallback = fallbackFiles[index] ? payload.baseUrl + "/data-saver/" + data.hash + "/" + encodeURIComponent(fallbackFiles[index]) : "";
+    var img = document.createElement("img");
+    img.src = src; img.alt = ""; img.loading = "lazy";
+    img.addEventListener("error", function () {
+      if (fallback && !img.dataset.fallbackTried) {
+        img.dataset.fallbackTried = "true"; img.src = fallback; return;
+      }
+      img.classList.add("reader-page-error");
+      img.alt = "Seite konnte nicht geladen werden. Antippen zum Wiederholen.";
+      img.title = img.alt;
+    });
+    img.addEventListener("click", function () {
+      if (!img.classList.contains("reader-page-error")) return;
+      img.classList.remove("reader-page-error"); img.removeAttribute("data-fallback-tried"); img.src = src + "?retry=" + Date.now();
+    });
+    readerPages.appendChild(img);
+  });
+  if (readerItem) {
+    readerItem.mdChapterUrl = "https://mangadex.org/chapter/" + chapter.id;
+    readerItem.mdChapterNumber = chapter.number;
+    readerItem.readerPageIndex = Math.max(0, Number(readerItem.readerPageIndex) || 0);
+    saveState(true);
+    setTimeout(function () {
+      var resumePage = readerPages.children[readerItem.readerPageIndex];
+      if (resumePage) resumePage.scrollIntoView({ block: "start" });
+    }, 100);
+  }
 }
 function loadReaderChapter(index) {
   if (index < 0 || index >= readerChapterList.length) {
@@ -1472,6 +1508,13 @@ function loadReaderChapter(index) {
   readerChapterIndex = index;
   document.getElementById("readerNext").disabled = index >= readerChapterList.length - 1;
   var chapter = readerChapterList[index];
+  readerChapterSelect.value = String(index);
+  if (readerItem) {
+    readerItem.readerChapterNumber = chapter.number;
+    readerItem.readerPageIndex = 0;
+    readerItem.mdChapterUrl = "";
+    saveState(true);
+  }
   showReaderStatus("Kapitel " + chapter.number + " wird geladen...");
   readerPages.innerHTML = "";
   mdApi("/at-home/server/" + encodeURIComponent(chapter.id)).then(function (payload) {
@@ -1482,6 +1525,7 @@ function loadReaderChapter(index) {
 }
 function openInAppReader(item) {
   if (!item) return;
+  readerItem = item;
   readerOverlay.classList.add("open");
   readerOverlay.setAttribute("aria-hidden", "false");
   readerTitle.textContent = item.title;
@@ -1496,7 +1540,12 @@ function openInAppReader(item) {
   }).then(function (list) {
     if (!list.length) throw new Error("Keine übersetzten Kapitel gefunden");
     readerChapterList = list;
-    var target = item.chapter === null || item.chapter === undefined ? 0 : parseFloat(item.chapter);
+    readerItem = item;
+    readerChapterSelect.innerHTML = list.map(function (chapter, index) {
+      return '<option value="' + index + '">Kapitel ' + escapeHtml(chapter.number) + '</option>';
+    }).join("");
+    var savedChapter = item.readerChapterNumber === null || item.readerChapterNumber === undefined ? item.chapter : item.readerChapterNumber;
+    var target = savedChapter === null || savedChapter === undefined ? 0 : parseFloat(savedChapter);
     var index = list.findIndex(function (chapter) { return parseFloat(chapter.number) === target; });
     if (index < 0) index = list.findIndex(function (chapter) { return parseFloat(chapter.number) > target; });
     loadReaderChapter(index < 0 ? 0 : index);
@@ -1514,6 +1563,18 @@ document.getElementById("readerClose").addEventListener("click", function () {
   readerPages.innerHTML = "";
 });
 document.getElementById("readerNext").addEventListener("click", function () { loadReaderChapter(readerChapterIndex + 1); });
+readerChapterSelect.addEventListener("change", function () { loadReaderChapter(parseInt(readerChapterSelect.value, 10)); });
+document.getElementById("readerReload").addEventListener("click", function () { loadReaderChapter(readerChapterIndex); });
+readerOverlay.addEventListener("scroll", function () {
+  if (!readerItem || readerChapterIndex < 0) return;
+  clearTimeout(readerSaveTimer);
+  readerSaveTimer = setTimeout(function () {
+    var page = Array.prototype.findIndex.call(readerPages.children, function (img) {
+      return img.offsetTop + img.offsetHeight / 2 >= readerOverlay.scrollTop + 70;
+    });
+    if (page >= 0) { readerItem.readerPageIndex = page; saveState(true); }
+  }, 250);
+});
 
 function renderTagFilters() {
   var tags = allTags();
@@ -2427,16 +2488,42 @@ function mdSearch(title, limit) {
     "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic";
   return mdApi("/manga" + params).then(function (res) { return (res && (res.data || res.results)) || []; });
 }
+function mdNormalizeTitle(title) {
+  return String(title || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+function mdTitleCandidates(manga) {
+  var attr = manga && manga.attributes || {};
+  var titles = Object.keys(attr.title || {}).map(function (key) { return attr.title[key]; });
+  (attr.altTitles || []).forEach(function (entry) {
+    Object.keys(entry || {}).forEach(function (key) { titles.push(entry[key]); });
+  });
+  return titles.filter(Boolean).map(mdNormalizeTitle);
+}
+function mdTitleScore(target, manga) {
+  var normalizedTarget = mdNormalizeTitle(target);
+  var targetTokens = normalizedTarget.split(" ").filter(Boolean);
+  var best = 0;
+  mdTitleCandidates(manga).forEach(function (candidate) {
+    if (candidate === normalizedTarget) { best = Math.max(best, 1000); return; }
+    if (candidate.indexOf(normalizedTarget) !== -1 || normalizedTarget.indexOf(candidate) !== -1) {
+      best = Math.max(best, 700 - Math.abs(candidate.length - normalizedTarget.length)); return;
+    }
+    var matching = targetTokens.filter(function (token) { return candidate.split(" ").indexOf(token) !== -1; }).length;
+    best = Math.max(best, matching * 100 / Math.max(1, targetTokens.length));
+  });
+  return best;
+}
 function mdResolveMangaForItem(item) {
   if (!item || item.mdId) return Promise.resolve(item);
-  return mdSearch(item.title, 5).then(function (results) {
+  return mdSearch(item.title, 10).then(function (results) {
     if (!results.length) return null;
-    var exact = results.find(function (entry) {
+    var best = results.reduce(function (winner, entry) {
       var manga = entry.data || entry;
-      return mdTitleOf(manga).toLowerCase() === (item.title || "").toLowerCase();
-    });
-    var manga = exact || results[0];
-    mdLinkItem(item, manga);
+      var score = mdTitleScore(item.title, manga);
+      return !winner || score > winner.score ? { manga: manga, score: score } : winner;
+    }, null);
+    if (!best || best.score < 1) return null;
+    mdLinkItem(item, best.manga);
     saveState(true);
     return item;
   });
