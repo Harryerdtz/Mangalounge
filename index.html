@@ -537,6 +537,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
         <span class="detail-meta" id="detailMetaOrigin"></span>
         <span class="detail-meta" id="detailMetaRating"></span>
         <span class="detail-meta" id="detailMetaRelease"></span>
+        <span class="detail-meta" id="detailMetaPublication"></span>
       </div>
 
       <div class="detail-progress-big">
@@ -805,6 +806,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
             <option value="Asura Scans">Asura Scans</option>
             <option value="MangaFire">MangaFire</option>
             <option value="ManhuaPlus">ManhuaPlus</option>
+            <option value="WebCentral">WebCentral</option>
             <option value="Custom">Eigene Vorlage</option>
           </select>
         </div>
@@ -813,7 +815,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
           <input type="text" id="customPlatformTemplate" placeholder="https://meineseite.de/suche?q={title}">
         </div>
       </div>
-      <p class="section-sub" style="margin:0;">Nur f&uuml;r MangaDex gibt es eine echte direkte Suche. Bei den anderen &ouml;ffnet sich eine Google-Suche nach Titel + Plattform (Scan-Seiten wechseln zu oft ihre URL-Struktur f&uuml;r feste Links).</p>
+      <p class="section-sub" style="margin:0;">MangaDex wird im Reader nur auf Deutsch und Englisch geladen. Andere Plattformen wie WebCentral öffnen sich als externe Quelle, sofern ein direkter Link vorhanden ist.</p>
     </div>
 
     <div class="settings-block">
@@ -938,6 +940,10 @@ function migrateItem(raw, fallbackTime) {
   base.description = raw.description || "";
   base.averageScore = (raw.averageScore === undefined || raw.averageScore === null) ? null : Number(raw.averageScore);
   base.genres = Array.isArray(raw.genres) ? raw.genres : [];
+  base.releaseDate = raw.releaseDate || "";
+  base.endDate = raw.endDate || "";
+  base.authors = Array.isArray(raw.authors) ? raw.authors : [];
+  base.volumes = raw.volumes === undefined || raw.volumes === null ? null : Number(raw.volumes);
   base.readerUrl = raw.readerUrl || "";
   base.userRating = raw.userRating || 0;
   // Modul 8/9: Release-Tag & Update-Benachrichtigung
@@ -972,7 +978,7 @@ function loadState() {
     var t = new Date(Date.now() - i * 1000).toISOString();
     return { id: uid(), title: r[0], chapter: parsed.chapter, notes: parsed.notes, url: r[2] || "",
       coverBase64: "", coverUrl: "", status: "aktiv", tags: [], readHistory: [], lastUpdated: t, createdAt: t,
-      aniListId: null, totalChapters: null, originType: "", description: "", averageScore: null, genres: [], readerUrl: "", userRating: 0,
+      aniListId: null, totalChapters: null, originType: "", description: "", averageScore: null, genres: [], releaseDate: "", endDate: "", authors: [], volumes: null, readerUrl: "", userRating: 0,
       releaseDay: "", hasUpdate: false, mdId: null, mdSyncedChapter: 0, mdLastSyncAt: "" };
   });
 }
@@ -997,7 +1003,7 @@ if (settings.readerGap === 12) { settings.readerGap = 0; saveSettings(); }
 saveState(true);
 
 var searchTerm = "", activeStatus = "alle", activeTags = [], activeType = "alle", sortMode = "updated", currentEditId = null, sheetCoverBase64 = "", sheetCoverUrl = "";
-var sheetAniListId = null, sheetTotalChapters = null, sheetOriginType = "", sheetDescription = "", sheetAverageScore = null, sheetGenres = [], sheetReaderUrl = "", sheetUserRating = 0;
+var sheetAniListId = null, sheetTotalChapters = null, sheetOriginType = "", sheetDescription = "", sheetAverageScore = null, sheetGenres = [], sheetReleaseDate = "", sheetEndDate = "", sheetAuthors = [], sheetVolumes = null, sheetReaderUrl = "", sheetUserRating = 0;
 var activeSmartFolder = "keine";
 // Modul 5: Start-Tab aus den Einstellungen uebernehmen
 if (settings.startTab === "active") activeStatus = "aktiv";
@@ -1148,6 +1154,53 @@ function searchAniListFull(query) {
     return (json.data && json.data.Page && json.data.Page.media) || [];
   });
 }
+function searchJikanManga(query) {
+  return fetch("https://api.jikan.moe/v4/manga?q=" + encodeURIComponent(query) + "&limit=5").then(function (res) {
+    if (!res.ok) throw new Error("jikan-http-" + res.status);
+    return res.json();
+  }).then(function (json) { return json.data && json.data[0] || null; });
+}
+function searchKitsuManga(query) {
+  return fetch("https://kitsu.io/api/edge/manga?filter[text]=" + encodeURIComponent(query) + "&page[limit]=5", {
+    headers: { "Accept": "application/vnd.api+json" }
+  }).then(function (res) {
+    if (!res.ok) throw new Error("kitsu-http-" + res.status);
+    return res.json();
+  }).then(function (json) { return json.data && json.data[0] && json.data[0].attributes || null; });
+}
+var supplementalRequestId = 0;
+function loadSupplementalMetadata(title) {
+  var requestId = ++supplementalRequestId;
+  return Promise.all([
+    searchJikanManga(title).catch(function () { return null; }),
+    searchKitsuManga(title).catch(function () { return null; })
+  ]).then(function (results) {
+    if (requestId !== supplementalRequestId) return;
+    var jikan = results[0], kitsu = results[1];
+    if (jikan) {
+      if (!sheetReleaseDate && jikan.published && jikan.published.from) sheetReleaseDate = jikan.published.from;
+      if (!sheetEndDate && jikan.published && jikan.published.to) sheetEndDate = jikan.published.to;
+      if (!sheetTotalChapters && jikan.chapters) sheetTotalChapters = jikan.chapters;
+      if (!sheetVolumes && jikan.volumes) sheetVolumes = jikan.volumes;
+      if (sheetAverageScore === null && jikan.score) sheetAverageScore = jikan.score * 10;
+      if (!sheetGenres.length && Array.isArray(jikan.genres)) sheetGenres = jikan.genres.map(function (g) { return g.name; });
+      if (!sheetAuthors.length && Array.isArray(jikan.authors)) sheetAuthors = jikan.authors.map(function (a) { return a.name; });
+      if (!sheetDescription && jikan.synopsis) sheetDescription = cleanDescription(jikan.synopsis);
+      if (!sheetCoverBase64 && !sheetCoverUrl && jikan.images && jikan.images.jpg) sheetCoverUrl = jikan.images.jpg.large_image_url || jikan.images.jpg.image_url || "";
+    }
+    if (kitsu) {
+      if (!sheetReleaseDate && kitsu.startDate) sheetReleaseDate = kitsu.startDate;
+      if (!sheetEndDate && kitsu.endDate) sheetEndDate = kitsu.endDate;
+      if (!sheetTotalChapters && kitsu.chapterCount) sheetTotalChapters = kitsu.chapterCount;
+      if (!sheetVolumes && kitsu.volumeCount) sheetVolumes = kitsu.volumeCount;
+      if (sheetAverageScore === null && kitsu.averageRating) sheetAverageScore = Number(kitsu.averageRating);
+      if (!sheetDescription && kitsu.synopsis) sheetDescription = cleanDescription(kitsu.synopsis);
+      if (!sheetCoverBase64 && !sheetCoverUrl && kitsu.posterImage && kitsu.posterImage.original) sheetCoverUrl = kitsu.posterImage.original.url || "";
+    }
+    updateAiInfoBlock();
+    updateSheetCoverPreview();
+  });
+}
 
 // Modul 2: Herkunft/Format -> Manga/Manhwa/Manhua
 function computeOriginType(media) {
@@ -1170,6 +1223,11 @@ function cleanDescription(html) {
   return html.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
 }
 function formatScore(avg) { return (avg === null || avg === undefined) ? "" : "\u2605 " + (avg / 10).toFixed(1); }
+function formatMetadataDate(value) {
+  if (!value) return "";
+  var date = new Date(value);
+  return isNaN(date.getTime()) ? String(value).slice(0, 10) : date.toLocaleDateString("de-DE");
+}
 
 // -----------------------------------------------------------------------
 // Modul 4: Lese-Link ermitteln. Erst versuchen, in AniLists eigener
@@ -1383,6 +1441,11 @@ function renderDetailContent(item) {
   document.getElementById("detailMetaRating").innerHTML = ratingStr ? ("Bewertung: <strong>" + escapeHtml(ratingStr) + "</strong>") : "";
   var weekdayText = {"Mo":"Montag","Di":"Dienstag","Mi":"Mittwoch","Do":"Donnerstag","Fr":"Freitag","Sa":"Samstag","So":"Sonntag"};
   document.getElementById("detailMetaRelease").innerHTML = item.releaseDay ? ("Release: <strong>" + (weekdayText[item.releaseDay] || item.releaseDay) + "</strong>") : "";
+  var publication = item.releaseDate ? "Start: " + formatMetadataDate(item.releaseDate) : "";
+  if (item.endDate) publication += (publication ? " · " : "") + "Ende: " + formatMetadataDate(item.endDate);
+  if (item.volumes) publication += (publication ? " · " : "") + item.volumes + " Bände";
+  if (item.authors && item.authors.length) publication += (publication ? " · " : "") + escapeHtml(item.authors.slice(0, 2).join(", "));
+  document.getElementById("detailMetaPublication").innerHTML = publication;
   // Progress
   document.getElementById("detailProgressValue").innerHTML = detailProgressText(item);
   renderReadingHistory(item);
@@ -1507,6 +1570,11 @@ function showReaderFallback(item) {
   readerStatus.innerHTML = "Der integrierte Reader wird von GitHub Pages durch MangaDex-CORS blockiert. <a href=\"" + escapeHtml(url) + "\" target=\"_blank\" rel=\"noopener\" style=\"color:#e6b866;\">Auf MangaDex öffnen</a>";
   readerStatus.style.display = "block";
 }
+function showReaderAlternative(item) {
+  var url = (item && (item.url || item.readerUrl)) || computeReaderUrl(null, item && item.title || "");
+  readerStatus.innerHTML = "Dieses Kapitel ist auf MangaDex nicht auf Deutsch oder Englisch verfügbar. <a href=\"" + escapeHtml(url) + "\" target=\"_blank\" rel=\"noopener\" style=\"color:#e6b866;\">Alternative Quelle öffnen</a>";
+  readerStatus.style.display = "block";
+}
 function updateReaderPageVisibility() {
   var single = settings.readerMode === "single";
   readerPages.style.setProperty("--reader-gap", (Number(settings.readerGap) || 0) + "px");
@@ -1602,10 +1670,7 @@ function openInAppReader(item) {
   showReaderStatus("MangaDex-Kapitel werden geladen...");
   mdResolveMangaForItem(item).then(function (resolvedItem) {
     if (!resolvedItem || !resolvedItem.mdId) throw new Error("Manga nicht auf MangaDex gefunden");
-    return mdGetChapterList(resolvedItem.mdId, ["de", "en"]).then(function (list) {
-      if (list.length) return list;
-      return mdGetChapterList(resolvedItem.mdId, []);
-    });
+    return mdGetChapterList(resolvedItem.mdId, ["de", "en"]);
   }).then(function (list) {
     if (requestId !== readerRequestId) return;
     if (!list.length) throw new Error("Keine übersetzten Kapitel gefunden");
@@ -1621,6 +1686,7 @@ function openInAppReader(item) {
     loadReaderChapter(index < 0 ? 0 : index);
   }).catch(function (err) {
     if (err && err.message && err.message.indexOf("MangaDex nicht erreichbar") === 0) showReaderFallback(item);
+    else if (err && err.message && err.message.indexOf("Keine übersetzten Kapitel") === 0) showReaderAlternative(item);
     else showReaderStatus((err && err.message) || "Der MangaDex-Reader konnte nicht geladen werden.");
   });
 }
@@ -1790,6 +1856,10 @@ function openSheet(id) {
   sheetDescription = item ? item.description : "";
   sheetAverageScore = item ? item.averageScore : null;
   sheetGenres = item ? (item.genres || []).slice() : [];
+  sheetReleaseDate = item ? (item.releaseDate || "") : "";
+  sheetEndDate = item ? (item.endDate || "") : "";
+  sheetAuthors = item ? (item.authors || []).slice() : [];
+  sheetVolumes = item ? item.volumes : null;
   sheetReaderUrl = item ? item.readerUrl : "";
   sheetUserRating = item ? (item.userRating || 0) : 0;
   updateAiInfoBlock();
@@ -1912,6 +1982,7 @@ function applyAniListSelection(media) {
   sheetDescription = cleanDescription(media.description);
   sheetAverageScore = (media.averageScore === undefined) ? null : media.averageScore;
   sheetGenres = Array.isArray(media.genres) ? media.genres : [];
+  sheetReleaseDate = ""; sheetEndDate = ""; sheetAuthors = []; sheetVolumes = null;
   sheetReaderUrl = computeReaderUrl(media, title);
   updateAiInfoBlock();
 
@@ -1923,6 +1994,7 @@ function applyAniListSelection(media) {
       updateSheetCoverPreview();
     });
   }
+  loadSupplementalMetadata(title).catch(function () {});
 }
 
 // Modul 1b: Einzel-Sync per Button neben Titel-Feld ("Daten von AniList ziehen")
@@ -2033,6 +2105,7 @@ document.getElementById("sheetSave").addEventListener("click", function () {
     item.notes = notes; item.url = url; item.coverBase64 = sheetCoverBase64; item.coverUrl = sheetCoverUrl; item.lastUpdated = now;
     item.aniListId = sheetAniListId; item.totalChapters = sheetTotalChapters; item.originType = sheetOriginType;
     item.description = sheetDescription; item.averageScore = sheetAverageScore; item.genres = sheetGenres;
+    item.releaseDate = sheetReleaseDate; item.endDate = sheetEndDate; item.authors = sheetAuthors; item.volumes = sheetVolumes;
     item.readerUrl = sheetReaderUrl; item.userRating = sheetUserRating; item.releaseDay = releaseDay;
     showToast("Aktualisiert");
     // MangaDex Fortschritt syncen, wenn Kapitel geändert wurde
@@ -2043,6 +2116,7 @@ document.getElementById("sheetSave").addEventListener("click", function () {
       lastUpdated: now, createdAt: now,
       aniListId: sheetAniListId, totalChapters: sheetTotalChapters, originType: sheetOriginType,
       description: sheetDescription, averageScore: sheetAverageScore, genres: sheetGenres,
+      releaseDate: sheetReleaseDate, endDate: sheetEndDate, authors: sheetAuthors, volumes: sheetVolumes,
       readerUrl: sheetReaderUrl, userRating: sheetUserRating, releaseDay: releaseDay, hasUpdate: false,
       mdId: null, mdSyncedChapter: 0, mdLastSyncAt: ""
     });
