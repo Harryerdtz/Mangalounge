@@ -22,6 +22,21 @@ export default {
     }
 
     const incoming = new URL(request.url);
+    if (incoming.pathname === "/image") {
+      const imageUrl = incoming.searchParams.get("url");
+      if (!imageUrl) return new Response("Missing image URL", { status: 400, headers: corsHeaders(origin) });
+      const image = new URL(imageUrl);
+      if (image.protocol !== "https:" || !image.hostname.endsWith(".mangadex.network")) {
+        return new Response("Image host not allowed", { status: 403, headers: corsHeaders(origin) });
+      }
+      const response = await fetch(image.href, {
+        headers: { "User-Agent": "MangaLounge/1.0 (https://harryerdtz.github.io/Mangalounge/)" }
+      });
+      const headers = new Headers(response.headers);
+      Object.entries(corsHeaders(origin)).forEach(([key, value]) => headers.set(key, value));
+      headers.delete("set-cookie");
+      return new Response(response.body, { status: response.status, headers });
+    }
     if (!ALLOWED_PREFIXES.some((prefix) => incoming.pathname.startsWith(prefix))) {
       return new Response("Not found", { status: 404, headers: corsHeaders(origin) });
     }

@@ -1471,8 +1471,10 @@ function renderReaderPages(chapter, payload) {
   readerStatus.style.display = "none";
   readerPages.innerHTML = "";
   files.forEach(function (file, index) {
-    var src = payload.baseUrl + "/data/" + data.hash + "/" + encodeURIComponent(file);
-    var fallback = fallbackFiles[index] ? payload.baseUrl + "/data-saver/" + data.hash + "/" + encodeURIComponent(fallbackFiles[index]) : "";
+    var directSrc = payload.baseUrl + "/data/" + data.hash + "/" + encodeURIComponent(file);
+    var directFallback = fallbackFiles[index] ? payload.baseUrl + "/data-saver/" + data.hash + "/" + encodeURIComponent(fallbackFiles[index]) : "";
+    var src = MANGADEX_API === "https://api.mangadex.org" ? directSrc : MANGADEX_API + "/image?url=" + encodeURIComponent(directSrc);
+    var fallback = directFallback && (MANGADEX_API === "https://api.mangadex.org" ? directFallback : MANGADEX_API + "/image?url=" + encodeURIComponent(directFallback));
     var img = document.createElement("img");
     img.src = src; img.alt = ""; img.loading = "lazy";
     img.addEventListener("error", function () {
@@ -1485,7 +1487,7 @@ function renderReaderPages(chapter, payload) {
     });
     img.addEventListener("click", function () {
       if (!img.classList.contains("reader-page-error")) return;
-      img.classList.remove("reader-page-error"); img.removeAttribute("data-fallback-tried"); img.src = src + "?retry=" + Date.now();
+      img.classList.remove("reader-page-error"); img.removeAttribute("data-fallback-tried"); img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "retry=" + Date.now();
     });
     readerPages.appendChild(img);
   });
