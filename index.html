@@ -388,14 +388,16 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .detail-notes a { color: var(--accent); }
 .reader-overlay { position: fixed; inset: 0; z-index: 60; display: none; background: #111; color: #f5f1e8; overflow-y: auto; }
 .reader-overlay.open { display: block; }
-.reader-toolbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: env(safe-area-inset-top, 0px) 14px 0; background: rgba(17,17,17,0.94); border-bottom: 1px solid rgba(255,255,255,0.12); }
+.reader-toolbar { position: sticky; top: 0; z-index: 2; display: block; padding: env(safe-area-inset-top, 0px) 14px 10px; background: rgba(17,17,17,0.94); border-bottom: 1px solid rgba(255,255,255,0.12); }
+.reader-topline, .reader-navline { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; }
+.reader-navline { justify-content: center; }
 .reader-toolbar button { border: 0; background: transparent; color: inherit; min-height: 44px; padding: 8px 10px; font-size: 14px; }
 .reader-toolbar select { max-width: 150px; min-width: 92px; min-height: 36px; padding: 6px 8px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: #262626; color: #f5f1e8; font-size: 13px; }
 .reader-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; text-align: center; }
 .reader-options { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px 16px; padding: 10px 14px; background: #1d1d1d; border-bottom: 1px solid rgba(255,255,255,0.12); }
 .reader-options label { display: flex; align-items: center; gap: 8px; color: #c8c0b3; font-size: 13px; }
 .reader-options select { min-height: 34px; border: 1px solid rgba(255,255,255,0.2); border-radius: 7px; background: #292929; color: #f5f1e8; padding: 5px 7px; }
-.reader-pages { display: grid; justify-items: center; gap: 12px; width: min(100%, 900px); margin: 0 auto; padding: 16px 10px 40px; }
+.reader-pages { display: grid; justify-items: center; gap: var(--reader-gap, 12px); width: min(100%, 900px); margin: 0 auto; padding: 16px 10px 40px; }
 .reader-pages.width-compact { max-width: 620px; }
 .reader-pages.width-wide { max-width: 900px; }
 .reader-pages.width-full { max-width: none; }
@@ -404,7 +406,8 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .reader-page-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 12px 32px; color: #c8c0b3; font-size: 13px; }
 .reader-page-controls button { min-height: 40px; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: #262626; color: #f5f1e8; }
 @media (max-width: 600px) {
-  .reader-toolbar { gap: 4px; padding-left: 8px; padding-right: 8px; }
+  .reader-toolbar { padding-left: 8px; padding-right: 8px; }
+  .reader-topline { gap: 4px; }
   .reader-toolbar button { padding-left: 6px; padding-right: 6px; font-size: 12px; }
   .reader-toolbar select { min-width: 78px; max-width: 104px; font-size: 12px; }
   .reader-title { flex: 1 1 80px; font-size: 13px; }
@@ -592,16 +595,15 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 
 <div class="reader-overlay" id="readerOverlay" aria-hidden="true">
   <div class="reader-toolbar">
-    <button type="button" id="readerClose">Schließen</button>
-    <select id="readerChapterSelect" aria-label="Kapitel auswählen"></select>
-    <span class="reader-title" id="readerTitle">MangaDex-Reader</span>
-    <button type="button" id="readerOptionsToggle" aria-label="Reader-Einstellungen">Optionen</button>
-    <button type="button" id="readerReload" aria-label="Kapitel neu laden">Reload</button>
-    <button type="button" id="readerNext">Weiter</button>
-  </div>
-  <div class="reader-options" id="readerOptionsPanel" hidden>
-    <label>Darstellung <select id="readerModeSelect"><option value="webtoon">Scroll</option><option value="single">Einzelseite</option></select></label>
-    <label>Seitenbreite <select id="readerWidthSelect"><option value="compact">Kompakt</option><option value="wide">Breit</option><option value="full">Vollbreite</option></select></label>
+    <div class="reader-topline">
+      <button type="button" id="readerClose">Schließen</button>
+      <span class="reader-title" id="readerTitle">MangaDex-Reader</span>
+      <button type="button" id="readerReload" aria-label="Kapitel neu laden">Reload</button>
+    </div>
+    <div class="reader-navline">
+      <select id="readerChapterSelect" aria-label="Kapitel auswählen"></select>
+      <button type="button" id="readerNext">Nächstes Kapitel</button>
+    </div>
   </div>
   <div class="reader-status" id="readerStatus">Kapitel wird geladen...</div>
   <div class="reader-pages" id="readerPages"></div>
@@ -815,6 +817,20 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
     </div>
 
     <div class="settings-block">
+      <h3>Reader</h3>
+      <div class="form-row"><span class="form-label">Darstellung</span>
+        <select id="readerModeSetting"><option value="webtoon">Scroll</option><option value="single">Einzelseite</option></select>
+      </div>
+      <div class="form-row"><span class="form-label">Seitenbreite</span>
+        <select id="readerWidthSetting"><option value="compact">Kompakt</option><option value="wide">Breit</option><option value="full">Vollbreite</option></select>
+      </div>
+      <div class="form-row"><span class="form-label">Abstand zwischen Seiten</span>
+        <select id="readerGapSetting"><option value="0">Kein Abstand</option><option value="8">Klein</option><option value="16">Mittel</option><option value="28">Groß</option></select>
+      </div>
+      <p class="section-sub" style="margin:0;">Diese Einstellungen gelten für den In-App-Reader und werden auf diesem Gerät gespeichert.</p>
+    </div>
+
+    <div class="settings-block">
       <h3>Statistik</h3>
       <div class="form-section insights-grid" style="margin:0;">
         <div class="insight-cell"><span class="insight-num" id="insightWeek">0</span><span class="insight-label">Updates diese Woche</span></div>
@@ -962,7 +978,7 @@ function loadState() {
 }
 function loadSettings() {
   var defaults = { mode: "system", theme: "gold", customAccent: "#A6392A", preferredPlatform: "MangaDex", customPlatformTemplate: "",
-    layout: "list", startTab: "continue", oledBlack: false, readerMode: "webtoon", readerWidth: "wide" };
+    layout: "list", startTab: "continue", oledBlack: false, readerMode: "webtoon", readerWidth: "wide", readerGap: 0 };
   try {
     var raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
@@ -977,6 +993,7 @@ function loadSettings() {
 
 var state = loadState();
 var settings = loadSettings();
+if (settings.readerGap === 12) { settings.readerGap = 0; saveSettings(); }
 saveState(true);
 
 var searchTerm = "", activeStatus = "alle", activeTags = [], activeType = "alle", sortMode = "updated", currentEditId = null, sheetCoverBase64 = "", sheetCoverUrl = "";
@@ -1490,6 +1507,7 @@ function showReaderFallback(item) {
 }
 function updateReaderPageVisibility() {
   var single = settings.readerMode === "single";
+  readerPages.style.setProperty("--reader-gap", (Number(settings.readerGap) || 0) + "px");
   readerPages.classList.toggle("single-page", single);
   readerPages.classList.toggle("width-compact", settings.readerWidth === "compact");
   readerPages.classList.toggle("width-wide", settings.readerWidth === "wide");
@@ -1506,7 +1524,7 @@ function renderReaderPages(chapter, payload) {
   var fallbackFiles = data && (Array.isArray(data.dataSaver) ? data.dataSaver : []);
   if (!Array.isArray(files)) files = [];
   if (!data || !data.hash || !files.length) throw new Error("Keine Seiten gefunden");
-  readerTitle.textContent = "Kapitel " + chapter.number;
+  readerTitle.textContent = (readerItem ? readerItem.title + " · " : "") + "Kapitel " + chapter.number;
   readerStatus.style.display = "none";
   readerPages.innerHTML = "";
   files.forEach(function (file, index) {
@@ -1572,9 +1590,6 @@ function openInAppReader(item) {
   readerItem = item;
   readerOverlay.classList.add("open");
   readerOverlay.setAttribute("aria-hidden", "false");
-  document.getElementById("readerOptionsPanel").hidden = true;
-  document.getElementById("readerModeSelect").value = settings.readerMode;
-  document.getElementById("readerWidthSelect").value = settings.readerWidth;
   readerTitle.textContent = item.title;
   readerPages.innerHTML = "";
   showReaderStatus("MangaDex-Kapitel werden geladen...");
@@ -1612,11 +1627,6 @@ document.getElementById("readerClose").addEventListener("click", function () {
 document.getElementById("readerNext").addEventListener("click", function () { loadReaderChapter(readerChapterIndex + 1); });
 readerChapterSelect.addEventListener("change", function () { loadReaderChapter(parseInt(readerChapterSelect.value, 10)); });
 document.getElementById("readerReload").addEventListener("click", function () { loadReaderChapter(readerChapterIndex); });
-document.getElementById("readerOptionsToggle").addEventListener("click", function () {
-  var panel = document.getElementById("readerOptionsPanel"); panel.hidden = !panel.hidden;
-});
-document.getElementById("readerModeSelect").addEventListener("change", function (e) { settings.readerMode = e.target.value; saveSettings(); updateReaderPageVisibility(); });
-document.getElementById("readerWidthSelect").addEventListener("change", function (e) { settings.readerWidth = e.target.value; saveSettings(); updateReaderPageVisibility(); });
 document.getElementById("readerPagePrev").addEventListener("click", function () { if (readerPageIndex > 0) { readerPageIndex--; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); } });
 document.getElementById("readerPageNext").addEventListener("click", function () { if (readerPageIndex < readerPages.children.length - 1) { readerPageIndex++; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); } });
 readerOverlay.addEventListener("scroll", function () {
@@ -2112,6 +2122,9 @@ function renderSettingsUI() {
   document.getElementById("preferredPlatform").value = settings.preferredPlatform;
   document.getElementById("customPlatformRow").style.display = settings.preferredPlatform === "Custom" ? "block" : "none";
   document.getElementById("customPlatformTemplate").value = settings.customPlatformTemplate;
+  document.getElementById("readerModeSetting").value = settings.readerMode;
+  document.getElementById("readerWidthSetting").value = settings.readerWidth;
+  document.getElementById("readerGapSetting").value = String(settings.readerGap);
   document.getElementById("oledBlackToggle").checked = !!settings.oledBlack;
   document.querySelectorAll("#layoutSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-layout") === settings.layout); });
   document.querySelectorAll("#startTabSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-starttab") === settings.startTab); });
@@ -2133,6 +2146,15 @@ document.getElementById("preferredPlatform").addEventListener("change", function
 });
 document.getElementById("customPlatformTemplate").addEventListener("input", function (e) {
   settings.customPlatformTemplate = e.target.value; saveSettings();
+});
+document.getElementById("readerModeSetting").addEventListener("change", function (e) {
+  settings.readerMode = e.target.value; saveSettings();
+});
+document.getElementById("readerWidthSetting").addEventListener("change", function (e) {
+  settings.readerWidth = e.target.value; saveSettings();
+});
+document.getElementById("readerGapSetting").addEventListener("change", function (e) {
+  settings.readerGap = Number(e.target.value) || 0; saveSettings();
 });
 document.getElementById("modeSegmented").addEventListener("click", function (e) {
   var btn = e.target.closest("button"); if (!btn) return;
