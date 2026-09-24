@@ -428,6 +428,15 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
         <button data-status="pausiert">Pausiert</button>
         <button data-status="abgeschlossen">Fertig</button>
       </div>
+      <div class="form-row filter-sort-row">
+        <label class="form-label" for="sortSelect">Sortieren nach</label>
+        <select id="sortSelect">
+          <option value="updated">Zuletzt geändert</option>
+          <option value="rating">Meine Bewertung</option>
+          <option value="read">Gelesene Kapitel</option>
+          <option value="missing">Fehlende Kapitel</option>
+        </select>
+      </div>
       <div class="tag-row" id="tagFilters"></div>
       <div class="tag-row" id="typeFilters"></div>
       <div class="tag-row" id="smartFolderFilters">
@@ -916,7 +925,7 @@ if (settings.mdToken) {
 }
 saveState(true);
 
-var searchTerm = "", activeStatus = "alle", activeTags = [], activeType = "alle", currentEditId = null, sheetCoverBase64 = "", sheetCoverUrl = "";
+var searchTerm = "", activeStatus = "alle", activeTags = [], activeType = "alle", sortMode = "updated", currentEditId = null, sheetCoverBase64 = "", sheetCoverUrl = "";
 var sheetAniListId = null, sheetTotalChapters = null, sheetOriginType = "", sheetDescription = "", sheetAverageScore = null, sheetGenres = [], sheetReaderUrl = "", sheetUserRating = 0;
 var activeSmartFolder = "keine";
 // Modul 5: Start-Tab aus den Einstellungen uebernehmen
@@ -1172,7 +1181,16 @@ function filteredSortedItems() {
     if (term && item.title.toLowerCase().indexOf(term) === -1) return false;
     return true;
   });
-  items.sort(function (a, b) { return new Date(b.lastUpdated) - new Date(a.lastUpdated); });
+  items.sort(function (a, b) {
+    if (sortMode === "rating") return (Number(b.userRating) || 0) - (Number(a.userRating) || 0) || a.title.localeCompare(b.title);
+    if (sortMode === "read") return (Number(b.chapter) || 0) - (Number(a.chapter) || 0) || a.title.localeCompare(b.title);
+    if (sortMode === "missing") {
+      var missingA = a.totalChapters === null || a.totalChapters === undefined ? -1 : Math.max(0, Number(a.totalChapters) - (Number(a.chapter) || 0));
+      var missingB = b.totalChapters === null || b.totalChapters === undefined ? -1 : Math.max(0, Number(b.totalChapters) - (Number(b.chapter) || 0));
+      return missingB - missingA || a.title.localeCompare(b.title);
+    }
+    return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+  });
   return items;
 }
 
@@ -1483,11 +1501,14 @@ filterToggleBtn.addEventListener("click", function () {
   filterToggleBtn.classList.toggle("active", filterDropdown.classList.contains("open"));
 });
 function updateFilterActiveDot() {
-  var anyActive = activeStatus !== "alle" || activeTags.length > 0 || activeType !== "alle" || activeSmartFolder !== "keine";
+  var anyActive = activeStatus !== "alle" || activeTags.length > 0 || activeType !== "alle" || activeSmartFolder !== "keine" || sortMode !== "updated";
   document.getElementById("filterActiveDot").style.display = anyActive ? "" : "none";
 }
 
 document.getElementById("search").addEventListener("input", function (e) { searchTerm = e.target.value; renderAll(); });
+document.getElementById("sortSelect").addEventListener("change", function (e) {
+  sortMode = e.target.value; renderAll(); updateFilterActiveDot();
+});
 document.getElementById("statusSegmented").addEventListener("click", function (e) {
   var btn = e.target.closest("button"); if (!btn) return;
   document.querySelectorAll("#statusSegmented button").forEach(function (b) { b.classList.remove("active"); });
@@ -1906,6 +1927,10 @@ document.getElementById("mdToken").addEventListener("input", function (e) {
   settings.mdToken = e.target.value; saveSettings();
 });
 document.getElementById("mdLoginTestBtn").addEventListener("click", function () {
+  if (window.location.protocol === "file:") {
+    showToast("Login benötigt http://localhost oder eine HTTPS-Adresse");
+    return;
+  }
   showToast("Login bei MangaDex...");
   mdClearTokens();
   mdEnsureAuth().then(function () {
@@ -2349,6 +2374,9 @@ function mdCanAuthenticate() {
 }
 function mdErrorMessage(err) {
   var message = (err && err.message) || String(err || "Unbekannter Fehler");
+  if (message.indexOf("md-network:") === 0 || message === "Failed to fetch" || message === "NetworkError when attempting to fetch resource.") {
+    return "MangaDex nicht erreichbar oder vom Browser blockiert. App über HTTPS/localhost öffnen";
+  }
   if (message === "md-unauth" || message.indexOf("md-http-401") === 0) return "MangaDex-Session abgelaufen";
   if (message.indexOf("md-http-429") === 0) return "MangaDex-Rate-Limit erreicht, bitte später erneut versuchen";
   if (message.indexOf("md-http-5") === 0) return "MangaDex ist momentan nicht erreichbar";
@@ -2356,7 +2384,7 @@ function mdErrorMessage(err) {
 }
 
 function mdSaveTokens(resp) {
-  var token = resp && resp.token;
+  var token = resp && (resp.token || (resp.data && resp.data.token));
   if (!token || !token.session) throw new Error("Ungueltige MangaDex-Token-Antwort");
   settings.mdAccessToken = token.session;
   if (token.refresh) settings.mdRefreshToken = token.refresh;
@@ -2382,6 +2410,9 @@ function mdApi(endpoint, opts) {
     if (r.status === 401) { mdClearTokens(); throw new Error("md-unauth"); }
     if (!r.ok) return r.text().then(function (t) { throw new Error("md-http-" + r.status + ": " + t.slice(0, 200)); });
     return r.json();
+  }).catch(function (err) {
+    if (err && err.message && err.message.indexOf("md-") === 0) throw err;
+    throw new Error("md-network: " + ((err && err.message) || "Failed to fetch"));
   });
 }
 function mdEnsureAuth() {
