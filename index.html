@@ -272,6 +272,10 @@ header.navbar {
 .insight-cell { flex: 1; text-align: center; padding: 0 4px; }
 .insight-num { display: block; font-size: 20px; font-weight: 700; color: var(--accent-2); }
 .insight-label { display: block; font-size: 10.5px; color: var(--label-tertiary); margin-top: 2px; line-height: 1.2; }
+.recommendations-list { display: grid; gap: 6px; margin-top: 10px; }
+.recommendation-item { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--separator); border-radius: var(--radius-s); background: var(--fill-tertiary); }
+.recommendation-item img { width: 36px; height: 52px; object-fit: cover; border-radius: 5px; background: var(--bg); }
+.recommendation-item span { font-size: 13px; color: var(--label); }
 .hidden-file { display: none; }
 
 /* Settings sheet specifics */
@@ -402,7 +406,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .reader-pages.width-wide { max-width: 900px; }
 .reader-pages.width-full { max-width: none; }
 .reader-pages.single-page img { display: none; }
-.reader-pages.single-page img.reader-visible { display: block; }
+.reader-pages.single-page img.reader-visible { display: block; cursor: pointer; }
 .reader-page-controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 12px 32px; color: #c8c0b3; font-size: 13px; }
 .reader-page-controls button { min-height: 40px; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: #262626; color: #f5f1e8; }
 @media (max-width: 600px) {
@@ -600,8 +604,10 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
       <button type="button" id="readerClose">Schließen</button>
       <span class="reader-title" id="readerTitle">MangaDex-Reader</span>
       <button type="button" id="readerReload" aria-label="Kapitel neu laden">Reload</button>
+        <button type="button" id="readerDownload" aria-label="Kapitel offline speichern">Offline</button>
     </div>
     <div class="reader-navline">
+      <button type="button" id="readerPrev">Vorheriges Kapitel</button>
       <select id="readerChapterSelect" aria-label="Kapitel auswählen"></select>
       <button type="button" id="readerNext">Nächstes Kapitel</button>
     </div>
@@ -838,7 +844,21 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
         <div class="insight-cell"><span class="insight-num" id="insightWeek">0</span><span class="insight-label">Updates diese Woche</span></div>
         <div class="insight-cell"><span class="insight-num" id="insightTotal">0</span><span class="insight-label">Kapitel insgesamt</span></div>
         <div class="insight-cell"><span class="insight-num" id="insightGenre">&mdash;</span><span class="insight-label">Meistgelesenes Genre</span></div>
+        <div class="insight-cell"><span class="insight-num" id="insightStreak">0</span><span class="insight-label">Tage Streak</span></div>
       </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Benachrichtigungen</h3>
+      <div class="settings-row" style="padding:0;"><span>Update-Hinweise erlauben</span><input type="checkbox" id="notificationsToggle" style="width:22px;height:22px;"></div>
+      <p class="section-sub" id="notificationsStatus" style="margin:6px 0 0;">Benachrichtigungen werden beim AniList-Abgleich ausgelöst, wenn die App geöffnet ist.</p>
+    </div>
+
+    <div class="settings-block">
+      <h3>Empfehlungen</h3>
+      <div class="settings-row" style="padding:0;"><span>Ähnliche Manga von AniList</span><button class="btn-ghost" id="recommendationsBtn" type="button">Laden</button></div>
+      <div id="recommendationsList" class="recommendations-list"></div>
+      <p class="section-sub" id="recommendationsStatus" style="margin:6px 0 0;">Empfehlungen werden nicht automatisch zur Bibliothek hinzugefügt.</p>
     </div>
 
     <div class="settings-block">
@@ -984,7 +1004,7 @@ function loadState() {
 }
 function loadSettings() {
   var defaults = { mode: "system", theme: "gold", customAccent: "#A6392A", preferredPlatform: "MangaDex", customPlatformTemplate: "",
-    layout: "list", startTab: "continue", oledBlack: false, readerMode: "webtoon", readerWidth: "wide", readerGap: 0 };
+    layout: "list", startTab: "continue", oledBlack: false, readerMode: "webtoon", readerWidth: "wide", readerGap: 0, notifications: false };
   try {
     var raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
@@ -1561,6 +1581,9 @@ var readerPageIndex = 0;
 var readerItem = null;
 var readerSaveTimer = null;
 var readerRequestId = 0;
+var readerPageUrls = [];
+var readerChapterMarkedRead = false;
+var readerCachePromise = window.caches ? caches.open("mangalounge-reader-v1") : Promise.resolve(null);
 function showReaderStatus(text) {
   readerStatus.textContent = text;
   readerStatus.style.display = "block";
@@ -1588,6 +1611,45 @@ function updateReaderPageVisibility() {
   document.getElementById("readerPageNext").disabled = readerPageIndex >= readerPages.children.length - 1;
   document.getElementById("readerPageCount").textContent = readerPages.children.length ? "Seite " + (readerPageIndex + 1) + " / " + readerPages.children.length : "Seite 0";
 }
+// -----------------------------------------------------------------------
+// Automatische Fortschritts-Markierung: sobald ein Kapitel im Reader zu
+// Ende gelesen wurde (letzte Seite im Einzelseiten-Modus bzw. bis zum
+// unteren Rand gescrollt im Scroll-Modus), wird item.chapter direkt auf
+// diese Kapitelnummer gesetzt -- ohne manuelles +1 im Hauptbildschirm.
+// Springt niemals zurueck (re-Lesen alter Kapitel senkt den Fortschritt
+// nicht), und markiert pro geladenem Kapitel nur einmal.
+// -----------------------------------------------------------------------
+function currentReaderChapterNumber() {
+  if (readerChapterIndex < 0 || !readerChapterList[readerChapterIndex]) return null;
+  var n = parseFloat(readerChapterList[readerChapterIndex].number);
+  return isNaN(n) ? null : n;
+}
+function markReaderChapterAsRead() {
+  if (readerChapterMarkedRead || !readerItem) return;
+  var chapNum = currentReaderChapterNumber();
+  if (chapNum === null) return;
+  var current = (readerItem.chapter === null || readerItem.chapter === undefined || isNaN(readerItem.chapter)) ? -1 : readerItem.chapter;
+  if (chapNum <= current) return;
+  readerChapterMarkedRead = true;
+  readerItem.chapter = chapNum;
+  readerItem.lastUpdated = new Date().toISOString();
+  pushHistory(readerItem, chapNum);
+  triggerHaptic();
+  saveState();
+  renderAll();
+  if (currentDetailId === readerItem.id) renderDetailContent(readerItem);
+  showToast("Kapitel " + chapNum + " als gelesen markiert");
+}
+function checkReaderChapterFinished() {
+  if (!readerItem || readerChapterMarkedRead) return;
+  var single = settings.readerMode === "single";
+  if (single) {
+    if (readerPages.children.length && readerPageIndex >= readerPages.children.length - 1) markReaderChapterAsRead();
+  } else {
+    var remaining = readerOverlay.scrollHeight - (readerOverlay.scrollTop + readerOverlay.clientHeight);
+    if (remaining < 60) markReaderChapterAsRead();
+  }
+}
 function renderReaderPages(chapter, payload) {
   var data = payload && payload.chapter;
   var files = data && (Array.isArray(data.data) ? data.data : data.dataSaver);
@@ -1597,24 +1659,51 @@ function renderReaderPages(chapter, payload) {
   readerTitle.textContent = (readerItem ? readerItem.title + " · " : "") + "Kapitel " + chapter.number;
   readerStatus.style.display = "none";
   readerPages.innerHTML = "";
+  readerPageUrls = [];
   files.forEach(function (file, index) {
     var directSrc = payload.baseUrl + "/data/" + data.hash + "/" + encodeURIComponent(file);
     var directFallback = fallbackFiles[index] ? payload.baseUrl + "/data-saver/" + data.hash + "/" + encodeURIComponent(fallbackFiles[index]) : "";
     var src = MANGADEX_API === "https://api.mangadex.org" ? directSrc : MANGADEX_API + "/image?url=" + encodeURIComponent(directSrc);
     var fallback = directFallback && (MANGADEX_API === "https://api.mangadex.org" ? directFallback : MANGADEX_API + "/image?url=" + encodeURIComponent(directFallback));
+    readerPageUrls.push(src);
     var img = document.createElement("img");
     img.src = src; img.alt = ""; img.loading = "lazy";
     img.addEventListener("error", function () {
       if (fallback && !img.dataset.fallbackTried) {
         img.dataset.fallbackTried = "true"; img.src = fallback; return;
       }
+      if (!img.dataset.cacheTried) {
+        img.dataset.cacheTried = "true";
+        readerCachePromise.then(function (cache) { return cache && cache.match(src); }).then(function (response) {
+          if (!response) throw new Error("not-cached");
+          return response.blob();
+        }).then(function (blob) { img.src = URL.createObjectURL(blob); }).catch(function () {
+          img.classList.add("reader-page-error");
+          img.alt = "Seite konnte nicht geladen werden. Antippen zum Wiederholen.";
+          img.title = img.alt;
+        });
+        return;
+      }
       img.classList.add("reader-page-error");
       img.alt = "Seite konnte nicht geladen werden. Antippen zum Wiederholen.";
       img.title = img.alt;
     });
-    img.addEventListener("click", function () {
-      if (!img.classList.contains("reader-page-error")) return;
-      img.classList.remove("reader-page-error"); img.removeAttribute("data-fallback-tried"); img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "retry=" + Date.now();
+    img.addEventListener("click", function (e) {
+      if (img.classList.contains("reader-page-error")) {
+        img.classList.remove("reader-page-error"); img.removeAttribute("data-fallback-tried"); img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "retry=" + Date.now();
+        return;
+      }
+      if (settings.readerMode !== "single") return;
+      var rect = img.getBoundingClientRect();
+      var xRatio = (e.clientX - rect.left) / rect.width;
+      if (xRatio < 0.4) {
+        if (readerPageIndex > 0) { readerPageIndex--; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); }
+      } else if (xRatio > 0.6) {
+        if (readerPageIndex < readerPages.children.length - 1) {
+          readerPageIndex++; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true);
+          checkReaderChapterFinished();
+        }
+      }
     });
     readerPages.appendChild(img);
   });
@@ -1630,6 +1719,7 @@ function renderReaderPages(chapter, payload) {
     }, 100);
   }
   updateReaderPageVisibility();
+  setTimeout(checkReaderChapterFinished, 300);
 }
 function loadReaderChapter(index) {
   if (index < 0 || index >= readerChapterList.length) {
@@ -1637,6 +1727,8 @@ function loadReaderChapter(index) {
     return;
   }
   readerChapterIndex = index;
+  readerChapterMarkedRead = false;
+  document.getElementById("readerPrev").disabled = index <= 0;
   document.getElementById("readerNext").disabled = index >= readerChapterList.length - 1;
   var chapter = readerChapterList[index];
   var requestId = ++readerRequestId;
@@ -1700,11 +1792,35 @@ document.getElementById("readerClose").addEventListener("click", function () {
   readerOverlay.scrollTop = 0;
   readerPages.innerHTML = "";
 });
+document.getElementById("readerPrev").addEventListener("click", function () { loadReaderChapter(readerChapterIndex - 1); });
 document.getElementById("readerNext").addEventListener("click", function () { loadReaderChapter(readerChapterIndex + 1); });
 readerChapterSelect.addEventListener("change", function () { loadReaderChapter(parseInt(readerChapterSelect.value, 10)); });
 document.getElementById("readerReload").addEventListener("click", function () { loadReaderChapter(readerChapterIndex); });
+document.getElementById("readerDownload").addEventListener("click", function () {
+  var button = this;
+  if (!readerPageUrls.length) { showReaderStatus("Erst ein Kapitel laden."); return; }
+  button.disabled = true; showReaderStatus("Kapitel wird offline gespeichert...");
+  readerCachePromise.then(function (cache) {
+    if (!cache) throw new Error("Cache API nicht verfügbar");
+    return Promise.all(readerPageUrls.map(function (url) {
+      return fetch(url).then(function (response) {
+        if (!response.ok) throw new Error("Seite konnte nicht geladen werden");
+        return cache.put(url, response.clone());
+      });
+    }));
+  }).then(function () {
+    showReaderStatus("Kapitel offline gespeichert.");
+  }).catch(function (err) {
+    showReaderStatus("Offline-Speichern fehlgeschlagen: " + err.message);
+  }).then(function () { button.disabled = false; });
+});
 document.getElementById("readerPagePrev").addEventListener("click", function () { if (readerPageIndex > 0) { readerPageIndex--; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); } });
-document.getElementById("readerPageNext").addEventListener("click", function () { if (readerPageIndex < readerPages.children.length - 1) { readerPageIndex++; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); } });
+document.getElementById("readerPageNext").addEventListener("click", function () {
+  if (readerPageIndex < readerPages.children.length - 1) {
+    readerPageIndex++; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true);
+    checkReaderChapterFinished();
+  }
+});
 readerOverlay.addEventListener("scroll", function () {
   if (!readerItem || readerChapterIndex < 0) return;
   clearTimeout(readerSaveTimer);
@@ -1713,6 +1829,7 @@ readerOverlay.addEventListener("scroll", function () {
       return img.offsetTop + img.offsetHeight / 2 >= readerOverlay.scrollTop + 70;
     });
     if (page >= 0) { readerPageIndex = page; readerItem.readerPageIndex = page; updateReaderPageVisibility(); saveState(true); }
+    checkReaderChapterFinished();
   }, 250);
 });
 
@@ -2209,6 +2326,8 @@ function renderSettingsUI() {
   document.getElementById("readerModeSetting").value = settings.readerMode;
   document.getElementById("readerWidthSetting").value = settings.readerWidth;
   document.getElementById("readerGapSetting").value = String(settings.readerGap);
+  document.getElementById("notificationsToggle").checked = !!settings.notifications;
+  document.getElementById("notificationsStatus").textContent = typeof Notification === "undefined" ? "Dieser Browser unterstützt keine Benachrichtigungen." : (Notification.permission === "granted" ? "Benachrichtigungen sind aktiviert." : "Beim nächsten AniList-Abgleich werden neue Updates gemeldet.");
   document.getElementById("oledBlackToggle").checked = !!settings.oledBlack;
   document.querySelectorAll("#layoutSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-layout") === settings.layout); });
   document.querySelectorAll("#startTabSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-starttab") === settings.startTab); });
@@ -2239,6 +2358,13 @@ document.getElementById("readerWidthSetting").addEventListener("change", functio
 });
 document.getElementById("readerGapSetting").addEventListener("change", function (e) {
   settings.readerGap = Number(e.target.value) || 0; saveSettings();
+});
+document.getElementById("notificationsToggle").addEventListener("change", function (e) {
+  if (!e.target.checked) { settings.notifications = false; saveSettings(); return; }
+  if (typeof Notification === "undefined") { e.target.checked = false; showToast("Benachrichtigungen werden nicht unterstützt"); return; }
+  Notification.requestPermission().then(function (permission) {
+    settings.notifications = permission === "granted"; e.target.checked = settings.notifications; saveSettings(); renderSettingsUI();
+  });
 });
 document.getElementById("modeSegmented").addEventListener("click", function (e) {
   var btn = e.target.closest("button"); if (!btn) return;
@@ -2525,6 +2651,10 @@ document.getElementById("diceBtn").addEventListener("click", function () {
 // =========================================================================
 // MODUL 9: Batch-Update-Checker (Rate-Limit sicher, 800-1000ms pro Request)
 // =========================================================================
+function notifyUpdate(item) {
+  if (!settings.notifications || typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  try { new Notification("Neues Kapitel verfügbar", { body: item.title + " hat ein Update." }); } catch (e) {}
+}
 function searchAniListByIdFull(id) {
   var gql = "query ($id: Int) { Media(id: $id, type: MANGA) { id title { english romaji } status chapters description(asHtml: false) averageScore genres coverImage { extraLarge large medium } countryOfOrigin format externalLinks { site url } } }";
   return fetch("https://graphql.anilist.co", {
@@ -2561,7 +2691,7 @@ document.getElementById("checkUpdatesBtn").addEventListener("click", function ()
         var changed = false;
         // Gesamt-Kapitel aktualisieren + Update-Badge setzen, wenn mehr
         if (m.chapters && m.chapters !== item.totalChapters) {
-          if (m.chapters > (item.totalChapters || 0)) { item.hasUpdate = true; }
+          if (m.chapters > (item.totalChapters || 0)) { item.hasUpdate = true; notifyUpdate(item); }
           item.totalChapters = m.chapters; changed = true;
         }
         // Status & Beschreibung (immer aus AniList \u00fcbernehmen, falls vorhanden)
@@ -2596,6 +2726,36 @@ document.getElementById("checkUpdatesBtn").addEventListener("click", function ()
     });
   }
   next();
+});
+function searchAniListRecommendations(id) {
+  var gql = "query ($id: Int) { Media(id: $id, type: MANGA) { recommendations(perPage: 8, sort: RATING_DESC) { nodes { mediaRecommendation { id title { english romaji } coverImage { medium } } } } } }";
+  return fetch("https://graphql.anilist.co", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify({ query: gql, variables: { id: Number(id) } }) })
+    .then(function (res) { if (!res.ok) throw new Error("recommendations-http-" + res.status); return res.json(); })
+    .then(function (json) {
+      if (json.errors) throw new Error("recommendations-graphql-error");
+      return (((json.data || {}).Media || {}).recommendations || {}).nodes || [];
+    });
+}
+document.getElementById("recommendationsBtn").addEventListener("click", function () {
+  var status = document.getElementById("recommendationsStatus");
+  var list = document.getElementById("recommendationsList");
+  var ids = state.filter(function (item) { return item.aniListId; }).slice(0, 3).map(function (item) { return item.aniListId; });
+  if (!ids.length) { status.textContent = "Lege zuerst einen Titel über AniList an."; return; }
+  this.disabled = true; status.textContent = "Empfehlungen werden geladen...";
+  Promise.all(ids.map(searchAniListRecommendations)).then(function (groups) {
+    var existing = {}; state.forEach(function (item) { if (item.aniListId) existing[item.aniListId] = true; });
+    var unique = [];
+    groups.flat().forEach(function (entry) {
+      var manga = entry.mediaRecommendation;
+      if (manga && !existing[manga.id] && !unique.some(function (item) { return item.id === manga.id; })) unique.push(manga);
+    });
+    list.innerHTML = unique.slice(0, 8).map(function (manga) {
+      var title = (manga.title && (manga.title.english || manga.title.romaji)) || "Unbekannter Titel";
+      var cover = manga.coverImage && manga.coverImage.medium;
+      return '<a class="recommendation-item" href="https://anilist.co/manga/' + manga.id + '" target="_blank" rel="noopener"><img src="' + escapeHtml(cover || "") + '" alt=""><span>' + escapeHtml(title) + '</span></a>';
+    }).join("");
+    status.textContent = unique.length ? "Ähnliche Titel aus AniList." : "Keine neuen Empfehlungen gefunden.";
+  }).catch(function () { status.textContent = "Empfehlungen konnten nicht geladen werden."; }).then(function () { document.getElementById("recommendationsBtn").disabled = false; });
 });
 
 // =========================================================================
@@ -2738,6 +2898,25 @@ function mdChapterUrl(mdId, chapterNr, lang) {
 // =========================================================================
 // MODUL 9: Mini-Insights
 // =========================================================================
+function calculateReadingStreak() {
+  var days = {};
+  state.forEach(function (item) {
+    (item.readHistory || []).forEach(function (entry) {
+      var date = new Date(entry.date);
+      if (!isNaN(date.getTime())) days[date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0")] = true;
+    });
+  });
+  var cursor = new Date();
+  var today = cursor.getFullYear() + "-" + String(cursor.getMonth() + 1).padStart(2, "0") + "-" + String(cursor.getDate()).padStart(2, "0");
+  if (!days[today]) cursor.setDate(cursor.getDate() - 1);
+  var streak = 0;
+  while (true) {
+    var key = cursor.getFullYear() + "-" + String(cursor.getMonth() + 1).padStart(2, "0") + "-" + String(cursor.getDate()).padStart(2, "0");
+    if (!days[key]) break;
+    streak++; cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
 function renderInsights() {
   var now = Date.now();
   var weekCount = 0, totalChapters = 0;
@@ -2752,6 +2931,7 @@ function renderInsights() {
   document.getElementById("insightWeek").textContent = weekCount;
   document.getElementById("insightTotal").textContent = totalChapters;
   document.getElementById("insightGenre").textContent = topGenre;
+  document.getElementById("insightStreak").textContent = calculateReadingStreak();
 }
 
 // =========================================================================
@@ -2801,7 +2981,7 @@ renderAll();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js?v=23").catch(function () {});
+    navigator.serviceWorker.register("sw.js?v=26").catch(function () {});
   });
 }
 </script>
