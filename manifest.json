@@ -25,5 +25,22 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Weiterlesen",
+      "short_name": "Weiterlesen",
+      "url": "./index.html?action=continue"
+    },
+    {
+      "name": "Zuletzt aktualisiert",
+      "short_name": "Neueste",
+      "url": "./index.html?action=recent"
+    },
+    {
+      "name": "Bibliothek durchsuchen",
+      "short_name": "Suche",
+      "url": "./index.html?action=search"
+    }
   ]
 }

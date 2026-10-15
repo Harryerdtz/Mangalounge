@@ -310,6 +310,16 @@ input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid v
   transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none; z-index: 40; white-space: normal; text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Fortschrittsring auf Covern */
+.row-cover-wrap { position: relative; flex-shrink: 0; }
+.detail-page-hint { display: block; margin-top: 4px; font-size: 12px; font-weight: 500; color: var(--label-secondary); }
+.cover-ring { position: absolute; left: 6px; bottom: 6px; width: 26px; height: 26px; z-index: 3; pointer-events: none; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.45)); }
+.cover-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.cover-ring circle { fill: none; stroke-width: 3.4; }
+.cover-ring .ring-bg { stroke: rgba(0,0,0,0.42); }
+.cover-ring .ring-fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dasharray 0.45s ease; }
+.cover-ring .ring-fg.full { stroke: #34c759; }
+body.hide-progress .cover-ring { display: none; }
 canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 
 /* --- Detail Overlay (Sheet) --- */
@@ -552,6 +562,83 @@ body.list-comfortable .row { padding: 14px 12px; }
 .reader-overlay.warm .reader-options { background: #231b16; border-bottom-color: rgba(240,226,205,0.12); }
 .reader-overlay.warm .reader-pages img { background: #2a211b; }
 .reader-pages img { cursor: zoom-in; }
+
+/* ===================== READER 2.0 ===================== */
+/* Helligkeit: legt sich ueber die Seiten, aber unter die Leiste */
+.reader-dimmer {
+  position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none;
+  z-index: 1; transition: opacity 0.25s ease;
+}
+.reader-overlay.warm .reader-dimmer { background: #2A1206; }
+/* Leiste: sanft ein-/ausblenden im Immersiv-Modus */
+.reader-overlay .reader-toolbar { z-index: 3; transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1), opacity 0.26s ease; }
+.reader-overlay.immersive .reader-toolbar { transform: translateY(-104%); opacity: 0; pointer-events: none; }
+.reader-overlay.immersive.toolbar-visible .reader-toolbar { transform: translateY(0); opacity: 1; pointer-events: auto; }
+/* Griff oben: holt die Leiste zurueck */
+.reader-handle {
+  position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 110px; height: 36px;
+  display: none; align-items: flex-start; justify-content: center; padding: 9px 0 0;
+  background: none; border: 0; z-index: 4; cursor: pointer;
+}
+.reader-overlay.immersive .reader-handle { display: flex; }
+.reader-overlay.immersive.toolbar-visible .reader-handle { display: none; }
+.reader-handle span {
+  width: 46px; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.5);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.45); transition: background 0.2s ease;
+}
+.reader-handle:active span { background: rgba(255,255,255,0.85); }
+/* Icon-Knoepfe in der Leiste */
+.reader-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 42px; padding: 0; }
+.reader-icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.reader-icon-btn.spin svg { animation: readerSpin 0.9s linear infinite; }
+@keyframes readerSpin { to { transform: rotate(360deg); } }
+/* Kapitelende-Karte */
+.reader-end { width: min(100%, 900px); margin: 0 auto; padding: 4px 10px 8px; }
+.reader-end-card {
+  border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.055);
+  border-radius: 18px; padding: 18px 16px; text-align: center;
+  animation: fadeUp 0.34s ease both;
+}
+.reader-overlay.warm .reader-end-card { border-color: rgba(240,226,205,0.16); background: rgba(240,226,205,0.06); }
+.reader-end-title { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #a89f92; margin-bottom: 7px; }
+.reader-end-hint { font-size: 14.5px; color: #f5f1e8; margin-bottom: 14px; }
+.reader-end-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+  padding: 10px 20px; border-radius: 999px; border: 0; background: var(--accent); color: var(--accent-on);
+  font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.reader-end-btn.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.24); color: #f5f1e8; font-weight: 500; }
+.reader-end-btn:active { transform: scale(0.97); }
+.reader-end-count { display: block; margin-top: 10px; font-size: 12px; color: #a89f92; }
+/* Sleep-Timer */
+.reader-sleep {
+  position: fixed; inset: 0; z-index: 76; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.74); padding: 24px; text-align: center;
+}
+.reader-sleep.open { display: flex; }
+.reader-sleep-box {
+  max-width: 340px; width: 100%; background: #1d1d1d; border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 20px; padding: 22px 18px; color: #f5f1e8; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+/* Reader-Einstellungen liegen ueber dem Reader */
+.overlay.reader-sheet { z-index: 74; }
+/* Toast auch im Reader sichtbar */
+html.reader-open .toast { z-index: 88; bottom: calc(env(safe-area-inset-bottom, 0px) + 40px); }
+/* Zoom per Doppeltipp (Einzelseiten-Modus) */
+.reader-pages img.reader-zoomed { transform: scale(1.85); cursor: zoom-out; transition: transform 0.22s ease; }
+/* Slider im Apple-Stil */
+input[type="range"].reader-range { -webkit-appearance: none; appearance: none; width: 100%; height: 30px; background: transparent; margin: 0; }
+input[type="range"].reader-range::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: var(--fill-tertiary); }
+input[type="range"].reader-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 24px; height: 24px; margin-top: -9px;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.35); border: none;
+}
+input[type="range"].reader-range::-moz-range-track { height: 6px; border-radius: 999px; background: var(--fill-tertiary); }
+input[type="range"].reader-range::-moz-range-thumb { width: 22px; height: 22px; border: none; border-radius: 50%; background: #fff; }
+.reader-range-row { display: flex; align-items: center; gap: 12px; }
+.reader-range-row .reader-range { flex: 1; }
+.reader-range-value { font-size: 13px; font-weight: 600; color: var(--label-secondary); font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+.offline-item { display: flex; align-items: center; gap: 10px; }
 
 /* ===================== FILTER EXTRAS ===================== */
 .filter-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 18px 10px; }
@@ -1108,26 +1195,166 @@ body.chapter-hidden .row .chapter-num { display: none !important; }
 </div>
 
 <div class="reader-overlay" id="readerOverlay" aria-hidden="true">
+  <div class="reader-dimmer" id="readerDimmer" aria-hidden="true"></div>
+  <button type="button" class="reader-handle" id="readerHandle" aria-label="Werkzeugleiste zeigen"><span></span></button>
   <div class="reader-progress" id="readerProgress"><i id="readerProgressBar"></i></div>
   <div class="reader-toolbar">
     <div class="reader-topline">
-      <button type="button" id="readerClose">Schließen</button>
+      <button type="button" class="reader-icon-btn" id="readerClose" aria-label="Reader schlie&szlig;en">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
       <span class="reader-title" id="readerTitle">MangaDex-Reader</span>
-      <button type="button" id="readerReload" aria-label="Kapitel neu laden">Reload</button>
-        <button type="button" id="readerDownload" aria-label="Kapitel offline speichern">Offline</button>
+      <button type="button" class="reader-icon-btn" id="readerSettingsBtn" aria-label="Reader-Einstellungen">
+        <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h8M16 17h4"/><circle cx="16" cy="7" r="2.1"/><circle cx="10" cy="12" r="2.1"/><circle cx="14" cy="17" r="2.1"/></svg>
+      </button>
+      <button type="button" class="reader-icon-btn" id="readerSleepBtn" aria-label="Sleep-Timer">
+        <svg viewBox="0 0 24 24"><path d="M20.4 14.5A8.5 8.5 0 019.5 3.6a8.5 8.5 0 1010.9 10.9z"/></svg>
+      </button>
+      <button type="button" class="reader-icon-btn" id="readerDownload" aria-label="Kapitel offline speichern">
+        <svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>
+      </button>
+      <button type="button" class="reader-icon-btn" id="readerReload" aria-label="Kapitel neu laden">
+        <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-3.2-6.9"/><path d="M21 4v5h-5"/></svg>
+      </button>
     </div>
     <div class="reader-navline">
       <button type="button" id="readerPrev">Vorheriges Kapitel</button>
-      <select id="readerChapterSelect" aria-label="Kapitel auswählen"></select>
-      <button type="button" id="readerNext">Nächstes Kapitel</button>
+      <select id="readerChapterSelect" aria-label="Kapitel ausw&auml;hlen"></select>
+      <button type="button" id="readerNext">N&auml;chstes Kapitel</button>
     </div>
   </div>
   <div class="reader-status" id="readerStatus">Kapitel wird geladen...</div>
   <div class="reader-pages" id="readerPages"></div>
+  <div class="reader-end" id="readerEnd" style="display:none;"></div>
   <div class="reader-page-controls" id="readerPageControls">
     <button type="button" id="readerPagePrev">Vorherige Seite</button>
     <span id="readerPageCount">Seite 1</span>
-    <button type="button" id="readerPageNext">Nächste Seite</button>
+    <button type="button" id="readerPageNext">N&auml;chste Seite</button>
+  </div>
+</div>
+
+<!-- Reader-Einstellungen (liegt ueber dem Reader) -->
+<div class="overlay reader-sheet" id="readerSheetOverlay">
+  <div class="sheet">
+    <div class="sheet-grabber"></div>
+    <div class="sheet-navbar">
+      <button class="cancel" id="readerSheetClose">Zur&uuml;ck</button>
+      <span class="sheet-navbar-title">Reader</span>
+      <button class="save" id="readerSheetDone">Fertig</button>
+    </div>
+
+    <div class="settings-block">
+      <h3>Darstellung</h3>
+      <div class="segmented" style="margin:0 0 10px;">
+        <button data-rseg="readerMode" data-value="webtoon">Scroll</button>
+        <button data-rseg="readerMode" data-value="single">Einzelseite</button>
+      </div>
+      <div class="form-row"><span class="form-label">Seitenbreite</span>
+        <select data-rset-val="readerWidth">
+          <option value="compact">Kompakt</option>
+          <option value="wide">Breit</option>
+          <option value="full">Vollbreite</option>
+        </select>
+      </div>
+      <div class="form-row"><span class="form-label">Abstand zwischen Seiten</span>
+        <select data-rset-val="readerGap">
+          <option value="0">Kein Abstand</option>
+          <option value="8">Klein</option>
+          <option value="16">Mittel</option>
+          <option value="28">Gro&szlig;</option>
+        </select>
+      </div>
+      <div class="form-row" style="display:block;">
+        <span class="form-label">Helligkeit</span>
+        <div class="reader-range-row">
+          <input type="range" class="reader-range" min="30" max="100" step="5" data-rset-val="readerBrightness" aria-label="Helligkeit">
+          <span class="reader-range-value" data-rsout="readerBrightness">100%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Bedienung</h3>
+      <div class="form-section" style="margin:0;">
+        <div class="settings-row"><span>Wischen zum Bl&auml;ttern</span><input type="checkbox" data-rset="readerSwipe" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Tipp-Zonen links / rechts</span><input type="checkbox" data-rset="readerTapZones" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Leiste automatisch ausblenden</span><input type="checkbox" data-rset="readerImmersive" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Doppeltipp vergr&ouml;&szlig;ert Seite</span><input type="checkbox" data-rset="readerZoom" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Tastatur (Pfeile, Esc)</span><input type="checkbox" data-rset="readerKeyboard" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Bildschirm bleibt an</span><input type="checkbox" data-rset="readerWakeLock" style="width:22px;height:22px;"></div>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Weiterlesen</h3>
+      <div class="form-section" style="margin:0 0 8px;">
+        <div class="settings-row"><span>Nahtlos zum n&auml;chsten Kapitel</span><input type="checkbox" data-rset="readerSeamless" style="width:22px;height:22px;"></div>
+      </div>
+      <div class="form-row"><span class="form-label">Als gelesen markieren</span>
+        <select data-rset-val="readerMarkMode">
+          <option value="end">Am Kapitelende</option>
+          <option value="80">Ab 80&nbsp;% gelesen</option>
+          <option value="never">Nur von Hand</option>
+        </select>
+      </div>
+      <div class="form-row"><span class="form-label">Sleep-Timer</span>
+        <select data-rset-val="readerSleep">
+          <option value="0">Aus</option>
+          <option value="15">15 Minuten</option>
+          <option value="30">30 Minuten</option>
+          <option value="45">45 Minuten</option>
+          <option value="60">60 Minuten</option>
+        </select>
+      </div>
+      <p class="section-sub" id="readerSleepInfo" style="margin:6px 0 0;"></p>
+    </div>
+
+    <div class="settings-block">
+      <h3>Qualit&auml;t &amp; Offline</h3>
+      <div class="form-row"><span class="form-label">Bildqualit&auml;t</span>
+        <select data-rset-val="readerQuality">
+          <option value="auto">Automatisch</option>
+          <option value="original">Immer Original</option>
+          <option value="datasaver">Datensparend</option>
+        </select>
+      </div>
+      <div class="form-section" style="margin:0 0 8px;">
+        <div class="settings-row"><span>Offline zuerst aus dem Cache</span><input type="checkbox" data-rset="readerCacheFirst" style="width:22px;height:22px;"></div>
+      </div>
+      <div class="settings-row" style="padding:0;">
+        <span>Offline gespeicherte Kapitel</span>
+        <button class="btn-ghost" id="readerOfflineBtn" type="button">Verwalten</button>
+      </div>
+      <p class="section-sub" id="readerOfflineInfo" style="margin:6px 0 0;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Sleep-Timer-Hinweis -->
+<div class="reader-sleep" id="readerSleepOverlay">
+  <div class="reader-sleep-box">
+    <div class="reader-end-title">Sleep-Timer</div>
+    <div class="reader-end-hint" id="readerSleepText">Zeit ist um &ndash; weiterlesen?</div>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button class="reader-end-btn ghost" id="readerSleepClose">Schlafen</button>
+      <button class="reader-end-btn" id="readerSleepMore">+15 Minuten</button>
+    </div>
+  </div>
+</div>
+
+<!-- Offline-Verwaltung -->
+<div class="overlay" id="offlineOverlay">
+  <div class="sheet">
+    <div class="sheet-grabber"></div>
+    <div class="sheet-navbar">
+      <button class="cancel" id="offlineClose">Zur&uuml;ck</button>
+      <span class="sheet-navbar-title">Offline</span>
+      <button class="save" id="offlineClearAll">Alle l&ouml;schen</button>
+    </div>
+    <div class="status-pills" id="offlineSummary"></div>
+    <div class="settings-block" style="margin-bottom:0;">
+      <div class="activity-list" id="offlineList"></div>
+    </div>
   </div>
 </div>
 
@@ -1388,7 +1615,8 @@ body.chapter-hidden .row .chapter-num { display: none !important; }
         <div class="settings-row"><span>Lesefortschritt auf Covern</span><input type="checkbox" id="showProgressToggle" style="width:22px;height:22px;"></div>
         <div class="settings-row"><span>Update-Badges anzeigen</span><input type="checkbox" id="showBadgesToggle" style="width:22px;height:22px;"></div>
         <div class="settings-row"><span>Cover vergr&ouml;&szlig;ern bei Klick</span><input type="checkbox" id="coverZoomToggle" style="width:22px;height:22px;"></div>
-        <div class="settings-row"><span>Reader: warmer Nachtmodus</span><input type="checkbox" id="readerNightToggle" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Fortschrittsring auf Covern</span><input type="checkbox" id="progressRingToggle" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Suche auch in Notizen</span><input type="checkbox" id="searchNotesToggle" style="width:22px;height:22px;"></div>
         <div class="settings-row"><span>Statistik-Badge in Navbar</span><input type="checkbox" id="statsNotifToggle" style="width:22px;height:22px;"></div>
         <div class="settings-row"><span>Haptisches Feedback</span><input type="checkbox" id="hapticToggle" style="width:22px;height:22px;"></div>
         <div class="settings-row"><span>Info &ouml;ffnen gleich mit AniList abgleichen</span><input type="checkbox" id="syncOnOpenToggle" style="width:22px;height:22px;"></div>
@@ -1419,16 +1647,82 @@ body.chapter-hidden .row .chapter-num { display: none !important; }
 
     <div class="settings-block">
       <h3>Reader</h3>
-      <div class="form-row"><span class="form-label">Darstellung</span>
-        <select id="readerModeSetting"><option value="webtoon">Scroll</option><option value="single">Einzelseite</option></select>
+      <div class="segmented" id="readerModeSeg" style="margin:0 0 10px;">
+        <button data-rseg="readerMode" data-value="webtoon">Scroll</button>
+        <button data-rseg="readerMode" data-value="single">Einzelseite</button>
       </div>
       <div class="form-row"><span class="form-label">Seitenbreite</span>
-        <select id="readerWidthSetting"><option value="compact">Kompakt</option><option value="wide">Breit</option><option value="full">Vollbreite</option></select>
+        <select data-rset-val="readerWidth">
+          <option value="compact">Kompakt</option>
+          <option value="wide">Breit</option>
+          <option value="full">Vollbreite</option>
+        </select>
       </div>
       <div class="form-row"><span class="form-label">Abstand zwischen Seiten</span>
-        <select id="readerGapSetting"><option value="0">Kein Abstand</option><option value="8">Klein</option><option value="16">Mittel</option><option value="28">Groß</option></select>
+        <select data-rset-val="readerGap">
+          <option value="0">Kein Abstand</option>
+          <option value="8">Klein</option>
+          <option value="16">Mittel</option>
+          <option value="28">Gro&szlig;</option>
+        </select>
       </div>
-      <p class="section-sub" style="margin:0;">Diese Einstellungen gelten für den In-App-Reader und werden auf diesem Gerät gespeichert.</p>
+      <div class="form-row" style="display:block;">
+        <span class="form-label">Helligkeit</span>
+        <div class="reader-range-row">
+          <input type="range" class="reader-range" min="30" max="100" step="5" data-rset-val="readerBrightness" aria-label="Helligkeit">
+          <span class="reader-range-value" data-rsout="readerBrightness">100%</span>
+        </div>
+      </div>
+      <div class="form-row"><span class="form-label">Bildqualit&auml;t</span>
+        <select data-rset-val="readerQuality">
+          <option value="auto">Automatisch</option>
+          <option value="original">Immer Original</option>
+          <option value="datasaver">Datensparend</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Reader-Bedienung</h3>
+      <div class="form-section" style="margin:0;">
+        <div class="settings-row"><span>Wischen zum Bl&auml;ttern</span><input type="checkbox" data-rset="readerSwipe" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Tipp-Zonen links / rechts</span><input type="checkbox" data-rset="readerTapZones" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Leiste automatisch ausblenden</span><input type="checkbox" data-rset="readerImmersive" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Doppeltipp vergr&ouml;&szlig;ert Seite</span><input type="checkbox" data-rset="readerZoom" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Tastatur (Pfeile, Esc)</span><input type="checkbox" data-rset="readerKeyboard" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Bildschirm bleibt an</span><input type="checkbox" data-rset="readerWakeLock" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Offline zuerst aus dem Cache</span><input type="checkbox" data-rset="readerCacheFirst" style="width:22px;height:22px;"></div>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <h3>Reader: Weiterlesen</h3>
+      <div class="form-section" style="margin:0 0 8px;">
+        <div class="settings-row"><span>Nahtlos zum n&auml;chsten Kapitel</span><input type="checkbox" data-rset="readerSeamless" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Reader: warmer Nachtmodus</span><input type="checkbox" id="readerNightToggle" style="width:22px;height:22px;"></div>
+      </div>
+      <div class="form-row"><span class="form-label">Als gelesen markieren</span>
+        <select data-rset-val="readerMarkMode">
+          <option value="end">Am Kapitelende</option>
+          <option value="80">Ab 80&nbsp;% gelesen</option>
+          <option value="never">Nur von Hand</option>
+        </select>
+      </div>
+      <div class="form-row"><span class="form-label">Sleep-Timer</span>
+        <select data-rset-val="readerSleep">
+          <option value="0">Aus</option>
+          <option value="15">15 Minuten</option>
+          <option value="30">30 Minuten</option>
+          <option value="45">45 Minuten</option>
+          <option value="60">60 Minuten</option>
+        </select>
+      </div>
+      <div class="settings-row" style="padding:10px 0 0;">
+        <span>Offline gespeicherte Kapitel</span>
+        <button class="btn-ghost" id="readerOfflineBtnB" type="button">Verwalten</button>
+      </div>
+      <p class="section-sub" id="readerOfflineInfoB" style="margin:6px 0 0;"></p>
+      <p class="section-sub" style="margin:6px 0 0;">Im Reader &ouml;ffnest du dieselben Einstellungen jederzeit &uuml;ber das Zahnrad in der Leiste.</p>
     </div>
 
     <div class="settings-block">
@@ -1448,6 +1742,10 @@ body.chapter-hidden .row .chapter-num { display: none !important; }
     <div class="settings-block">
       <h3>Benachrichtigungen</h3>
       <div class="settings-row" style="padding:0;"><span>Update-Hinweise erlauben</span><input type="checkbox" id="notificationsToggle" style="width:22px;height:22px;"></div>
+      <div class="form-section" style="margin:10px 0 0;">
+        <div class="settings-row"><span>Kapitelnummer in der Meldung</span><input type="checkbox" id="notifyDetailsToggle" style="width:22px;height:22px;"></div>
+        <div class="settings-row"><span>Ruhezeiten (22&ndash;8 Uhr)</span><input type="checkbox" id="quietHoursToggle" style="width:22px;height:22px;"></div>
+      </div>
       <p class="section-sub" id="notificationsStatus" style="margin:6px 0 0;">Benachrichtigungen werden beim AniList-Abgleich ausgelöst, wenn die App geöffnet ist.</p>
     </div>
 
@@ -1479,6 +1777,16 @@ body.chapter-hidden .row .chapter-num { display: none !important; }
       </div>
       <input type="file" id="importFile" class="hidden-file" accept="application/json">
       <p class="section-sub" id="savedStatus"></p>
+    </div>
+
+    <div class="settings-block">
+      <h3>Ger&auml;tespeicher</h3>
+      <p class="section-sub" id="storageStatus" style="margin:0 0 6px;">Wird berechnet&hellip;</p>
+      <div class="form-section" style="margin:0;">
+        <div class="settings-row" style="display:none;" id="offloadRow"><span>Gro&szlig;e Cover auslagern</span><button class="btn-ghost" id="offloadBtn" type="button">Auslagern</button></div>
+        <div class="settings-row" style="display:none;" id="restoreCoversRow"><span>Cover zur&uuml;ckholen</span><button class="btn-ghost" id="restoreCoversBtn" type="button">Zur&uuml;ckholen</button></div>
+      </div>
+      <p class="section-sub" style="margin:8px 0 0;">Eigene Cover liegen sonst als Text im begrenzten Ger&auml;tespeicher. Auslagern legt sie in eine gr&ouml;&szlig;ere lokale Ablage um &ndash; ein Backup enth&auml;lt sie weiterhin.</p>
     </div>
   </div>
 </div>
@@ -1619,6 +1927,8 @@ function migrateItem(raw, fallbackTime) {
   }
   base.tags = Array.isArray(raw.tags) ? raw.tags : [];
   base.readHistory = Array.isArray(raw.readHistory) ? raw.readHistory : [];
+  // Ausgelagertes Cover (IndexedDB) beibehalten
+  if (raw.coverKey) base.coverKey = raw.coverKey;
   // Modul 1-4: AniList-Metadaten (leer/neutral, wenn nie ueber die Suche angelegt)
   base.aniListId = raw.aniListId || null;
   base.totalChapters = (raw.totalChapters === undefined || raw.totalChapters === null) ? null : Number(raw.totalChapters);
@@ -1689,7 +1999,14 @@ function loadSettings() {
     gridSize: "normal", listLayout: "normal", font: "system",
     showProgress: true, showBadges: true, coverZoom: true, readerNightMode: false, statsNotifications: true, haptics: true, activityLastSeen: "", lastAutoSync: "",
     menuStyle: "apple", glass: "subtle", chapterDisplay: "hover",
-    syncOnOpen: true, autoLinkAniList: true };
+    syncOnOpen: true, autoLinkAniList: true,
+    // Reader 2.0 -- alles einzeln an-/ausschaltbar
+    readerSwipe: true, readerTapZones: true, readerImmersive: true, readerZoom: true,
+    readerKeyboard: true, readerWakeLock: true, readerSeamless: true, readerCacheFirst: true,
+    readerBrightness: 100, readerQuality: "auto", readerMarkMode: "end", readerSleep: 0,
+    // Komfort im Hauptbildschirm
+    searchNotes: true,
+    coverProgressRing: true, notifyDetails: true, quietHours: false };
   try {
     var raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
@@ -1717,7 +2034,10 @@ if (settings.startTab === "active") activeStatus = "aktiv";
 
 function saveState(silent) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); if (!silent) setStatus("Gespeichert auf diesem Ger\u00e4t"); }
-  catch (e) { setStatus("Speichern fehlgeschlagen \u2013 Speicher evtl. voll"); }
+  catch (e) {
+    setStatus("Speichern fehlgeschlagen \u2013 Speicher evtl. voll");
+    showToast("Speicher voll \u2013 bitte Backup erstellen");
+  }
 }
 function saveSettings() {
   try {
@@ -2042,7 +2362,7 @@ function applyAniListMediaToItem(item, m, opts) {
     if (m.chapters > prevTotal) {
       res.newChapters = true;
       item.hasUpdate = true;
-      notifyUpdate(item);
+      notifyUpdate(item, m.chapters, prevTotal);
       logActivity("update", item, "Neues Kapitel: " + m.chapters + ". verf\u00fcgbar" + (prevTotal ? " (vorher " + prevTotal + ")" : ""));
     }
     item.totalChapters = m.chapters;
@@ -2347,7 +2667,14 @@ function filteredSortedItems() {
       if (auths.indexOf(activeAuthor) === -1) return false;
     }
     if (!matchesSmartFolder(item, activeSmartFolder)) return false;
-    if (term && item.title.toLowerCase().indexOf(term) === -1) return false;
+    if (term) {
+      // Mehrere Woerter muessen alle vorkommen; optional auch in Notizen suchen
+      var haystack = [item.title, item.altTitle, item.studio, item.originType, item.url,
+        (item.authors || []).join(" "), (item.staff || []).join(" "), (item.tags || []).join(" "),
+        settings.searchNotes !== false ? (item.notes || "") : ""].join(" ").toLowerCase();
+      var parts = term.split(/\s+/).filter(Boolean);
+      for (var p = 0; p < parts.length; p++) { if (haystack.indexOf(parts[p]) === -1) return false; }
+    }
     return true;
   });
   items.sort(function (a, b) {
@@ -2363,7 +2690,157 @@ function filteredSortedItems() {
   return items;
 }
 
-function coverSrc(item) { return item.coverBase64 || item.coverUrl || ""; }
+function coverSrc(item) {
+  if (item.coverKey && coverCache[item.coverKey]) return coverCache[item.coverKey];
+  return item.coverBase64 || item.coverUrl || "";
+}
+// -----------------------------------------------------------------------
+// Cover-Auslagerung: grosse Base64-Cover wandern in die IndexedDB, damit
+// der kleine localStorage nicht ueberlaeuft. Alles bleibt lokal.
+// -----------------------------------------------------------------------
+var COVER_DB_NAME = "mangalounge-covers";
+var COVER_DB_STORE = "covers";
+var coverCache = {};
+var coverDbPromise = null;
+function openCoverDb() {
+  if (coverDbPromise) return coverDbPromise;
+  coverDbPromise = new Promise(function (resolve) {
+    if (!window.indexedDB) { resolve(null); return; }
+    var request = indexedDB.open(COVER_DB_NAME, 1);
+    request.onupgradeneeded = function () {
+      var db = request.result;
+      if (!db.objectStoreNames.contains(COVER_DB_STORE)) db.createObjectStore(COVER_DB_STORE);
+    };
+    request.onsuccess = function () { resolve(request.result); };
+    request.onerror = function () { resolve(null); };
+  });
+  return coverDbPromise;
+}
+function putCoverToStore(key, dataUrl) {
+  openCoverDb().then(function (db) {
+    if (!db) return;
+    var tx = db.transaction(COVER_DB_STORE, "readwrite");
+    tx.objectStore(COVER_DB_STORE).put(dataUrl, key);
+  }).catch(function () {});
+}
+function deleteCoverFromStore(key) {
+  openCoverDb().then(function (db) {
+    if (!db) return;
+    var tx = db.transaction(COVER_DB_STORE, "readwrite");
+    tx.objectStore(COVER_DB_STORE).delete(key);
+  }).catch(function () {});
+}
+function clearCoverStore() {
+  openCoverDb().then(function (db) {
+    if (!db) return;
+    var tx = db.transaction(COVER_DB_STORE, "readwrite");
+    tx.objectStore(COVER_DB_STORE).clear();
+  }).catch(function () {});
+}
+// Alle ausgelagerten Cover vor dem ersten Zeichnen in den Speicher holen
+function loadCoverCache() {
+  var keys = state.filter(function (i) { return i.coverKey; }).map(function (i) { return i.coverKey; });
+  if (!keys.length) return Promise.resolve();
+  return openCoverDb().then(function (db) {
+    if (!db) return;
+    return new Promise(function (resolve) {
+      var store;
+      try { store = db.transaction(COVER_DB_STORE, "readonly").objectStore(COVER_DB_STORE); } catch (e) { resolve(); return; }
+      var pending = keys.length;
+      keys.forEach(function (key) {
+        var request = store.get(key);
+        request.onsuccess = function () { if (request.result) coverCache[key] = request.result; if (--pending <= 0) resolve(); };
+        request.onerror = function () { if (--pending <= 0) resolve(); };
+      });
+    });
+  }).catch(function () {});
+}
+// Cover eines Eintrags speichern -- je nach Einstellung ausgelagert
+function persistCoverForItem(item, dataUrl) {
+  if (!dataUrl) {
+    if (item.coverKey) { deleteCoverFromStore(item.coverKey); delete item.coverKey; }
+    item.coverBase64 = "";
+    return;
+  }
+  if (settings.offloadCovers && dataUrl.indexOf("data:") === 0) {
+    var key = item.coverKey || ("cover_" + item.id);
+    coverCache[key] = dataUrl;
+    item.coverKey = key;
+    item.coverBase64 = "";
+    putCoverToStore(key, dataUrl);
+  } else {
+    item.coverBase64 = dataUrl;
+  }
+}
+function offloadAllCovers() {
+  return openCoverDb().then(function (db) {
+    if (!db) throw new Error("IndexedDB nicht verf\u00fcgbar");
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(COVER_DB_STORE, "readwrite");
+      var store = tx.objectStore(COVER_DB_STORE);
+      var moved = 0;
+      state.forEach(function (item) {
+        if (item.coverBase64 && item.coverBase64.indexOf("data:") === 0) {
+          var key = item.coverKey || ("cover_" + item.id);
+          var data = item.coverBase64;
+          coverCache[key] = data;
+          item.coverKey = key;
+          item.coverBase64 = "";
+          store.put(data, key);
+          moved++;
+        }
+      });
+      tx.oncomplete = function () { resolve(moved); };
+      tx.onerror = function () { reject(tx.error || new Error("Fehler")); };
+    });
+  });
+}
+function inlineAllCovers() {
+  var restored = 0;
+  state.forEach(function (item) {
+    if (item.coverKey && coverCache[item.coverKey]) { item.coverBase64 = coverCache[item.coverKey]; delete item.coverKey; restored++; }
+  });
+  clearCoverStore();
+  coverCache = {};
+  settings.offloadCovers = false; saveSettings();
+  saveState(); renderAll(); renderStorageStatus();
+  showToast(restored ? "Cover wieder im Ger\u00e4tespeicher" : "Nichts zur\u00fcckzuholen");
+}
+function storageBytes() {
+  var total = 0;
+  [STORAGE_KEY, SETTINGS_KEY, ACTIVITY_KEY, OFFLINE_KEY].forEach(function (key) {
+    try { var value = localStorage.getItem(key); if (value) total += new Blob([value]).size; } catch (e) {}
+  });
+  return total;
+}
+function renderStorageStatus() {
+  var el = document.getElementById("storageStatus");
+  if (!el) return;
+  var inlineCovers = state.filter(function (i) { return i.coverBase64; }).length;
+  var storedCovers = state.filter(function (i) { return i.coverKey; }).length;
+  var parts = ["Belegt: " + formatBytes(storageBytes()), state.length + " Titel"];
+  if (inlineCovers) parts.push(inlineCovers + (inlineCovers === 1 ? " eigenes Cover" : " eigene Cover") + " im Speicher");
+  if (storedCovers) parts.push(storedCovers + " ausgelagert");
+  el.textContent = parts.join(" \u00b7 ");
+  var offloadRow = document.getElementById("offloadRow");
+  var restoreRow = document.getElementById("restoreCoversRow");
+  if (offloadRow) offloadRow.style.display = (inlineCovers && window.indexedDB) ? "flex" : "none";
+  if (restoreRow) restoreRow.style.display = storedCovers ? "flex" : "none";
+}
+
+// Kleiner Fortschrittsring auf dem Cover (an-/ausschaltbar)
+function coverRingMarkup(item) {
+  if (settings.coverProgressRing === false) return "";
+  var read = (item.chapter === null || item.chapter === undefined) ? 0 : (Number(item.chapter) || 0);
+  var total = Number(item.totalChapters) || 0;
+  if (!total || read <= 0) return "";
+  var pct = Math.max(0, Math.min(100, (read / total) * 100));
+  var radius = 15, circumference = 2 * Math.PI * radius;
+  var length = (circumference * pct / 100).toFixed(1);
+  return '<span class="cover-ring" title="' + read + ' von ' + total + ' Kapiteln gelesen">' +
+    '<svg viewBox="0 0 36 36" aria-hidden="true"><circle class="ring-bg" cx="18" cy="18" r="' + radius + '"></circle>' +
+    '<circle class="ring-fg' + (pct >= 99.5 ? " full" : "") + '" cx="18" cy="18" r="' + radius + '" stroke-dasharray="' + length + ' ' + circumference.toFixed(1) + '"></circle></svg></span>';
+}
 function coverOrInitial(item, cls) {
   var src = coverSrc(item);
   if (src) return '<img class="' + cls + '" src="' + escapeHtml(src) + '" alt="" loading="lazy">';
@@ -2387,6 +2864,7 @@ function renderShelf() {
     html += '<div class="shelf-item" data-item-press="' + item.id + '">';
     html += '<div class="shelf-cover-wrap" data-shelf-open="' + item.id + '">';
     html += coverSrc(item) ? '<img class="shelf-cover" src="' + escapeHtml(coverSrc(item)) + '" alt="" loading="lazy">' : '<div class="shelf-cover-fallback">' + escapeHtml((item.title || "?").charAt(0).toUpperCase()) + '</div>';
+    html += coverRingMarkup(item);
     html += '<span class="shelf-chapter-pill">Kap. ' + chapterLabel + shelfFinishedTotal + (item.hasUpdate ? '<span class="notif-dot"></span>' : '') + '</span>';
     html += '<span class="cover-actions">' +
       '<button type="button" class="gh-btn primary" data-cover-read="' + item.id + '">Lesen</button>' +
@@ -2456,13 +2934,24 @@ function statusLabel(s) {
 }
 function detailProgressText(item) {
   var read = (item.chapter === null || item.chapter === undefined) ? 0 : item.chapter;
+  var text;
   if (item.totalChapters) {
     var missing = Math.max(0, item.totalChapters - read);
-    return "Gelesen: <strong>" + read + "</strong> / Verfügbar: <strong>" + item.totalChapters + "</strong>" +
+    text = "Gelesen: <strong>" + read + "</strong> / Verfügbar: <strong>" + item.totalChapters + "</strong>" +
       (missing > 0 ? " · Noch " + missing + " Kapitel" : " · Fertig!");
+  } else if (item.aniListId) {
+    text = "Gelesen: <strong>" + read + "</strong> · Laufend";
+  } else {
+    text = "Gelesen: <strong>" + read + "</strong>";
   }
-  if (item.aniListId) return "Gelesen: <strong>" + read + "</strong> · Laufend";
-  return "Gelesen: <strong>" + read + "</strong>";
+  // Exakter Seitenstand aus dem Reader, wenn er zum aktuellen Kapitel gehört
+  var pages = Number(item.readerPageCount) || 0;
+  var current = Number(item.readerPageIndex) || 0;
+  var sameChapter = item.readerChapterNumber !== null && item.readerChapterNumber !== undefined && String(item.readerChapterNumber) === String(read);
+  if (pages > 1 && sameChapter) {
+    text += '<span class="detail-page-hint">Zuletzt: Seite ' + Math.min(current + 1, pages) + ' von ' + pages + '</span>';
+  }
+  return text;
 }
 function renderReadingHistory(item) {
   var target = document.getElementById("detailReadingHistory");
@@ -2775,6 +3264,343 @@ function showReaderAlternative(item) {
   readerStatus.innerHTML = "Dieses Kapitel ist auf MangaDex nicht auf Deutsch oder Englisch verfügbar. <a href=\"" + escapeHtml(url) + "\" target=\"_blank\" rel=\"noopener\" style=\"color:#e6b866;\">Alternative Quelle öffnen</a>";
   readerStatus.style.display = "block";
 }
+// -----------------------------------------------------------------------
+// READER 2.0 -- Bedienung, Helligkeit, Qualitaet, Weiterlesen
+// -----------------------------------------------------------------------
+var readerWakeLock = null;
+var readerToolbarTimer = null;
+var readerSleepTimer = null;
+var readerAutoNextTimer = null;
+var readerEndShown = false;
+var readerPrefetchFor = -1;
+var readerSwipeX = 0, readerSwipeY = 0, readerSwipeFromToolbar = false;
+var readerLastSwipeAt = 0;
+var readerLastScrollTop = 0;
+var readerLastTapAt = 0;
+var readerZoomOrigin = "";
+var OFFLINE_KEY = "mangalounge_offline_v1";
+
+function readerIsOpen() { return readerOverlay.classList.contains("open"); }
+function isOnline() { return navigator.onLine !== false; }
+// Grobe Netzeinschaetzung fuer die automatische Bildqualitaet
+function readerSlowConnection() {
+  var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!c) return false;
+  if (c.saveData) return true;
+  var t = String(c.effectiveType || "").toLowerCase();
+  return t === "slow-2g" || t === "2g" || t === "3g";
+}
+// Original oder datensparende Bilder?
+function readerUseDataSaver() {
+  var q = settings.readerQuality || "auto";
+  if (q === "datasaver") return true;
+  if (q === "original") return false;
+  return readerSlowConnection();
+}
+function readerImageUrl(baseUrl, hash, file, saver) {
+  var direct = baseUrl + "/" + (saver ? "data-saver" : "data") + "/" + hash + "/" + encodeURIComponent(file);
+  return MANGADEX_API === "https://api.mangadex.org" ? direct : MANGADEX_API + "/image?url=" + encodeURIComponent(direct);
+}
+// --- Helligkeit --------------------------------------------------------
+function applyReaderBrightness() {
+  var dimmer = document.getElementById("readerDimmer");
+  if (!dimmer) return;
+  var v = Number(settings.readerBrightness);
+  if (isNaN(v)) v = 100;
+  dimmer.style.opacity = (Math.max(0, Math.min(70, 100 - v)) / 100).toFixed(2);
+}
+// --- Leiste automatisch ausblenden ------------------------------------
+function setReaderToolbarVisible(visible) {
+  readerOverlay.classList.toggle("toolbar-visible", !!visible);
+  clearTimeout(readerToolbarTimer);
+  if (visible && readerIsOpen()) scheduleReaderToolbarHide();
+}
+function scheduleReaderToolbarHide() {
+  clearTimeout(readerToolbarTimer);
+  if (settings.readerImmersive === false) return;
+  readerToolbarTimer = setTimeout(function () {
+    if (readerIsOpen()) readerOverlay.classList.remove("toolbar-visible");
+  }, 2600);
+}
+function toggleReaderToolbar() {
+  if (settings.readerImmersive === false) return;
+  setReaderToolbarVisible(!readerOverlay.classList.contains("toolbar-visible"));
+}
+// --- Bildschirm bleibt an ---------------------------------------------
+function requestReaderWakeLock() {
+  if (!("wakeLock" in navigator)) return;
+  if (settings.readerWakeLock === false || !readerIsOpen()) return;
+  if (document.visibilityState !== "visible" || readerWakeLock) return;
+  try {
+    navigator.wakeLock.request("screen").then(function (sentinel) {
+      readerWakeLock = sentinel;
+      if (sentinel && sentinel.addEventListener) sentinel.addEventListener("release", function () { readerWakeLock = null; });
+    }).catch(function () {});
+  } catch (e) {}
+}
+function releaseReaderWakeLock() {
+  if (!readerWakeLock) return;
+  try { readerWakeLock.release(); } catch (e) {}
+  readerWakeLock = null;
+}
+// --- Sleep-Timer ------------------------------------------------------
+function startReaderSleepTimer() {
+  clearTimeout(readerSleepTimer);
+  var mins = Number(settings.readerSleep) || 0;
+  if (mins && readerIsOpen()) readerSleepTimer = setTimeout(showReaderSleepPrompt, mins * 60000);
+  updateReaderSleepInfo();
+}
+function showReaderSleepPrompt() {
+  releaseReaderWakeLock();
+  var el = document.getElementById("readerSleepOverlay");
+  if (el) el.classList.add("open");
+}
+function updateReaderSleepInfo() {
+  var txt = (Number(settings.readerSleep) || 0) ? ("Timer l\u00e4uft: nach " + settings.readerSleep + " Minuten kommt der Hinweis.") : "Ausgeschaltet \u2013 es wird nicht unterbrochen.";
+  var el = document.getElementById("readerSleepInfo");
+  if (el) el.textContent = txt;
+}
+// --- Offline-Verwaltung ----------------------------------------------
+function loadOfflineIndex() {
+  try {
+    var raw = localStorage.getItem(OFFLINE_KEY);
+    if (raw) { var parsed = JSON.parse(raw); if (parsed && typeof parsed === "object") return parsed; }
+  } catch (e) {}
+  return {};
+}
+function saveOfflineIndex() { try { localStorage.setItem(OFFLINE_KEY, JSON.stringify(offlineIndex)); } catch (e) {} }
+var offlineIndex = loadOfflineIndex();
+function offlineTotalPages() {
+  return Object.keys(offlineIndex).reduce(function (n, k) { return n + (offlineIndex[k].count || 0); }, 0);
+}
+function updateOfflineInfo() {
+  var keys = Object.keys(offlineIndex);
+  var txt = keys.length
+    ? (keys.length + " Kapitel \u00b7 " + offlineTotalPages() + " Seiten offline verf\u00fcgbar")
+    : "Noch nichts offline gespeichert.";
+  ["readerOfflineInfo", "readerOfflineInfoB"].forEach(function (id) {
+    var el = document.getElementById(id); if (el) el.textContent = txt;
+  });
+}
+function recordOfflineChapter(chapter, urls) {
+  offlineIndex[chapter.id] = {
+    title: readerItem ? readerItem.title : "",
+    number: String(chapter.number),
+    count: urls.length,
+    urls: urls.slice(0, 500),
+    at: new Date().toISOString()
+  };
+  saveOfflineIndex(); updateOfflineInfo();
+}
+function renderOfflineList() {
+  var list = document.getElementById("offlineList");
+  var summary = document.getElementById("offlineSummary");
+  if (!list) return;
+  var keys = Object.keys(offlineIndex).sort(function (a, b) {
+    return String((offlineIndex[b] || {}).at || "").localeCompare(String((offlineIndex[a] || {}).at || ""));
+  });
+  if (summary) summary.innerHTML =
+    '<span class="status-pill">Kapitel <strong>' + keys.length + '</strong></span>' +
+    '<span class="status-pill">Seiten <strong>' + offlineTotalPages() + '</strong></span>' +
+    '<span class="status-pill">Gr\u00f6\u00dfe <strong id="offlineSizeValue">\u2026</strong></span>';
+  if (!keys.length) {
+    list.innerHTML = '<p class="activity-empty">Noch keine Kapitel offline gespeichert. \u00d6ffne ein Kapitel im Reader und tippe oben auf das Download-Symbol.</p>';
+    return;
+  }
+  list.innerHTML = keys.map(function (id) {
+    var e = offlineIndex[id] || {};
+    return '<div class="activity-item offline-item">' +
+      '<span class="act-icon"><svg class="icon" viewBox="0 0 24 24" width="18" height="18"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg></span>' +
+      '<span class="act-body"><span class="act-title">' + escapeHtml(e.title || "Manga") + '</span>' +
+      '<span class="act-msg">Kapitel ' + escapeHtml(e.number || "?") + ' \u00b7 ' + (e.count || 0) + ' Seiten</span></span>' +
+      '<button class="btn-ghost" data-offline-del="' + escapeHtml(id) + '" type="button">L\u00f6schen</button></div>';
+  }).join("");
+  measureOfflineSize();
+}
+// Schaetzt die belegte Groesse, indem die Bilder aus dem Cache gelesen werden
+function measureOfflineSize() {
+  var keys = Object.keys(offlineIndex);
+  if (!keys.length) return;
+  var urlCount = keys.reduce(function (n, id) { return n + ((offlineIndex[id].urls || []).length); }, 0);
+  var setSize = function (bytes) {
+    var el = document.getElementById("offlineSizeValue");
+    if (el) el.textContent = formatBytes(bytes);
+  };
+  if (!urlCount) { setSize(0); return; }
+  readerCachePromise.then(function (cache) {
+    if (!cache) { setSize(0); return; }
+    var total = 0, pending = urlCount;
+    keys.forEach(function (id) {
+      (offlineIndex[id].urls || []).forEach(function (url) {
+        cache.match(url).then(function (res) { return res ? res.blob() : null; }).then(function (blob) {
+          if (blob) total += blob.size;
+        }).catch(function () {}).then(function () {
+          if (--pending <= 0) setSize(total);
+        });
+      });
+    });
+  }).catch(function () { setSize(0); });
+}
+function formatBytes(bytes) {
+  if (!bytes) return "0 MB";
+  if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1).replace(".", ",") + " MB";
+}
+function deleteOfflineChapter(id) {
+  var entry = offlineIndex[id];
+  if (!entry) return Promise.resolve();
+  return readerCachePromise.then(function (cache) {
+    if (!cache) return;
+    return Promise.all((entry.urls || []).map(function (url) { return cache.delete(url).catch(function () {}); }));
+  }).then(function () {
+    delete offlineIndex[id];
+    saveOfflineIndex(); updateOfflineInfo(); renderOfflineList();
+    showToast("Offline-Kapitel gel\u00f6scht");
+  });
+}
+function clearAllOffline() {
+  var ids = Object.keys(offlineIndex);
+  if (!ids.length) { showToast("Nichts zu l\u00f6schen"); return; }
+  Promise.all(ids.map(function (id) { return deleteOfflineChapter(id); })).then(function () {
+    showToast("Alle Offline-Kapitel gel\u00f6scht");
+  });
+}
+// --- Seitenwechsel ----------------------------------------------------
+function setReaderPage(index) {
+  readerPageIndex = index;
+  updateReaderPageVisibility();
+  if (readerItem) { readerItem.readerPageIndex = index; saveState(true); }
+}
+function readerTurnPage(dir) {
+  if (!readerItem) return;
+  if (!readerPages.children.length) return;
+  if (settings.readerMode === "single") {
+    var last = readerPages.children.length - 1;
+    if (dir > 0) {
+      if (readerPageIndex < last) { setReaderPage(readerPageIndex + 1); checkReaderChapterFinished(); }
+      else readerNextChapterIfAny(true);
+    } else if (readerPageIndex > 0) setReaderPage(readerPageIndex - 1);
+  } else {
+    readerOverlay.scrollBy({ top: dir * Math.max(220, readerOverlay.clientHeight * 0.88), behavior: "smooth" });
+  }
+}
+function readerChapterLabel() {
+  var n = currentReaderChapterNumber();
+  return n === null ? "Kapitel" : "Kapitel " + n;
+}
+function readerNextChapterIfAny(notify) {
+  var next = readerChapterIndex + 1;
+  if (next >= readerChapterList.length) { if (notify) showToast("Letztes verf\u00fcgbares Kapitel"); return false; }
+  loadReaderChapter(next);
+  if (notify) showToast("Kapitel " + readerChapterList[next].number);
+  return true;
+}
+// Naechstes Kapitel im Hintergrund vorladen
+function readerPrefetchNext() {
+  if (settings.readerSeamless === false) return;
+  var next = readerChapterIndex + 1;
+  if (next < 0 || next >= readerChapterList.length || readerPrefetchFor === next) return;
+  readerPrefetchFor = next;
+  var chapter = readerChapterList[next];
+  mdApi("/at-home/server/" + encodeURIComponent(chapter.id)).then(function (payload) {
+    if (!payload || !payload.chapter || readerChapterIndex + 1 !== next) return;
+    var data = payload.chapter;
+    var saver = readerUseDataSaver();
+    var files = (saver ? data.dataSaver : data.data) || data.data || data.dataSaver || [];
+    (files || []).slice(0, 8).forEach(function (file) {
+      var im = new Image();
+      im.decoding = "async";
+      im.src = readerImageUrl(payload.baseUrl, data.hash, file, saver);
+    });
+  }).catch(function () {});
+}
+function cancelReaderAutoNext() { clearTimeout(readerAutoNextTimer); readerAutoNextTimer = null; }
+function showReaderEndCard() {
+  var end = document.getElementById("readerEnd");
+  if (!end) return;
+  var next = readerChapterIndex + 1;
+  var hasNext = next < readerChapterList.length;
+  var seamless = hasNext && settings.readerSeamless !== false;
+  end.style.display = "block";
+  end.innerHTML = '<div class="reader-end-card">' +
+    '<div class="reader-end-title">' + escapeHtml(readerChapterLabel()) + ' beendet</div>' +
+    '<div class="reader-end-hint" id="readerEndHint">' +
+      (hasNext ? (seamless ? "Weiter mit dem n\u00e4chsten Kapitel \u2026" : "Bereit f\u00fcr Kapitel " + escapeHtml(String(readerChapterList[next].number)) + "?")
+               : "Das war das letzte verf\u00fcgbare Kapitel.") +
+    '</div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">' +
+      (hasNext ? '<button class="reader-end-btn" id="readerEndNext" type="button">N\u00e4chstes Kapitel</button>' : "") +
+      '<button class="reader-end-btn ghost" id="readerEndTop" type="button">Nach oben</button>' +
+    '</div></div>';
+  var nextBtn = document.getElementById("readerEndNext");
+  if (nextBtn) nextBtn.addEventListener("click", function () { cancelReaderAutoNext(); readerNextChapterIfAny(true); });
+  var topBtn = document.getElementById("readerEndTop");
+  if (topBtn) topBtn.addEventListener("click", function () { readerOverlay.scrollTo({ top: 0, behavior: "smooth" }); });
+  if (seamless) readerAutoNextTimer = setTimeout(function () { readerAutoNextTimer = null; readerNextChapterIfAny(false); }, 2600);
+}
+// Greift der Nutzer ein, wird der automatische Wechsel abgebrochen
+function readerUserTookOver() {
+  if (!readerAutoNextTimer) return;
+  cancelReaderAutoNext();
+  var hint = document.getElementById("readerEndHint");
+  if (hint && readerChapterIndex + 1 < readerChapterList.length) {
+    hint.textContent = "Bereit f\u00fcr Kapitel " + readerChapterList[readerChapterIndex + 1].number + "?";
+  }
+}
+// --- Tippen auf eine Seite -------------------------------------------
+function readerToggleZoom(img, xRatio, yRatio) {
+  if (img.classList.contains("reader-zoomed")) {
+    img.classList.remove("reader-zoomed");
+    img.style.transformOrigin = "";
+  } else {
+    img.style.transformOrigin = Math.round(xRatio * 100) + "% " + Math.round(yRatio * 100) + "%";
+    img.classList.add("reader-zoomed");
+  }
+}
+function readerPageTapped(img, e) {
+  if (img.classList.contains("reader-page-error")) {
+    img.classList.remove("reader-page-error");
+    img.removeAttribute("data-fallback-tried");
+    img.src = (img.dataset.src || img.src.split("?retry=")[0]) + (String(img.dataset.src || img.src).indexOf("?") === -1 ? "?" : "&") + "retry=" + Date.now();
+    return;
+  }
+  if (Date.now() - readerLastSwipeAt < 550) return; // war ein Wisch
+  var single = settings.readerMode === "single";
+  var rect = img.getBoundingClientRect();
+  var xRatio = rect.width ? (e.clientX - rect.left) / rect.width : 0.5;
+  var yRatio = rect.height ? (e.clientY - rect.top) / rect.height : 0.5;
+  var zones = single && settings.readerTapZones !== false;
+  var zone = !zones ? "middle" : (xRatio < 0.4 ? "left" : (xRatio > 0.6 ? "right" : "middle"));
+  if (!single) { openCoverLightbox(img.currentSrc || img.src); return; }
+  if (zone === "middle") {
+    var now = Date.now();
+    var zoomOn = settings.readerZoom !== false;
+    if (zoomOn && now - readerLastTapAt < 330) {
+      readerLastTapAt = 0;
+      readerToggleZoom(img, xRatio, yRatio);
+      return;
+    }
+    readerLastTapAt = zoomOn ? now : 0;
+    if (zoomOn) {
+      setTimeout(function () { if (readerLastTapAt === now) { readerLastTapAt = 0; toggleReaderToolbar(); } }, 340);
+    } else {
+      toggleReaderToolbar();
+    }
+    return;
+  }
+  readerLastTapAt = 0;
+  readerTurnPage(zone === "left" ? -1 : 1);
+}
+function applyReaderSettings() {
+  readerOverlay.classList.toggle("immersive", settings.readerImmersive !== false);
+  if (settings.readerImmersive === false) setReaderToolbarVisible(true);
+  applyReaderBrightness();
+  updateReaderSleepInfo();
+  if (readerIsOpen()) {
+    if (settings.readerWakeLock === false) releaseReaderWakeLock(); else requestReaderWakeLock();
+    startReaderSleepTimer();
+  }
+}
 function updateReaderPageVisibility() {
   var single = settings.readerMode === "single";
   readerPages.style.setProperty("--reader-gap", (Number(settings.readerGap) || 0) + "px");
@@ -2787,7 +3613,19 @@ function updateReaderPageVisibility() {
   document.getElementById("readerPagePrev").disabled = readerPageIndex <= 0;
   document.getElementById("readerPageNext").disabled = readerPageIndex >= readerPages.children.length - 1;
   document.getElementById("readerPageCount").textContent = readerPages.children.length ? "Seite " + (readerPageIndex + 1) + " / " + readerPages.children.length : "Seite 0";
+  if (readerItem && readerPages.children.length) {
+    readerItem.readerPageCount = readerPages.children.length;
+    saveState(true);
+  }
   updateReaderProgress();
+  if (readerReaderReachedHalf()) readerPrefetchNext();
+}
+// Ab der Haelfte des Kapitels wird das naechste im Hintergrund geladen
+function readerReaderReachedHalf() {
+  if (settings.readerSeamless === false || !readerPages.children.length) return false;
+  if (settings.readerMode === "single") return readerPageIndex >= Math.floor(readerPages.children.length / 2);
+  var total = readerOverlay.scrollHeight - readerOverlay.clientHeight;
+  return total > 0 && (readerOverlay.scrollTop / total) >= 0.5;
 }
 // Punkt 17: Lesefortschritts-Balken im Reader
 function updateReaderProgress() {
@@ -2830,34 +3668,68 @@ function markReaderChapterAsRead() {
   if (currentDetailId === readerItem.id) renderDetailContent(readerItem);
   if (!checkFinishedItem(readerItem)) showToast("Kapitel " + chapNum + " als gelesen markiert");
 }
+// Ist das Kapitel zu Ende gelesen?
+function readerAtChapterEnd() {
+  if (!readerPages.children.length) return false;
+  if (settings.readerMode === "single") return readerPageIndex >= readerPages.children.length - 1;
+  var remaining = readerOverlay.scrollHeight - (readerOverlay.scrollTop + readerOverlay.clientHeight);
+  return remaining < 60;
+}
+// Greift die eingestellte Markier-Schwelle?
+function readerMarkThresholdReached() {
+  if (!readerPages.children.length) return false;
+  var mode = settings.readerMarkMode || "end";
+  if (mode === "never") return false;
+  if (readerAtChapterEnd()) return true;
+  if (mode === "80") {
+    if (settings.readerMode === "single") return (readerPageIndex + 1) / readerPages.children.length >= 0.8;
+    var total = readerOverlay.scrollHeight - readerOverlay.clientHeight;
+    return total > 0 && (readerOverlay.scrollTop / total) >= 0.8;
+  }
+  return false;
+}
 function checkReaderChapterFinished() {
-  if (!readerItem || readerChapterMarkedRead) return;
-  var single = settings.readerMode === "single";
-  if (single) {
-    if (readerPages.children.length && readerPageIndex >= readerPages.children.length - 1) markReaderChapterAsRead();
+  if (!readerItem || readerChapterIndex < 0) return;
+  if (!readerEndShown && readerAtChapterEnd()) { readerEndShown = true; showReaderEndCard(); }
+  if (readerChapterMarkedRead) return;
+  if (readerMarkThresholdReached()) markReaderChapterAsRead();
+}
+// Laedt eine Seite -- offline zuerst aus dem Cache, sonst direkt
+function loadReaderImage(img, src) {
+  if (settings.readerCacheFirst !== false && !isOnline()) {
+    readerCachePromise.then(function (cache) { return cache ? cache.match(src) : null; }).then(function (response) {
+      if (!response) throw new Error("not-cached");
+      return response.blob();
+    }).then(function (blob) {
+      img.dataset.fromCache = "true";
+      img.src = URL.createObjectURL(blob);
+    }).catch(function () { img.src = src; });
   } else {
-    var remaining = readerOverlay.scrollHeight - (readerOverlay.scrollTop + readerOverlay.clientHeight);
-    if (remaining < 60) markReaderChapterAsRead();
+    img.src = src;
   }
 }
 function renderReaderPages(chapter, payload) {
   var data = payload && payload.chapter;
-  var files = data && (Array.isArray(data.data) ? data.data : data.dataSaver);
-  var fallbackFiles = data && (Array.isArray(data.dataSaver) ? data.dataSaver : []);
-  if (!Array.isArray(files)) files = [];
-  if (!data || !data.hash || !files.length) throw new Error("Keine Seiten gefunden");
+  if (!data || !data.hash) throw new Error("Keine Seiten gefunden");
+  var saver = readerUseDataSaver();
+  var primary = (saver ? data.dataSaver : data.data) || data.data || data.dataSaver;
+  var fallbackFiles = (saver ? data.data : data.dataSaver) || [];
+  var files = Array.isArray(primary) ? primary : [];
+  if (!files.length) throw new Error("Keine Seiten gefunden");
   readerTitle.textContent = (readerItem ? readerItem.title + " · " : "") + "Kapitel " + chapter.number;
   readerStatus.style.display = "none";
   readerPages.innerHTML = "";
   readerPageUrls = [];
+  readerEndShown = false;
+  cancelReaderAutoNext();
+  var endEl = document.getElementById("readerEnd");
+  if (endEl) { endEl.style.display = "none"; endEl.innerHTML = ""; }
   files.forEach(function (file, index) {
-    var directSrc = payload.baseUrl + "/data/" + data.hash + "/" + encodeURIComponent(file);
-    var directFallback = fallbackFiles[index] ? payload.baseUrl + "/data-saver/" + data.hash + "/" + encodeURIComponent(fallbackFiles[index]) : "";
-    var src = MANGADEX_API === "https://api.mangadex.org" ? directSrc : MANGADEX_API + "/image?url=" + encodeURIComponent(directSrc);
-    var fallback = directFallback && (MANGADEX_API === "https://api.mangadex.org" ? directFallback : MANGADEX_API + "/image?url=" + encodeURIComponent(directFallback));
+    var src = readerImageUrl(payload.baseUrl, data.hash, file, saver);
+    var fallback = fallbackFiles[index] ? readerImageUrl(payload.baseUrl, data.hash, fallbackFiles[index], !saver) : "";
     readerPageUrls.push(src);
     var img = document.createElement("img");
-    img.src = src; img.alt = ""; img.loading = "lazy";
+    img.alt = ""; img.loading = saver ? "eager" : "lazy"; img.dataset.src = src;
     img.addEventListener("error", function () {
       if (fallback && !img.dataset.fallbackTried) {
         img.dataset.fallbackTried = "true"; img.src = fallback; return;
@@ -2867,7 +3739,7 @@ function renderReaderPages(chapter, payload) {
         readerCachePromise.then(function (cache) { return cache && cache.match(src); }).then(function (response) {
           if (!response) throw new Error("not-cached");
           return response.blob();
-        }).then(function (blob) { img.src = URL.createObjectURL(blob); }).catch(function () {
+        }).then(function (blob) { img.dataset.fromCache = "true"; img.src = URL.createObjectURL(blob); }).catch(function () {
           img.classList.add("reader-page-error");
           img.alt = "Seite konnte nicht geladen werden. Antippen zum Wiederholen.";
           img.title = img.alt;
@@ -2878,29 +3750,15 @@ function renderReaderPages(chapter, payload) {
       img.alt = "Seite konnte nicht geladen werden. Antippen zum Wiederholen.";
       img.title = img.alt;
     });
-    img.addEventListener("click", function (e) {
-      if (img.classList.contains("reader-page-error")) {
-        img.classList.remove("reader-page-error"); img.removeAttribute("data-fallback-tried"); img.src = src + (src.indexOf("?") === -1 ? "?" : "&") + "retry=" + Date.now();
-        return;
-      }
-      if (settings.readerMode !== "single") { openCoverLightbox(img.currentSrc || img.src); return; }
-      var rect = img.getBoundingClientRect();
-      var xRatio = (e.clientX - rect.left) / rect.width;
-      if (xRatio < 0.4) {
-        if (readerPageIndex > 0) { readerPageIndex--; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); }
-      } else if (xRatio > 0.6) {
-        if (readerPageIndex < readerPages.children.length - 1) {
-          readerPageIndex++; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true);
-          checkReaderChapterFinished();
-        }
-      }
-    });
+    img.addEventListener("click", function (e) { readerPageTapped(img, e); });
     readerPages.appendChild(img);
+    loadReaderImage(img, src);
   });
   if (readerItem) {
     readerItem.mdChapterUrl = "https://mangadex.org/chapter/" + chapter.id;
     readerItem.mdChapterNumber = chapter.number;
     readerItem.readerPageIndex = Math.max(0, Number(readerItem.readerPageIndex) || 0);
+    readerItem.readerPageCount = files.length;
     readerPageIndex = readerItem.readerPageIndex;
     saveState(true);
     setTimeout(function () {
@@ -2918,6 +3776,9 @@ function loadReaderChapter(index) {
   }
   readerChapterIndex = index;
   readerChapterMarkedRead = false;
+  readerEndShown = false;
+  readerPrefetchFor = -1;
+  cancelReaderAutoNext();
   document.getElementById("readerPrev").disabled = index <= 0;
   document.getElementById("readerNext").disabled = index >= readerChapterList.length - 1;
   var chapter = readerChapterList[index];
@@ -2926,10 +3787,12 @@ function loadReaderChapter(index) {
   if (readerItem) {
     var chapterChanged = String(readerItem.readerChapterNumber) !== String(chapter.number);
     readerItem.readerChapterNumber = chapter.number;
-    if (chapterChanged) readerItem.readerPageIndex = 0;
+    if (chapterChanged) { readerItem.readerPageIndex = 0; readerItem.readerPageCount = 0; }
     readerItem.mdChapterUrl = "";
     saveState(true);
   }
+  setReaderToolbarVisible(true);
+  readerOverlay.scrollTop = 0;
   showReaderStatus("Kapitel " + chapter.number + " wird geladen...");
   readerPages.innerHTML = "";
   mdApi("/at-home/server/" + encodeURIComponent(chapter.id)).then(function (payload) {
@@ -2948,6 +3811,15 @@ function openInAppReader(item) {
   readerOverlay.setAttribute("aria-hidden", "false");
   readerOverlay.scrollTop = 0;
   readerOverlay.classList.toggle("warm", !!settings.readerNightMode);
+  document.documentElement.classList.add("reader-open");
+  readerEndShown = false;
+  readerPrefetchFor = -1;
+  cancelReaderAutoNext();
+  setReaderToolbarVisible(true);
+  applyReaderSettings();
+  requestReaderWakeLock();
+  startReaderSleepTimer();
+  updateOfflineInfo();
   var readerProgressEl = document.getElementById("readerProgress"); if (readerProgressEl) readerProgressEl.classList.add("active");
   updateReaderProgress();
   readerTitle.textContent = item.title;
@@ -2978,13 +3850,104 @@ function openInAppReader(item) {
 document.getElementById("detailReadInside").addEventListener("click", function () {
   openInAppReader(findItem(currentDetailId));
 });
-document.getElementById("readerClose").addEventListener("click", function () {
+function closeReader() {
   readerRequestId++;
   readerOverlay.classList.remove("open");
   readerOverlay.setAttribute("aria-hidden", "true");
   readerOverlay.scrollTop = 0;
   readerPages.innerHTML = "";
+  document.documentElement.classList.remove("reader-open");
+  cancelReaderAutoNext();
+  releaseReaderWakeLock();
+  clearTimeout(readerSleepTimer);
+  clearTimeout(readerToolbarTimer);
+  var sleepEl = document.getElementById("readerSleepOverlay");
+  if (sleepEl) sleepEl.classList.remove("open");
+  var endEl = document.getElementById("readerEnd");
+  if (endEl) { endEl.style.display = "none"; endEl.innerHTML = ""; }
   var readerProgressEl = document.getElementById("readerProgress"); if (readerProgressEl) readerProgressEl.classList.remove("active");
+}
+document.getElementById("readerClose").addEventListener("click", closeReader);
+document.getElementById("readerHandle").addEventListener("click", function () { setReaderToolbarVisible(true); });
+// Reader-Einstellungen oeffnen
+document.getElementById("readerSettingsBtn").addEventListener("click", function () {
+  syncReaderSettings();
+  updateReaderSleepInfo();
+  updateOfflineInfo();
+  document.getElementById("readerSheetOverlay").classList.add("open");
+});
+function closeReaderSheet() { document.getElementById("readerSheetOverlay").classList.remove("open"); }
+document.getElementById("readerSheetClose").addEventListener("click", closeReaderSheet);
+document.getElementById("readerSheetDone").addEventListener("click", closeReaderSheet);
+document.getElementById("readerSleepBtn").addEventListener("click", function () {
+  // Schnellzugriff: Timer im Wechsel 0 / 15 / 30 / 60 Minuten setzen
+  var steps = [0, 15, 30, 45, 60];
+  var i = steps.indexOf(Number(settings.readerSleep) || 0);
+  settings.readerSleep = steps[(i < 0 ? 0 : i + 1) % steps.length];
+  saveSettings(); syncReaderSettings(); updateReaderSleepInfo(); startReaderSleepTimer();
+  showToast(Number(settings.readerSleep) ? ("Sleep-Timer: " + settings.readerSleep + " Min.") : "Sleep-Timer aus");
+});
+// Sleep-Timer-Hinweis
+document.getElementById("readerSleepClose").addEventListener("click", function () {
+  document.getElementById("readerSleepOverlay").classList.remove("open");
+  closeReader();
+});
+document.getElementById("readerSleepMore").addEventListener("click", function () {
+  document.getElementById("readerSleepOverlay").classList.remove("open");
+  settings.readerSleep = 15; saveSettings(); syncReaderSettings(); updateReaderSleepInfo(); startReaderSleepTimer();
+  requestReaderWakeLock();
+  showToast("Weiterlesen \u2013 noch 15 Minuten");
+});
+// Offline-Verwaltung
+document.getElementById("readerOfflineBtn").addEventListener("click", function () { renderOfflineList(); document.getElementById("offlineOverlay").classList.add("open"); });
+var readerOfflineBtnB = document.getElementById("readerOfflineBtnB");
+if (readerOfflineBtnB) readerOfflineBtnB.addEventListener("click", function () { renderOfflineList(); document.getElementById("offlineOverlay").classList.add("open"); });
+document.getElementById("offlineClose").addEventListener("click", function () { document.getElementById("offlineOverlay").classList.remove("open"); });
+document.getElementById("offlineClearAll").addEventListener("click", function () { clearAllOffline(); });
+document.getElementById("offlineList").addEventListener("click", function (e) {
+  var btn = e.target.closest ? e.target.closest("[data-offline-del]") : null;
+  if (!btn) return;
+  deleteOfflineChapter(btn.getAttribute("data-offline-del"));
+});
+// Wischen und Tippen
+readerOverlay.addEventListener("touchstart", function (e) {
+  var t = e.touches && e.touches[0];
+  if (!t) return;
+  readerSwipeX = t.clientX; readerSwipeY = t.clientY;
+  readerSwipeFromToolbar = !!(e.target && e.target.closest && e.target.closest(".reader-toolbar, .reader-end, .reader-page-controls"));
+}, { passive: true });
+readerOverlay.addEventListener("touchend", function (e) {
+  if (!readerSwipeX || readerSwipeFromToolbar) { readerSwipeX = 0; return; }
+  var t = e.changedTouches && e.changedTouches[0];
+  var startX = readerSwipeX; readerSwipeX = 0;
+  if (!t || settings.readerSwipe === false) return;
+  var dx = t.clientX - startX, dy = t.clientY - readerSwipeY;
+  if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+  readerLastSwipeAt = Date.now();
+  if (settings.readerMode === "single") {
+    readerTurnPage(dx < 0 ? 1 : -1);
+  } else {
+    // Im Scroll-Modus wechselt ein deutlicher Wisch das Kapitel
+    if (Math.abs(dx) < 100) return;
+    readerNextChapterIfAny(true);
+  }
+}, { passive: true });
+// Tastatur
+document.addEventListener("keydown", function (e) {
+  if (!readerIsOpen() || settings.readerKeyboard === false) return;
+  var tag = (e.target && e.target.tagName) || "";
+  if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  if (e.key === "Escape") { closeReader(); return; }
+  if (e.key === "ArrowRight") { readerTurnPage(1); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { readerTurnPage(-1); e.preventDefault(); }
+  else if (e.key === " ") {
+    if (settings.readerMode === "single") { readerTurnPage(1); e.preventDefault(); }
+  }
+});
+// Beim Zurueckkommen den Bildschirm wieder wachhalten
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible") requestReaderWakeLock();
+  else releaseReaderWakeLock();
 });
 document.getElementById("readerPrev").addEventListener("click", function () { loadReaderChapter(readerChapterIndex - 1); });
 document.getElementById("readerNext").addEventListener("click", function () { loadReaderChapter(readerChapterIndex + 1); });
@@ -2992,8 +3955,10 @@ readerChapterSelect.addEventListener("change", function () { loadReaderChapter(p
 document.getElementById("readerReload").addEventListener("click", function () { loadReaderChapter(readerChapterIndex); });
 document.getElementById("readerDownload").addEventListener("click", function () {
   var button = this;
-  if (!readerPageUrls.length) { showReaderStatus("Erst ein Kapitel laden."); return; }
-  button.disabled = true; showReaderStatus("Kapitel wird offline gespeichert...");
+  if (!readerPageUrls.length || readerChapterIndex < 0) { showReaderStatus("Erst ein Kapitel laden."); return; }
+  var chapter = readerChapterList[readerChapterIndex];
+  button.disabled = true; button.classList.add("spin");
+  showReaderStatus("Kapitel wird offline gespeichert...");
   readerCachePromise.then(function (cache) {
     if (!cache) throw new Error("Cache API nicht verfügbar");
     var saved = 0, total = readerPageUrls.length;
@@ -3011,28 +3976,32 @@ document.getElementById("readerDownload").addEventListener("click", function () 
     }
     return nextPage();
   }).then(function () {
+    recordOfflineChapter(chapter, readerPageUrls);
     showReaderStatus("Kapitel offline gespeichert.");
+    showToast("Kapitel " + chapter.number + " offline verfügbar");
   }).catch(function (err) {
     showReaderStatus("Offline-Speichern fehlgeschlagen: " + err.message);
-  }).then(function () { button.disabled = false; });
+  }).then(function () { button.disabled = false; button.classList.remove("spin"); });
 });
-document.getElementById("readerPagePrev").addEventListener("click", function () { if (readerPageIndex > 0) { readerPageIndex--; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true); } });
+document.getElementById("readerPagePrev").addEventListener("click", function () { if (readerPageIndex > 0) setReaderPage(readerPageIndex - 1); });
 document.getElementById("readerPageNext").addEventListener("click", function () {
-  if (readerPageIndex < readerPages.children.length - 1) {
-    readerPageIndex++; updateReaderPageVisibility(); readerItem.readerPageIndex = readerPageIndex; saveState(true);
-    checkReaderChapterFinished();
-  }
+  if (readerPageIndex < readerPages.children.length - 1) { setReaderPage(readerPageIndex + 1); checkReaderChapterFinished(); }
+  else readerNextChapterIfAny(true);
 });
 readerOverlay.addEventListener("scroll", function () {
   if (!readerItem || readerChapterIndex < 0) return;
+  if (settings.readerImmersive !== false && readerOverlay.classList.contains("toolbar-visible")) scheduleReaderToolbarHide();
   clearTimeout(readerSaveTimer);
   readerSaveTimer = setTimeout(function () {
+    if (readerOverlay.scrollTop < readerLastScrollTop - 40) readerUserTookOver();
+    readerLastScrollTop = readerOverlay.scrollTop;
     var page = Array.prototype.findIndex.call(readerPages.children, function (img) {
       return img.offsetTop + img.offsetHeight / 2 >= readerOverlay.scrollTop + 70;
     });
     if (page >= 0) { readerPageIndex = page; readerItem.readerPageIndex = page; updateReaderPageVisibility(); saveState(true); }
     updateReaderProgress();
     checkReaderChapterFinished();
+    readerPrefetchNext();
   }, 250);
 });
 
@@ -3094,7 +4063,7 @@ function renderList() {
     if (item.lastUpdated) metaBits.push("Aktualisiert " + formatDate(item.lastUpdated));
     metaBits.push(progressLabel(item));
     html += '<div class="row" data-item-press="' + item.id + '">';
-    html += '<div data-open-url="' + item.id + '">' + coverOrInitial(item, "row-cover") + '</div>';
+    html += '<div class="row-cover-wrap" data-open-url="' + item.id + '">' + coverOrInitial(item, "row-cover") + coverRingMarkup(item) + '</div>';
     html += '<div class="row-content" data-edit="' + item.id + '">';
     html += '<div class="row-title">' + escapeHtml(item.title) + (item.originType ? ' <span class="origin-pill">' + escapeHtml(item.originType) + '</span>' : '') + (item.hasUpdate ? '<span class="notif-dot"></span>' : '') + '</div>';
     html += '<div class="row-meta">' + escapeHtml(metaBits.filter(Boolean).join(" \u00b7 ")) + '</div>';
@@ -3196,7 +4165,7 @@ function openSheet(id) {
   document.getElementById("fTags").value = item ? (item.tags || []).join(", ") : "";
   document.getElementById("fNotes").value = item ? item.notes : "";
   document.getElementById("fUrl").value = item ? item.url : "";
-  sheetCoverBase64 = item ? (item.coverBase64 || "") : "";
+  sheetCoverBase64 = item ? coverSrc(item) : "";
   sheetCoverUrl = item ? (item.coverUrl || "") : "";
   updateSheetCoverPreview();
   // Modul 1-4: AniList-Metadaten aus dem Item uebernehmen bzw. zuruecksetzen
@@ -3465,7 +4434,8 @@ document.getElementById("sheetSave").addEventListener("click", function () {
     var prevStatus = item.status, prevRating = item.userRating || 0, prevAniListId = item.aniListId || null;
     if (chapter !== item.chapter && chapter !== null) pushHistory(item, chapter);
     item.title = title; item.chapter = chapter; item.status = status; item.tags = tags;
-    item.notes = notes; item.url = url; item.coverBase64 = sheetCoverBase64; item.coverUrl = sheetCoverUrl; item.lastUpdated = now;
+    item.notes = notes; item.url = url; item.coverUrl = sheetCoverUrl; item.lastUpdated = now;
+    persistCoverForItem(item, sheetCoverBase64);
     item.aniListId = sheetAniListId; item.totalChapters = sheetTotalChapters; item.originType = sheetOriginType;
     item.description = sheetDescription; item.averageScore = sheetAverageScore; item.genres = sheetGenres;
     item.releaseDate = sheetReleaseDate; item.endDate = sheetEndDate; item.authors = sheetAuthors; item.volumes = sheetVolumes;
@@ -3487,9 +4457,9 @@ document.getElementById("sheetSave").addEventListener("click", function () {
     showToast("Aktualisiert");
     // MangaDex Fortschritt syncen, wenn Kapitel geändert wurde
   } else {
-    state.unshift({
+    var newItem = {
       id: uid(), title: title, chapter: chapter, status: status, tags: tags, notes: notes, url: url,
-      coverBase64: sheetCoverBase64, coverUrl: sheetCoverUrl, readHistory: chapter !== null ? [{ date: now, chapter: chapter }] : [],
+      coverBase64: "", coverUrl: sheetCoverUrl, readHistory: chapter !== null ? [{ date: now, chapter: chapter }] : [],
       lastUpdated: now, createdAt: now,
       aniListId: sheetAniListId, totalChapters: sheetTotalChapters, originType: sheetOriginType,
       description: sheetDescription, averageScore: sheetAverageScore, genres: sheetGenres,
@@ -3500,7 +4470,9 @@ document.getElementById("sheetSave").addEventListener("click", function () {
       statusManual: (sheetAniListExtras && sheetAniListExtras.status) ? (status !== mapAniListStatus(sheetAniListExtras.status)) : false,
       finishedLogged: false,
       mdId: null, mdSyncedChapter: 0, mdLastSyncAt: ""
-    });
+    };
+    persistCoverForItem(newItem, sheetCoverBase64);
+    state.unshift(newItem);
     showToast("Hinzugef\u00fcgt");
     // mdId aus readerUrl / url extrahieren bei neuem Item
     saveState(true);
@@ -3522,14 +4494,25 @@ document.getElementById("fDelete").addEventListener("click", function () {
   var going = findItem(currentEditId);
   var goneTitle = going ? going.title : "";
   state = state.filter(function (s) { return s.id !== currentEditId; });
-  saveState(); closeSheet(); renderAll(); showToast("Gel\u00f6scht");
+  saveState(); closeSheet(); renderAll();
   if (goneTitle) logActivity("deleted", { id: null, title: goneTitle }, "Aus der Bibliothek entfernt");
+  showToast("Gel\u00f6scht");
 });
 
 // --- Backup ---
 document.getElementById("exportBtn").addEventListener("click", function () {
   try {
-    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    // Ausgelagerte Cover wandern fuer das Backup wieder in die Datei
+    var exportState = state.map(function (item) {
+      if (item.coverKey && coverCache[item.coverKey]) {
+        var copy = Object.assign({}, item);
+        copy.coverBase64 = coverCache[item.coverKey];
+        delete copy.coverKey;
+        return copy;
+      }
+      return item;
+    });
+    var blob = new Blob([JSON.stringify(exportState, null, 2)], { type: "application/json" });
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
     a.href = url; a.download = "mangalounge-backup-" + new Date().toISOString().slice(0, 10) + ".json";
@@ -3548,6 +4531,7 @@ document.getElementById("importFile").addEventListener("change", function (e) {
       if (!Array.isArray(parsed)) throw new Error("bad format");
       var now = new Date().toISOString();
       state = parsed.map(function (item) { return migrateItem(item, now); }).filter(function (item) { return item.title; });
+      if (settings.offloadCovers) state.forEach(function (item) { if (item.coverBase64) persistCoverForItem(item, item.coverBase64); });
       saveState(); renderAll(); showToast("Wiederhergestellt");
     } catch (err) { showToast("Datei konnte nicht gelesen werden"); }
   };
@@ -3611,10 +4595,10 @@ function renderSettingsUI() {
   document.getElementById("preferredPlatform").value = settings.preferredPlatform;
   document.getElementById("customPlatformRow").style.display = settings.preferredPlatform === "Custom" ? "block" : "none";
   document.getElementById("customPlatformTemplate").value = settings.customPlatformTemplate;
-  document.getElementById("readerModeSetting").value = settings.readerMode;
-  document.getElementById("readerWidthSetting").value = settings.readerWidth;
-  document.getElementById("readerGapSetting").value = String(settings.readerGap);
+  syncReaderSettings();
   document.getElementById("notificationsToggle").checked = !!settings.notifications;
+  document.getElementById("notifyDetailsToggle").checked = settings.notifyDetails !== false;
+  document.getElementById("quietHoursToggle").checked = !!settings.quietHours;
   document.getElementById("notificationsStatus").textContent = typeof Notification === "undefined" ? "Dieser Browser unterstützt keine Benachrichtigungen." : (Notification.permission === "granted" ? "Benachrichtigungen sind aktiviert." : "Beim nächsten AniList-Abgleich werden neue Updates gemeldet.");
   document.getElementById("oledBlackToggle").checked = !!settings.oledBlack;
   document.querySelectorAll("#layoutSegmented button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-layout") === settings.layout); });
@@ -3628,9 +4612,12 @@ function renderSettingsUI() {
   document.getElementById("showProgressToggle").checked = settings.showProgress !== false;
   document.getElementById("showBadgesToggle").checked = settings.showBadges !== false;
   document.getElementById("coverZoomToggle").checked = settings.coverZoom !== false;
+  document.getElementById("progressRingToggle").checked = settings.coverProgressRing !== false;
+  document.getElementById("searchNotesToggle").checked = settings.searchNotes !== false;
   document.getElementById("readerNightToggle").checked = !!settings.readerNightMode;
   document.getElementById("statsNotifToggle").checked = settings.statsNotifications !== false;
   document.getElementById("hapticToggle").checked = settings.haptics !== false;
+  renderStorageStatus();
   document.getElementById("syncOnOpenToggle").checked = settings.syncOnOpen !== false;
   document.getElementById("autoLinkToggle").checked = settings.autoLinkAniList !== false;
   applyCustomization();
@@ -3686,14 +4673,81 @@ document.getElementById("preferredPlatform").addEventListener("change", function
 document.getElementById("customPlatformTemplate").addEventListener("input", function (e) {
   settings.customPlatformTemplate = e.target.value; saveSettings();
 });
-document.getElementById("readerModeSetting").addEventListener("change", function (e) {
-  settings.readerMode = e.target.value; saveSettings();
+document.getElementById("progressRingToggle").addEventListener("change", function (e) { settings.coverProgressRing = e.target.checked; saveSettings(); renderAll(); });
+document.getElementById("searchNotesToggle").addEventListener("change", function (e) { settings.searchNotes = e.target.checked; saveSettings(); });
+document.getElementById("notifyDetailsToggle").addEventListener("change", function (e) { settings.notifyDetails = e.target.checked; saveSettings(); });
+document.getElementById("quietHoursToggle").addEventListener("change", function (e) { settings.quietHours = e.target.checked; saveSettings(); });
+
+// -----------------------------------------------------------------------
+// Reader-Einstellungen: eine einzige Verdrahtung fuer alle Regler.
+// Haupt-Einstellungen und das Sheet im Reader teilen sich data-Attribute,
+// bleiben also immer synchron.
+// -----------------------------------------------------------------------
+var READER_SETTING_KEYS = ["readerMode", "readerWidth", "readerGap", "readerBrightness", "readerQuality",
+  "readerMarkMode", "readerSleep", "readerSwipe", "readerTapZones", "readerImmersive", "readerZoom",
+  "readerKeyboard", "readerWakeLock", "readerSeamless", "readerCacheFirst"];
+var READER_NUMBER_KEYS = { readerGap: 1, readerBrightness: 1, readerSleep: 1 };
+function syncReaderSettings() {
+  READER_SETTING_KEYS.forEach(function (key) {
+    var value = settings[key];
+    document.querySelectorAll('[data-rset="' + key + '"]').forEach(function (el) { el.checked = value !== false; });
+    document.querySelectorAll('[data-rset-val="' + key + '"]').forEach(function (el) { el.value = String(value === undefined || value === null ? "" : value); });
+    document.querySelectorAll('[data-rseg="' + key + '"]').forEach(function (el) { el.classList.toggle("active", el.getAttribute("data-value") === String(value)); });
+    document.querySelectorAll('[data-rsout="' + key + '"]').forEach(function (el) { el.textContent = key === "readerBrightness" ? (Number(value) + "%") : String(value); });
+  });
+  updateReaderSleepInfo();
+  updateOfflineInfo();
+}
+function setReaderSetting(key, value) {
+  var next = READER_NUMBER_KEYS[key] ? (Number(value) || 0) : value;
+  var previous = settings[key];
+  settings[key] = next;
+  saveSettings();
+  syncReaderSettings();
+  applyReaderSettings();
+  if (previous === next && key !== "readerMode") return;
+  if (readerIsOpen() && readerPages.children.length) {
+    if (key === "readerMode" || key === "readerWidth" || key === "readerGap") { updateReaderPageVisibility(); }
+    else if (key === "readerQuality") { readerPrefetchFor = -1; loadReaderChapter(readerChapterIndex); }
+    else if (key === "readerMarkMode") { checkReaderChapterFinished(); }
+  }
+}
+document.addEventListener("change", function (e) {
+  var el = e.target;
+  if (!el || !el.getAttribute) return;
+  var key = el.getAttribute("data-rset");
+  if (key) { setReaderSetting(key, el.checked); return; }
+  key = el.getAttribute("data-rset-val");
+  if (key) setReaderSetting(key, el.value);
 });
-document.getElementById("readerWidthSetting").addEventListener("change", function (e) {
-  settings.readerWidth = e.target.value; saveSettings();
+document.addEventListener("input", function (e) {
+  var el = e.target;
+  if (!el || !el.getAttribute || el.getAttribute("data-rset-val") !== "readerBrightness") return;
+  settings.readerBrightness = Number(el.value) || 100;
+  document.querySelectorAll('[data-rsout="readerBrightness"]').forEach(function (o) { o.textContent = Number(el.value) + "%"; });
+  applyReaderBrightness();
+  clearTimeout(setReaderSetting._saveTimer);
+  setReaderSetting._saveTimer = setTimeout(function () { saveSettings(); syncReaderSettings(); }, 400);
 });
-document.getElementById("readerGapSetting").addEventListener("change", function (e) {
-  settings.readerGap = Number(e.target.value) || 0; saveSettings();
+document.addEventListener("click", function (e) {
+  var btn = e.target && e.target.closest ? e.target.closest("[data-rseg]") : null;
+  if (!btn) return;
+  setReaderSetting(btn.getAttribute("data-rseg"), btn.getAttribute("data-value"));
+});
+var offloadBtn = document.getElementById("offloadBtn");
+if (offloadBtn) offloadBtn.addEventListener("click", function () {
+  offloadBtn.disabled = true;
+  offloadAllCovers().then(function (moved) {
+    settings.offloadCovers = true; saveSettings();
+    saveState(true); renderAll(); renderStorageStatus();
+    showToast(moved ? (moved + " Cover ausgelagert") : "Keine Cover zum Auslagern");
+  }).catch(function () {
+    showToast("Auslagern nicht m\u00f6glich");
+  }).then(function () { offloadBtn.disabled = false; });
+});
+var restoreCoversBtn = document.getElementById("restoreCoversBtn");
+if (restoreCoversBtn) restoreCoversBtn.addEventListener("click", function () {
+  inlineAllCovers(); renderStorageStatus();
 });
 document.getElementById("notificationsToggle").addEventListener("change", function (e) {
   if (!e.target.checked) { settings.notifications = false; saveSettings(); return; }
@@ -3735,6 +4789,7 @@ function renderGrid(items) {
     var gridFinishedTotal = (item.status === "abgeschlossen" && item.totalChapters) ? '/' + item.totalChapters : '';
     return '<div class="grid-card" data-grid-edit="' + item.id + '" data-item-press="' + item.id + '">' +
       '<div class="grid-cover-wrap" data-grid-open="' + item.id + '">' + gridCoverMarkup(item) +
+      coverRingMarkup(item) +
       '<span class="grid-chapter-badge">Kap. ' + chapterLabel + gridFinishedTotal + (item.hasUpdate ? '<span class="notif-dot"></span>' : '') + '</span>' +
       '<span class="cover-actions">' +
       '<button type="button" class="gh-btn primary" data-cover-read="' + item.id + '">Lesen</button>' +
@@ -4005,9 +5060,22 @@ document.getElementById("diceBtn").addEventListener("click", function () {
 // =========================================================================
 // MODUL 9: Batch-Update-Checker (Rate-Limit sicher, 800-1000ms pro Request)
 // =========================================================================
-function notifyUpdate(item) {
+function notifyUpdate(item, chapters, previousChapters) {
   if (!settings.notifications || typeof Notification === "undefined" || Notification.permission !== "granted") return;
-  try { new Notification("Neues Kapitel verfügbar", { body: item.title + " hat ein Update." }); } catch (e) {}
+  // Ruhezeiten: nachts nichts melden
+  if (settings.quietHours) {
+    var hour = new Date().getHours();
+    if (hour >= 22 || hour < 8) return;
+  }
+  var body = item.title + " hat ein Update.";
+  if (settings.notifyDetails !== false && chapters) {
+    body = item.title + " \u2013 " + (previousChapters ? (chapters - previousChapters) + " neues Kapitel" : "neues Kapitel") +
+      " (Kapitel " + chapters + ")";
+  }
+  try {
+    var n = new Notification("Neues Kapitel verf\u00fcgbar", { body: body, tag: "ml-" + item.id, icon: "icon-180.png" });
+    n.onclick = function () { try { window.focus(); } catch (e) {} openDetail(item.id); n.close(); };
+  } catch (e) {}
 }
 function searchAniListByIdFull(id) {
   var gql = "query ($id: Int) { Media(id: $id, type: MANGA) { id title { english romaji native } synonyms status chapters volumes description(asHtml: false) averageScore meanScore popularity favourites genres coverImage { extraLarge large medium } countryOfOrigin format source isAdult startDate { year month day } endDate { year month day } tags { name rank } staff(perPage: 4) { edges { role node { name { full } } } } studios { edges { isMain node { name } } } externalLinks { site url } } }";
@@ -4767,16 +5835,43 @@ document.addEventListener("touchmove", onPullMove, { passive: false });
 document.addEventListener("touchend", onPullEnd);
 document.addEventListener("touchcancel", onPullEnd);
 
-applyTheme();
-renderAll();
-applyCustomization();
+// Erst die (evtl. ausgelagerten) Cover holen, dann zeichnen
+loadCoverCache().then(function () {
+  applyTheme();
+  renderAll();
+  applyCustomization();
+  applyReaderSettings();
+  handleAppAction();
+}, function () {
+  applyTheme(); renderAll(); applyCustomization(); applyReaderSettings();
+});
+
+// App-Verknuepfungen aus dem Manifest (?action=...)
+function handleAppAction() {
+  var action = null;
+  try { action = new URLSearchParams(location.search).get("action"); } catch (e) {}
+  if (!action) return;
+  try { history.replaceState(null, "", location.pathname); } catch (e) {}
+  if (action === "continue") {
+    var candidate = state.slice().filter(function (i) { return i.status !== "abgeschlossen"; })
+      .sort(function (a, b) { return new Date(b.lastUpdated) - new Date(a.lastUpdated); })[0] || state[0];
+    if (candidate) setTimeout(function () { openInAppReader(candidate); }, 500);
+  } else if (action === "recent") {
+    activeStatus = "alle"; sortMode = "updated";
+    var sortEl = document.getElementById("sortSelect"); if (sortEl) sortEl.value = "updated";
+    renderAll();
+  } else if (action === "search") {
+    setTimeout(function () { var s = document.getElementById("search"); if (s) { s.focus(); if (s.select) s.select(); } }, 350);
+  }
+}
+handleAppAction();
 
 // Stiller Hintergrund-Abgleich mit AniList (max. alle 6 Stunden)
 setTimeout(autoSyncAniList, 1600);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js?v=37").catch(function () {});
+    navigator.serviceWorker.register("sw.js?v=39").catch(function () {});
   });
 }
 </script>

@@ -7,7 +7,8 @@ Diese Dateien sind alles, was du brauchst:
 - `sw.js` – Service Worker, sorgt für echtes Offline-Funktionieren
 - `config.js` – URL des optionalen MangaDex-Proxys
 - `mangadex-proxy.js` – Cloudflare-Worker für den integrierten Reader
-- `icon-180.png`, `icon-512.png`, `favicon-32.png` – App-Icons
+- `icon-180.png`, `icon-512.png`, `favicon-32.png` – App-Icons (Home-Bildschirm, Browser-Tab)
+- `icon.svg` – Quelldatei der Icons (nur zum Nachbearbeiten, wird von der App nicht geladen)
 
 ## 1. Repository anlegen
 
@@ -47,15 +48,50 @@ aktualisierte `index.html`. Zum Aktualisieren:
 1. Im Repo die alte `index.html` öffnen → Stift-Icon (bearbeiten) → Inhalt
    komplett ersetzen → **Commit changes**. (Oder: alte Datei löschen, neue per
    Upload hochladen.)
-2. In `sw.js` die Zeile `var CACHE_NAME = "mangalounge-cache-v1";` hochzählen
-   (`v2`, `v3`, …) – sonst liefert der Service Worker weiter die alte,
+2. In `sw.js` die Zeile `var CACHE_NAME = "mangalounge-cache-v38";` hochzählen
+   (`v39`, `v40`, …) – sonst liefert der Service Worker weiter die alte,
    zwischengespeicherte Version aus, selbst wenn du die neue hochgeladen hast.
+   Die Nummer steht auch in `index.html` ganz unten in der Zeile
+   `navigator.serviceWorker.register("sw.js?v=38")` – beide zusammen ändern.
 3. Auf dem iPhone die App einmal komplett schließen (nach oben wischen im
    App-Umschalter) und neu öffnen, damit sie die neue Version lädt.
 
 Deine gespeicherten Mangas bleiben dabei erhalten – die liegen in `localStorage`
 deines iPhones, nicht in den Dateien selbst, und werden von einem Update der
 `index.html` nicht angerührt.
+
+## Der Reader
+
+Der integrierte Reader lässt sich komplett auf dich einstellen. Alles ist einzeln
+an- und abschaltbar – entweder in den Einstellungen unter **Reader** bzw.
+**Reader-Bedienung** oder direkt beim Lesen über das Zahnrad in der Leiste oben.
+
+- **Blättern:** Scroll oder Einzelseite, Seitenbreite, Abstand zwischen den Seiten.
+- **Wischen:** Wischen blättert (Einzelseite) bzw. wechselt das Kapitel (Scroll).
+- **Tipp-Zonen:** Tippen links/rechts blättert, in der Mitte erscheint die Leiste.
+- **Leiste automatisch ausblenden:** Beim Lesen verschwindet die Leiste, ein
+  kleiner Griff oben holt sie zurück.
+- **Doppeltipp vergrößert** die aktuelle Seite (Einzelseiten-Modus).
+- **Helligkeit:** eigener Regler, wirkt nur im Reader.
+- **Qualität:** Original, datensparend oder automatisch je nach Verbindung.
+- **Nahtlos weiterlesen:** das nächste Kapitel wird im Hintergrund vorgeladen und
+  am Kapitelende direkt geladen – abbrechbar durch Hochscrollen.
+- **Als gelesen markieren:** am Kapitelende, ab 80 % oder nur von Hand.
+- **Bildschirm bleibt an**, **Sleep-Timer** und **Tastatursteuerung** (Pfeile, Esc).
+- **Offline:** Kapitel lassen sich speichern; die Verwaltung zeigt alle
+  gespeicherten Kapitel mit Seitenzahl und Größe und erlaubt gezieltes Löschen.
+  Offline zuerst aus dem Cache lässt gespeicherte Kapitel auch im Flugmodus laden.
+
+Der Lesestand wird pro Titel als Kapitel **und** Seite gemerkt, damit
+„Weiterlesen“ wirklich an der richtigen Stelle landet.
+
+## Gerätespeicher
+
+Eigene Cover liegen als Text im `localStorage`, der auf dem iPhone klein ist.
+In den Einstellungen unter **Gerätespeicher** siehst du, wie viel belegt ist, und
+kannst große Cover per Knopfdruck in eine größere lokale Ablage (IndexedDB)
+auslagern. Ein Backup enthält die Cover weiterhin, und du kannst sie jederzeit
+zurückholen.
 
 ## Was sich durch das Selbst-Hosten ändert
 
