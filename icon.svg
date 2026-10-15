@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="bg" x1="4" y1="1" x2="44" y2="47" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EE7B58"/>
+      <stop offset="0.42" stop-color="#BC4130"/>
+      <stop offset="1" stop-color="#5C1912"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="24" y1="2" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="page" x1="12" y1="16" x2="36" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFDFA"/>
+      <stop offset="1" stop-color="#E6D6C4"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="31" y1="26" x2="41" y2="37" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFEEC4"/>
+      <stop offset="1" stop-color="#D9A038"/>
+    </linearGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#3A0C07" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+
+  <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#bg)"/>
+  <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#gloss)"/>
+
+  <!-- aufgeschlagenes Buch -->
+  <g filter="url(#soft)">
+    <path d="M23.6 18.8c-3.3-2.4-7.5-3.3-11-3.3-.95 0-1.75.8-1.75 1.75v13.4c0 .95.8 1.75 1.75 1.75 3.4 0 7.3.9 11 3.3z" fill="url(#page)"/>
+    <path d="M24.4 18.8c3.3-2.4 7.5-3.3 11-3.3.95 0 1.75.8 1.75 1.75v13.4c0 .95-.8 1.75-1.75 1.75-3.4 0-7.3.9-11 3.3z" fill="url(#page)"/>
+  </g>
+
+  <!-- Buchruecken -->
+  <path d="M24 19.2v16.4" stroke="#C6A78F" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Textzeilen -->
+  <g stroke="#CFBBA8" stroke-width="1.2" stroke-linecap="round">
+    <path d="M14.6 24.2h6.1"/>
+    <path d="M14.6 28.2h4.8"/>
+    <path d="M27.3 24.2h6.1"/>
+    <path d="M27.3 28.2h4.8"/>
+  </g>
+
+  <!-- goldener Funke -->
+  <path d="M36.6 26.9l1.25 3 3 1.25-3 1.25-1.25 3-1.25-3-3-1.25 3-1.25z" fill="url(#gold)"/>
+</svg>
