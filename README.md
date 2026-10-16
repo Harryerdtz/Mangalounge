@@ -122,11 +122,11 @@ Wenn du eine aktualisierte `index.html` bekommst, tauschst du sie im Repo aus
 die alte Kopie wegwirft:
 
 1. In `sw.js` die Zeile
-   `var CACHE_NAME = "mangalounge-cache-v53";` auf `v54`, `v55`, … ändern.
+   `var CACHE_NAME = "mangalounge-cache-v81";` auf `v60`, `v61`, … ändern.
 2. In `index.html` ganz unten dieselbe Nummer in
-   `navigator.serviceWorker.register("sw.js?v=53")` anpassen.
+   `navigator.serviceWorker.register("sw.js?v=81")` anpassen.
 
-**Beide Nummern gehören zusammen.** Aktuell sind beide auf **v53**. Bleibt eine
+**Beide Nummern gehören zusammen.** Aktuell sind beide auf **v81**. Bleibt eine
 der beiden stehen, liefert der Service Worker weiter die alte Version aus,
 selbst wenn die neue Datei schon online ist.
 
@@ -178,27 +178,59 @@ auf dieselben Werte zu.
 Der Lesestand wird pro Titel als Kapitel **und** Seite gemerkt, damit
 „Weiterlesen“ wirklich an der richtigen Stelle landet.
 
-## API-Katalog und Downloads
+## MangaDex-Suche und Downloads
 
-Der **API-Katalog** bündelt vier Dienste, die tatsächlich über eine Schnittstelle
-antworten:
+Der **API-Katalog** ist ein reines MangaDex-Suchsystem im Stil der offiziellen
+Seite. Unter der Suchleiste sitzt ein Knopf **Filters**, der ein dunkles Panel
+(`#advancedFilters`) mit diesen Werten öffnet:
 
-| Dienst | Suche | Kapitel & Seiten |
-| --- | --- | --- |
-| **MangaDex** (Standard) | `/manga?title=` | `/manga/{id}/aggregate`, `/at-home/server/{id}` |
-| **ComicK** | `/v1.0/search/` | `/comic/{id}/chapters`, `/chapter/{hid}` |
-| **Manganato** | MangaHook `/api/search/` | `/api/manga/{id}`, `/api/manga/{id}/{ch}` |
-| **Consumet** (MangaPark) | `/manga/mangapark/{query}` | `/manga/mangapark/info?id=`, `/manga/mangapark/read` |
+| Feld | Optionen |
+| --- | --- |
+| Sort by | None (Standard), Relelevance, Latest Chapter, Followed Count, Publication Year |
+| Content Rating | Any, Safe, Suggestive, Erotica |
+| Magazine Demographic | Any, Shounen, Shoujo, Seinen, Josei |
+| Original languages | All languages, Japanese (ja), Korean (ko), Chinese (zh) |
+| Publication Status | Any, Ongoing, Completed, Hiatus, Cancelled |
+| Has translated chapters | Checkbox + Sprach-Dropdown (de / en) |
 
-In der Suchleiste sitzt ein Umschalter für die aktive API; im Katalog steht für
-jeden Dienst eine Zeile mit Häkchen. Ist der Katalog geöffnet, durchsucht die
-Suchleiste den gewählten Dienst. Ein Treffer öffnet die Kapitelliste; jeder
-Eintrag hat einen runden Download-Knopf und **Lesen**.
+Unten rechts liegen **Reset filters** und **I'm feeling lucky**. Der Query-Builder
+setzt die Werte 1:1 in die offiziellen MangaDex-Parameter um
+(`order[...]`, `contentRating[]`, `publicationDemographic[]`, `originalLanguage[]`,
+`status[]`, `availableTranslatedLanguage[]`).
+
+**Entdecken-Modus.** Ist das Suchfeld beim Öffnen des Katalogs leer, läuft
+automatisch eine Abfrage nach den meistgefolgten Mangas
+(`order[followedCount]=desc`). Diese werden als **Cover-Gitter** gezeigt, bis der
+Nutzer selbst einen Begriff eintippt. Kapitellisten werden dabei **erst bei Klick**
+auf einen Titel nachgeladen.
+
+**API-Client-Authentifizierung.** Unter **Einstellungen → MangaDex** stehen
+**MangaDex Client ID**, **Client Secret**, **Username** und **Password** (werden
+lokal gespeichert). Vor jeder Suche oder Kapitel-Abfrage wird geprüft, ob ein
+gültiger `access_token` vorliegt; nicht oder abgelaufen, wird per POST an
+`auth.mangadex.org/.../token` mit `grant_type=password` ein neuer Token geholt,
+gecacht und als `Authorization: Bearer <token>` mitgeschickt. Fehlt ein Wert,
+läuft die Suche unauthentifiziert im Gast-Modus. Der Knopf **Anmelden** startet sofort
+einen Verbindungstest gegen `/auth/check` und zeigt „Prüfe Verbindung …“, dann
+grün „Anmeldung erfolgreich! Verbindung steht.“ bzw. rot die Fehlermeldung.
+
+**AniList-Bildintegration.** MangaDex ist Ratelimits ausgesetzt; die hochauflösenden
+Cover kommen daher primär von **AniList**. Über die MangaDex→AniList-ID-Zuordnung
+(wird aus der Beziehung gelesen) wird `coverImage.extraLarge || large` geholt und
+ersetzt das Cover – im Gitter, in der Liste und auf dem Ergebnisobjekt. Liefert
+AniList nichts, bleibt das originale MangaDex-Cover bestehen. **Übernehmen** legt
+den Titel mit dem Cover direkt in die Bibliothek; das Cover wandert komprimiert in
+die IndexedDB.
 
 **Alles über den Worker.** Fremde Hosts erlauben kein CORS. Suche, Kapitellisten
 und Bilder laufen daher durch den Cloudflare-Worker (`config.js`): die Ziel-URL
 wird angehängt, der Worker holt sie und setzt die CORS-Kopfzeilen. MangaDex nutzt
-weiter seine `/manga`-Routen, alles andere den generischen `?url=`-Zweig.
+weiter seine `/manga`-Routen.
+
+**MangaDex-Bilder gezielt proxyt.** MangaDex blockiert direktes Hotlinking. Jede
+Lese-Seiten-URL (Reader und Download-Center) wird daher erzwungen durch
+`proxyTargetUrl()` geleitet – auch im Download-Pool. Der Proxy ist idempotent,
+schon gejagte URLs bleiben unverändert.
 
 **Download-Center.** Das Symbol rechts in der Kopfzeile trägt eine kleine Zahl
 mit den gerade laufenden Downloads. Ein Tipp öffnet das Download-Center mit allen
@@ -312,15 +344,15 @@ egal ob sie gerade im Text- oder im Cover-Speicher liegen.
 - Die automatische Cover-Suche über AniList ist noch nicht eingebaut.
   Auf GitHub Pages wäre sie technisch möglich, das ist aber ein eigenes
   Stück Code.
-- Der **API-Katalog** spricht die vier Dienste direkt über ihre JSON-Schnittstellen
-  an. Die Endpunkte stehen gesammelt in `API_BASES` und `API_ADAPTERS` in
-  `index.html`; ändert ein Dienst seine Adresse, ist das eine Zeile. Antwortet ein
-  Dienst nicht (ComicK/CDN, MangaHook-Deployment, Consumet-Instanz), meldet der
-  Katalog den Fehler sichtbar statt still zu scheitern.
+- Der **API-Katalog** ist ein reines MangaDex-Suchsystem mit Filter-UI. Die Filter
+  werden in `buildMangaDexQuery()` in offizielle URL-Parameter übersetzt. Nutzt
+  MangaDex seine API-Parameter, ist das eine Zeile.
 - Der **Worker muss neu deployt** werden, damit der generische `?url=`-Proxy
-  greift. Ohne das liefert er nur die MangaDex-Anfragen aus; Suche und Downloads
-  der übrigen Dienste melden dann einen Proxy-Fehler.
-- Die öffentliche Consumet-Instanz (`api.consumet.org`) ist zeitweise nicht
-  erreichbar; für zuverlässigen Betrieb lohnt ein eigener Consumet-Server.
+  greift. Ohne das liefert er nur die MangaDex-Anfragen aus.
+- **Client-ID, Secret, Username und Password** liegen im localStorage des Browsers
+  und sind damit grundsätzlich auslesbar. Der Password-Grant ist so wie von
+  MangaDex vorgesehen, aber in einer reinen Client-App kein echter Geheimschutz.
+- MangaDex-Lese-Seiten laufen nur durch den Proxy. Fehlt der Worker oder blockiert
+  er die Bildserver, bleibt der Reader auf den betroffenen Seiten leer.
 - Fremde Bild-CDN verlangen teils einen Referer. Der Worker setzt einen, das
   deckt die gängigen Fälle ab, ist aber keine Garantie.

@@ -316,7 +316,14 @@ header.navbar {
 .ac-item { display: flex; gap: 8px; align-items: center; padding: 8px 10px; min-height: 44px; width: 100%; border: none;
   background: none; text-align: left; border-bottom: 1px solid var(--separator); }
 .ac-item:last-child { border-bottom: none; }
-.ac-item img { width: 30px; height: 42px; border-radius: 4px; object-fit: cover; flex-shrink: 0; background: var(--fill-tertiary); }
+.ac-item img { width: 44px; height: 62px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--fill-tertiary); }
+/* Cover-Kachel in den API-/Bibliotheks-Vorschlaegen: Bild laedt, darunter
+   liegt immer der Anfangsbuchstabe - schlägt das Bild fehl, bleibt die Kachel
+   trotzdem sauber (kein graues Loch). */
+.ac-cover { position: relative; width: 44px; height: 62px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+  background: var(--fill-tertiary); display: flex; align-items: center; justify-content: center;
+  color: var(--label-tertiary); font-size: 22px; font-weight: 600; }
+.ac-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ac-title { flex: 1; font-size: 14px; color: var(--label); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ac-badge { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: var(--fill-tertiary); color: var(--label-secondary); flex-shrink: 0; }
 
@@ -821,7 +828,7 @@ input[type="range"].reader-range::-moz-range-thumb { width: 22px; height: 22px; 
 @media (hover: hover) {
   .row, .grid-card, .shelf-item, .cover-result, .chip, .plus1-chip, .bump-btn,
   .icon-btn, .detail-link-btn, .rating-dot, .swatch, .filter-reset, .stat-tile,
-  .status-pill, .recommendation-item, .genre-chip, .settings-row {
+  .status-pill, .recommendation-item, .genre-chip, .settings-row, .api-card {
     transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease,
                 background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
   }
@@ -858,6 +865,13 @@ input[type="range"].reader-range::-moz-range-thumb { width: 22px; height: 22px; 
   .shelf-item:hover .shelf-cover-wrap { box-shadow: var(--shadow-soft); border-color: var(--accent); }
   .shelf-cover-wrap { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
   .shelf-item:hover .shelf-title { color: var(--accent-text); }
+
+  /* Entdecken-Karten: exakt dasselbe Anheben+Vergroessern wie im Regal.
+     Die Hinzufuegen-Pille (gleiche Klassen wie im Regal) deckt sich mit auf. */
+  .api-card:hover { transform: translateY(-5px) scale(1.05); }
+  .api-card:hover .api-cover-wrap { box-shadow: var(--shadow-soft); }
+  .api-card:hover .api-cover-wrap::after { opacity: 1; }
+  .api-card:hover .api-card-title { color: var(--accent-text); }
 
   /* Interaktive Kleinigkeiten: leichtes Anheben/Vergroessern */
   .chip:hover, .genre-chip:hover { transform: translateY(-2px) scale(1.05); box-shadow: var(--shadow-softer); }
@@ -1147,7 +1161,8 @@ body.chapter-hidden .row .chapter-num { display: none !important; }
 .shelf-cover-wrap .gh-btn { font-size: 10.5px; padding: 0 4px; min-height: 26px; }
 @media (hover: hover) {
   .grid-card:hover .cover-actions,
-  .shelf-item:hover .cover-actions { opacity: 1; transform: none; pointer-events: auto; }
+  .shelf-item:hover .cover-actions,
+  .api-card:hover .cover-actions { opacity: 1; transform: none; pointer-events: auto; }
   .gh-btn { transition: transform 0.15s ease, background-color 0.15s ease; }
   .gh-btn:hover { transform: translateY(-1px); }
   /* Kapitel-Pille rutscht ueber die Buttons, damit nichts verdeckt wird */
@@ -1453,7 +1468,7 @@ header.navbar {
    Jede druckbare Flaeche antwortet sofort beim Druecken - nicht erst beim
    Loslassen. Listen und Zeilen hellen auf (wie eine iOS-Auswahl), Karten und
    Knoepfe ziehen sich leicht zusammen. Gilt fuer Finger und Maus. */
-.row, .grid-card, .shelf-item, .icon-btn, .stat-tile, .cover-result,
+.row, .grid-card, .shelf-item, .icon-btn, .stat-tile, .cover-result, .api-card,
 .activity-item, .history-item, .recommendation-item, .detail-link-btn,
 .rating-dot, .swatch, .bump-btn {
   transition: transform var(--dur-2) var(--ease-spring),
@@ -1467,7 +1482,7 @@ header.navbar {
 .activity-item:active, .history-item:active, .recommendation-item:active,
 .cover-result:active, .detail-link-btn:active, .history-more:active,
 #settingsOverlay .form-section > .settings-row:active { background: color-mix(in srgb, var(--label) 6%, transparent); }
-.grid-card:active, .shelf-item:active, .stat-tile:active { transform: scale(0.965); }
+.grid-card:active, .shelf-item:active, .stat-tile:active, .api-card:active { transform: scale(0.965); }
 .chip:active, .genre-chip:active, .status-pill:active, .plus1-chip:active,
 .bump-btn:active, .filter-reset:active { transform: scale(0.95); }
 .icon-btn:active { transform: scale(0.9); background: var(--fill-tertiary); }
@@ -1595,8 +1610,8 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
   .filter-dropdown { transition: opacity 0.2s ease; opacity: 1; }
   .filter-dropdown.open { opacity: 1; }
   .row, .grid-card, .shelf-item, .icon-btn, .stat-tile, .cover-result, .chip,
-  .genre-chip, .status-pill, .plus1-chip, .bump-btn, .filter-reset { transition: background-color 0.2s ease, opacity 0.2s ease; }
-  .grid-card:active, .shelf-item:active, .stat-tile:active,
+  .genre-chip, .status-pill, .plus1-chip, .bump-btn, .filter-reset, .api-card { transition: background-color 0.2s ease, opacity 0.2s ease; }
+  .grid-card:active, .shelf-item:active, .stat-tile:active, .api-card:active,
   .chip:active, .genre-chip:active, .status-pill:active, .plus1-chip:active,
   .bump-btn:active, .filter-reset:active, .icon-btn:active { transform: none !important; }
 }
@@ -1640,46 +1655,107 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 .navbar-inner > div:first-child { min-width: 0; }
 .navbar-inner .large-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* API-Katalog: dienstneutral, schlicht wie eine iOS-Liste. */
+/* API-Katalog: Trefferliste, schlicht wie eine iOS-Liste. */
 #apiSection { display: none; }
 #apiSection .wrap { padding-bottom: 40px; }
-.api-group-title {
+.catalog-group-title {
   display: flex; align-items: baseline; justify-content: space-between;
   font-size: 13px; font-weight: 400; color: var(--label-secondary);
   margin: 20px 16px 8px; padding: 0 2px; letter-spacing: 0;
 }
-.api-group-count { color: var(--label-tertiary); font-variant-numeric: tabular-nums; }
-.api-service {
-  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
-  padding: 10px 14px; min-height: 44px; border: none; background: transparent;
-  color: var(--label); font-family: inherit;
-  transition: background-color var(--dur-2) var(--ease-out);
-}
-.api-service:not(:last-child) { border-bottom: 1px solid var(--separator); }
-.api-service:active { background: var(--fill-tertiary); }
-.api-service-body { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.api-service-name { font-size: 17px; line-height: 1.2; }
-.api-service.active .api-service-name { font-weight: 600; }
-.api-service-desc { font-size: 12px; color: var(--label-tertiary); margin-top: 1px; }
-.api-service-check { color: var(--accent-text); display: inline-flex; flex: 0 0 auto; }
-.api-service-check svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.api-service-pick { font-size: 13px; color: var(--accent-text); flex: 0 0 auto; }
+.catalog-group-count { color: var(--label-tertiary); font-variant-numeric: tabular-nums; }
 
-/* Umschalter fuer die aktive Such-API, sitzt in der Suchleiste. */
-.api-switch {
-  display: flex; gap: 6px; margin: 8px 0 0; padding: 3px;
-  background: var(--fill-tertiary); border-radius: 10px; overflow-x: auto;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+/* Filter-Leiste unter der Suchleiste: dunkles, aufklappbares Panel. */
+.searchbar-wrap { position: relative; }
+.filter-open-btn {
+  display: flex; align-items: center; gap: 7px; margin: 10px 0 0; padding: 9px 14px; min-height: 40px;
+  width: 100%;
+  position: relative;
+  border: 1px solid var(--separator); border-radius: var(--radius-s); background: var(--fill-tertiary);
+  color: var(--label-secondary); font-family: inherit; font-size: 15px; font-weight: 500;
+  transition: color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-spring);
 }
-.api-switch::-webkit-scrollbar { display: none; }
-.api-switch button {
-  flex: 1 0 auto; border: none; background: transparent; color: var(--label-secondary);
-  font-family: inherit; font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 8px;
-  white-space: nowrap;
-  transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-spring);
+.filter-open-btn .notif-dot { position: absolute; top: 6px; right: 10px; margin: 0; }
+.filter-open-btn .icon { width: 16px; height: 16px; transition: transform var(--dur-2) var(--ease-out); }
+.filter-open-btn[aria-expanded="true"] { color: var(--label); border-color: var(--accent); }
+.filter-open-btn[aria-expanded="true"] .icon { transform: rotate(90deg); }
+.filter-open-btn:active { transform: scale(0.98); }
+
+.advanced-filters {
+  position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 70;
+  display: grid; grid-template-rows: 0fr; opacity: 0; overflow: hidden; visibility: hidden;
+  transition: grid-template-rows .34s var(--ease-in-out), opacity .26s var(--ease-out), visibility .26s;
 }
-.api-switch button.active { background: var(--bg); color: var(--label); box-shadow: 0 1px 3px rgba(0,0,0,0.12); font-weight: 600; }
-.api-switch button:active { transform: scale(0.97); }
+.advanced-filters.open { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
+.advanced-filters > .af-inner { min-height: 0; overflow: hidden; }
+.af-panel {
+  background: #17171B; border: 1px solid rgba(255,255,255,.09); border-radius: 14px;
+  padding: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.38);
+}
+.af-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 10px; }
+.af-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.af-field > span { font-size: 12px; color: rgba(255,255,255,.55); font-weight: 500; letter-spacing: .01em; }
+.af-field select {
+  background: #26262C; color: #EDEDF4; border: 1px solid rgba(255,255,255,.1);
+  border-radius: 9px; height: 38px; padding: 0 10px; font-family: inherit; font-size: 14px;
+}
+.af-field select:focus { outline: none; border-color: var(--accent); }
+.af-lang { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.af-check { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.85); font-size: 14px; padding-bottom: 9px; }
+.af-check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.af-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.af-actions .btn-ghost {
+  height: 38px; padding: 0 16px; border-radius: 9px; background: rgba(255,255,255,.08);
+  color: #EDEDF4; border: 1px solid rgba(255,255,255,.12);
+}
+.af-lucky {
+  height: 38px; padding: 0 18px; border: none; border-radius: 9px;
+  background: var(--accent); color: var(--accent-on); font-family: inherit; font-size: 14px; font-weight: 600;
+}
+
+/* Entdecken-Gitter des Katalogs. */
+.api-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; padding: 4px 14px 14px; }
+/* Jede Karte enthaelt exakt ein Cover mit festem 2:3-Verhaeltnis und einen
+   zweizeiligen Titel. min-width:0 verhindert, dass ein langer Titel die
+   Spaltenbreite sprengt; alle Karten bleiben dadurch exakt gleich gross.
+   Der Umschlag (.api-cover-wrap) traegt Format, Radius, Schatten und - wie
+   im Bibliotheks-Regal - die Overlay-Buttons (.cover-actions / .gh-btn). */
+.api-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; border: none; background: transparent; text-align: left; padding: 0; font-family: inherit; }
+.api-cover-wrap { position: relative; display: block; width: 100%; aspect-ratio: 2 / 3; border-radius: 8px; background: var(--fill-tertiary); box-shadow: 0 2px 8px rgba(0,0,0,.14); overflow: hidden; }
+.api-cover-wrap .api-card-cover { display: block; width: 100%; height: 100%; border-radius: 0; object-fit: cover; background: transparent; box-shadow: none; transition: transform 160ms cubic-bezier(0.4, 0, 0.2, 1); }
+/* Fallback-Kachel: Buchstabe des Titels, solange kein Cover da ist oder das
+   Bild scheitert - statt eines le dickte grauen Feldes (wie im Regal). */
+.api-cover-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600; color: var(--label-tertiary); background: var(--fill-tertiary); }
+.api-cover-wrap:not(.no-cover) .api-cover-fallback { display: none; }
+/* Dezenter Verlauf unten, damit der Knopf lesbar bleibt - nur bei Maus-Hover,
+   exakt wie bei den Regal-Covern (.shelf-cover-wrap::before). */
+.api-cover-wrap::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.55) 100%);
+  transition: opacity 0.2s ease;
+}
+.api-card-title { font-size: 13px; line-height: 1.25; color: var(--label); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.api-card.no-cover .api-card-title, .api-cover-wrap.no-cover + .api-card-title { font-weight: 600; }
+@media (hover: none) {
+  /* Touch-Geraete (iPhone): Es gibt keinen Hover, also ist die
+     "Hinzufuegen"-Aktion dauerhaft sichtbar - dieselben Button-Klassen
+     wie im Regal, daher identische Animation und Optik. */
+  .api-card .cover-actions { opacity: 1; transform: none; pointer-events: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .api-card-cover, .api-cover-wrap::after, .api-card { transition: none; }
+  .api-card:hover { transform: none; }
+}
+.api-loadmore { padding: 4px 14px 24px; }
+.api-loadmore button { width: 100%; }
+
+/* Login-Bestätigung: neutral waehrend des Tests, gruen bei Erfolg, rot bei Fehler. */
+.md-status { font-size: 13px; color: var(--label-tertiary); margin-top: 8px; transition: color var(--dur-2) var(--ease-out); }
+.md-status.ok { color: #34C759; font-weight: 600; }
+.md-status.err { color: var(--danger); font-weight: 600; }
+.md-link { color: var(--accent-text); text-decoration: none; font-weight: 500; }
+.md-link:active { text-decoration: underline; }
+.btn-ghost:disabled { opacity: 0.45; }
 
 /* Trefferliste des API-Katalogs. */
 .api-result {
@@ -1726,6 +1802,33 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 .chapter-row-meta { font-size: 12px; color: var(--label-tertiary); }
 .chapter-row-open { border: none; background: none; color: var(--accent-text); font-family: inherit; font-size: 15px; font-weight: 500; padding: 0 4px; }
 
+/* Aufklapp-Kopf der Kapitelliste: gross, abgerundet, mit rotierendem Chevron.
+   Die Liste darunter klappt mit einer gezaehlten Hoehen-Animation auf und
+   schiesst den Inhalt darunter sanft nach unten. */
+.chapter-toggle {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 16px; margin-top: 8px;
+  border: none; border-radius: 14px;
+  background: var(--fill-tertiary); color: var(--label);
+  font-family: var(--app-font); font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+  text-align: left; cursor: pointer;
+  transition: background 160ms cubic-bezier(0.4, 0, 0.2, 1), transform 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chapter-toggle > span:first-child { pointer-events: none; }
+.chapter-toggle:active { background: var(--fill-quaternary); transform: scale(0.985); }
+.chapter-caret { width: 18px; height: 18px; flex: none; color: var(--label-secondary); transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1); }
+.chapter-toggle.is-open .chapter-caret { transform: rotate(180deg); }
+.chapter-list-clip {
+  display: grid; grid-template-rows: 0fr; opacity: 0; min-height: 0;
+  transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.chapter-list-clip.is-open { grid-template-rows: 1fr; opacity: 1; }
+.chapter-list-clip > .chapter-list-inner { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .chapter-caret { transition: none; }
+  .chapter-list-clip { transition: none; opacity: 1; }
+}
+
 /* Download-Center */
 .download-item {
   display: flex; align-items: center; gap: 11px; padding: 10px 12px;
@@ -1737,6 +1840,49 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 .download-meta { font-size: 12px; color: var(--label-tertiary); margin-top: 2px; }
 .download-bar { height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--label) 10%, transparent); margin-top: 6px; overflow: hidden; }
 .download-bar > i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--accent); transition: width var(--dur-2) linear; }
+/* Filter-Tag-Chips: runde Kreise (Apple-Pill), nicht Kästchen. */
+.af-tag-toggle { margin-top: 0; font-size: 15px; padding: 11px 16px; }
+.af-tags-search { margin: 8px 0 10px; }
+.af-tags-search input {
+  width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--separator);
+  background: var(--fill-tertiary); color: var(--label); font-family: inherit; font-size: 14px;
+}
+.af-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0 10px; max-height: 170px; overflow-y: auto; }
+.af-tag {
+  font-size: 13px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--separator); background: var(--fill-tertiary); color: var(--label-secondary);
+  min-height: 34px; line-height: 1; cursor: pointer;
+  transition: background 160ms cubic-bezier(0.4, 0, 0.2, 1), color 160ms cubic-bezier(0.4, 0, 0.2, 1), transform 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.af-tag:hover { background: var(--fill-quaternary); }
+.af-tag:active { transform: scale(0.96); }
+.af-tag.active { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
+/* Statistik & Verlauf: runde Kreise/Ovale statt Kästchen (Apple-Design). */
+.stat-tile { border-radius: 18px; }
+.activity-item { border-radius: 16px; }
+.pc-cover { border-radius: 50%; width: 46px; height: 46px; }
+.pc-btn { border-radius: 999px; padding: 8px 14px; }
+.week-bar { border-radius: 999px 999px 4px 4px; }
+.week-bar-wrap { display: none; }
+.week-bar { border-radius: 999px; }
+.week-bars { display: flex; flex-direction: column; gap: 6px; }
+.week-bar-row { display: flex; align-items: center; gap: 8px; }
+.week-bar-label { font-size: 11px; color: var(--label-tertiary); width: 46px; flex-shrink: 0; text-align: right; white-space: nowrap; }
+.week-bar-track { flex: 1; height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--label) 10%, transparent); overflow: hidden; }
+.week-bar-fill { display: block; height: 100%; border-radius: 999px; background: var(--accent); transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+.week-bar-count { font-size: 11px; color: var(--label-secondary); width: 22px; flex-shrink: 0; text-align: left; }
+.progress-chronicle { display: flex; flex-direction: column; }
+.pc-item { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-bottom: 1px solid var(--separator); }
+.pc-item:last-child { border-bottom: none; }
+.pc-cover { width: 38px; height: 54px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--fill-tertiary);
+  display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--label-tertiary); font-size: 17px; }
+.pc-body { flex: 1; min-width: 0; }
+.pc-title { display: block; font-size: 14px; color: var(--label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-meta { display: block; font-size: 11.5px; color: var(--label-tertiary); margin-top: 2px; }
+.pc-bar { display: block; height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--label) 10%, transparent); margin-top: 5px; overflow: hidden; }
+.pc-bar > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.settings-actions { display: inline-flex; gap: 6px; flex-shrink: 0; }
+.settings-actions .btn-ghost { white-space: nowrap; }
 .download-del { border: none; background: none; color: var(--danger); font-family: inherit; font-size: 15px; font-weight: 500; padding: 0 4px; }
 .download-icon {
   width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
@@ -1784,7 +1930,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
       <h1 class="large-title" style="font-size:22px;">MangaLounge</h1>
     </div>
     <div style="display:flex;gap:2px;">
-      <button class="icon-btn" id="downloadCenterBtn" aria-label="Download-Center">
+      <button class="icon-btn" id="downloadCenterBtn" aria-label="Download-Center" style="display:none;">
         <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>
         <span class="bell-count hidden" id="downloadCount"></span>
       </button>
@@ -1807,17 +1953,119 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
         <svg class="icon" viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input type="text" id="search" placeholder="Titel suchen">
       </div>
-      <button class="icon-btn filter-toggle-btn" id="filterToggleBtn" aria-label="Filter ein-/ausblenden">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
-        <span class="notif-dot" id="filterActiveDot" style="display:none;"></span>
-      </button>
+      <!-- Versteckter Legacy-Button: Event-Handler verbleiben, Pflege im Code unnoetig. -->
+      <button class="icon-btn filter-toggle-btn" id="filterToggleBtn" style="display:none;" aria-hidden="true" tabindex="-1"></button>
     </div>
-    <!-- Aktive Such-API: im Katalog steuert sie die Suche, sonst nur die Auswahl. -->
-    <div class="api-switch" id="apiSwitch" role="tablist" aria-label="Such-API" style="display:none;"></div>
+    <!-- Auto-Vorschlaege waehrend des Tippens (MangaDex-Titel) -->
+    <div class="autocomplete-dropdown" id="apiSuggest" aria-hidden="true"></div>
+    <!-- Vorschlaege aus der Bibliothek (nur vorhandene Titel) -->
+    <div class="autocomplete-dropdown" id="libSuggest" aria-hidden="true"></div>
+    <!-- Filteruebersicht über volle Breite (ehemalige Eck-Icon-Button bleibt
+         versteckt im DOM, damit vorhandene Pruefungen weiterlaufen). -->
+    <button type="button" class="filter-open-btn" id="advancedFiltersToggle" aria-expanded="false" aria-controls="advancedFilters">
+      <span>Filter</span>
+      <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 19h4"/></svg>
+      <span class="notif-dot" id="filterActiveDot" style="display:none;"></span>
+    </button>
+    <div class="advanced-filters" id="advancedFilters" aria-hidden="true">
+      <div class="af-inner">
+        <div class="af-panel">
+          <div class="af-grid">
+            <label class="af-field">
+              <span>Sort by</span>
+              <select id="fSortBy">
+                <option value="">None</option>
+                <option value="relevance">Relevance</option>
+                <option value="latestUploadedChapter">Latest Chapter</option>
+                <option value="followedCount">Followed Count</option>
+                <option value="year">Publication Year</option>
+              </select>
+            </label>
+            <label class="af-field">
+              <span>Content Rating</span>
+              <select id="fContentRating">
+                <option value="">Any</option>
+                <option value="safe">Safe</option>
+                <option value="suggestive">Suggestive</option>
+                <option value="erotica">Erotica</option>
+              </select>
+            </label>
+            <label class="af-field">
+              <span>Magazine Demographic</span>
+              <select id="fDemographic">
+                <option value="">Any</option>
+                <option value="shounen">Shounen</option>
+                <option value="shoujo">Shoujo</option>
+                <option value="seinen">Seinen</option>
+                <option value="josei">Josei</option>
+              </select>
+            </label>
+            <label class="af-field">
+              <span>Original languages</span>
+              <select id="fOriginalLang">
+                <option value="">All languages</option>
+                <option value="ja">Japanese (ja)</option>
+                <option value="ko">Korean (ko)</option>
+                <option value="zh">Chinese (zh)</option>
+              </select>
+            </label>
+            <label class="af-field">
+              <span>Publication Status</span>
+              <select id="fPubStatus">
+                <option value="">Any</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+                <option value="hiatus">Hiatus</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </label>
+            <div class="af-field af-lang">
+              <label class="af-check">
+                <input type="checkbox" id="fHasTranslated">
+                <span>Has translated chapters</span>
+              </label>
+              <select id="fTranslatedLang" aria-label="bersetzte Sprache">
+                <option value="de">Deutsch (de)</option>
+                <option value="en">Englisch (en)</option>
+              </select>
+            </div>
+            <label class="af-field">
+              <span>Erscheinungsjahr</span>
+              <input type="number" id="fYear" placeholder="z. B. 2018" inputmode="numeric">
+            </label>
+            <label class="af-field">
+              <span>&nbsp;</span>
+              <label class="af-check">
+                <input type="checkbox" id="fHasAvailable">
+                <span>Mit verf&uuml;gbaren Kapiteln</span>
+              </label>
+            </label>
+            <div class="af-field af-tags-field">
+              <button type="button" class="chapter-toggle af-tag-toggle" id="afTagsToggle" aria-expanded="false">
+                <span>Genres &amp; Tags</span>
+                <svg class="chapter-caret" viewBox="0 0 24 24" width="18" height="18"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+              <div class="chapter-list-clip" id="afTagsClip">
+                <div class="chapter-list-inner">
+                  <div class="af-tags-search">
+                    <input type="text" id="afTagSearch" placeholder="Tag suchen …">
+                  </div>
+                  <div class="af-tags" id="afTags"><span class="row-hint">Lade Tags &hellip;</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="af-actions">
+            <button type="button" class="btn-ghost af-reset" id="afReset">Reset filters</button>
+            <button type="button" class="af-lucky" id="afLucky">I'm feeling lucky</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <nav class="nav-tabs" id="navTabs" aria-label="Hauptnavigation">
     <button type="button" data-nav="library" class="active">Bibliothek</button>
-    <button type="button" data-nav="api">API-Katalog</button>
+    <button type="button" data-nav="api">Entdecken</button>
   </nav>
   <div class="filter-dropdown" id="filterDropdown">
     <div class="filter-dropdown-inner">
@@ -1875,9 +2123,8 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 <!-- API-Katalog: eigener Hauptbereich neben der Bibliothek -->
 <section id="apiSection">
   <div class="wrap">
-    <h2 class="section-title">API-Katalog</h2>
-    <p class="section-sub" id="apiStatus">Such-API wählen und Titel suchen.</p>
-    <div class="api-services form-section" id="apiServices"></div>
+    <h2 class="section-title">Entdecken</h2>
+    <p class="section-sub" id="apiStatus">MangaDex: Titel oben eingeben, Filter nach Belieben.</p>
     <div id="apiResults"></div>
     <div id="apiChaptersWrap" style="display:none;">
       <h3 class="api-group-title" id="apiChaptersTitle"></h3>
@@ -1956,6 +2203,10 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 
       <div id="detailChaptersWrap">
         <div class="detail-section-title">Kapitel offline speichern</div>
+        <button class="detail-link-btn primary" id="detailAddToLibBtn" type="button" style="display:none;">
+          <svg class="icon" viewBox="0 0 24 24" width="18" height="18"><path d="M12 5v14M5 12h14"/></svg>
+          Zur Bibliothek hinzuf&uuml;gen
+        </button>
         <div class="form-section" style="margin:0;">
           <div id="detailChapters"></div>
         </div>
@@ -2359,6 +2610,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
         <button type="button" data-target="sgDarstellung">Darstellung</button>
         <button type="button" data-target="sgBedienung">Bedienung</button>
         <button type="button" data-target="sgReader">Reader</button>
+        <button type="button" data-target="sgMangaDex">MangaDex</button>
         <button type="button" data-target="sgAniList">AniList</button>
         <button type="button" data-target="sgDaten">Daten</button>
       </nav>
@@ -2662,6 +2914,78 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
       </div>
     </div>
 
+    <div class="settings-group" id="sgMangaDex">
+      <h2 class="settings-group-title">
+        MangaDex
+      </h2>
+
+      <div class="settings-block">
+        <h3>API-Zugang</h3>
+        <div class="form-section">
+          <div class="form-row">
+            <label class="form-label" for="mdClientId">MangaDex Client ID</label>
+            <input type="text" id="mdClientId" placeholder="Client-ID des MangaDex-Dashboards" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="mdClientSecret">MangaDex Client Secret</label>
+            <input type="password" id="mdClientSecret" placeholder="Client-Secret" autocomplete="off" spellcheck="false">
+            <p class="row-hint">Das Secret wird <strong>nicht</strong> angezeigt. Du erzeugst es auf
+              <a class="md-link" href="https://mangadex.org/settings" target="_blank" rel="noopener">mangadex.org/settings</a>
+              — dort auf <strong>„Get Secret"</strong> tippen und das hier einfügen.</p>
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="mdUsername">MangaDex Username</label>
+            <input type="text" id="mdUsername" placeholder="MangaDex-Benutzername (optional)" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="form-row">
+            <label class="form-label" for="mdPassword">MangaDex Password</label>
+            <input type="password" id="mdPassword" placeholder="MangaDex-Passwort (optional)" autocomplete="off" spellcheck="false">
+          </div>
+          <div class="settings-row">
+            <span>Verbindung</span>
+            <span class="storage-legend-value" id="mdTokenStatus">–</span>
+          </div>
+          <div class="settings-row">
+            <span>Verbindungstest</span>
+            <button class="btn-ghost" id="mdLoginBtn" type="button">Anmelden</button>
+          </div>
+          <p class="row-hint" id="mdLoginStatus">–</p>
+          <p class="row-hint">Client-ID, Secret, Benutzername und Passwort des eigenen MangaDex-Clients (Dashboard → Clients). Die Anmeldung läuft per Password-Grant; fehlt ein Wert, läuft die Suche unauthentifiziert im Gast-Modus.</p>
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <h3>Konto &amp; Aktionen</h3>
+        <div class="form-section">
+          <div class="settings-row">
+            <span>Konto-Status</span>
+            <span class="storage-legend-value" id="mdAccountStatus">&ndash;</span>
+          </div>
+          <div class="settings-row">
+            <span>Aktionen</span>
+            <span class="settings-actions">
+              <button class="btn-ghost" id="mdFollowsBtn" type="button">Meine Manga laden</button>
+              <button class="btn-ghost" id="mdLogoutBtn" type="button">Abmelden</button>
+            </span>
+          </div>
+          <p class="row-hint">„Meine Manga laden“ füllt den Katalog mit den Titeln, denen du auf MangaDex folgst (Anmeldung n&ouml;tig). „Abmelden“ l&ouml;scht Zugangsdaten und Token aus dieser App.</p>
+        </div>
+      </div>
+
+      <div class="settings-block">
+        <h3>Katalog &amp; Vorschläge</h3>
+        <div class="form-section">
+          <div class="settings-row"><span>Auto-Vorschl&auml;ge im Katalog</span><input type="checkbox" id="ctSuggestApiToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><span>AniList-Cover in Vorschl&auml;gen (7-Tage-Cache)</span><input type="checkbox" id="ctSuggestAnilistToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><span>Vorschl&auml;ge aus der Bibliothek</span><input type="checkbox" id="ctSuggestLibToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><span>AniList-Cover im Katalog</span><input type="checkbox" id="ctAnilistCoversToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><span>Endloses Nachladen (Entdecken)</span><input type="checkbox" id="ctEndlessScrollToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><span>Alternative Cover-Quellen (Jikan/Kitsu)</span><input type="checkbox" id="ctCoverFallbackToggle" style="width:22px;height:22px;"></div>
+          <p class="row-hint">Diese Schalter steuern die neuen Funktionen der Katalog-Ansicht und der Vorschlags-Listen. Alle bleiben im Ger&auml;t gespeichert.</p>
+        </div>
+      </div>
+    </div>
+
     <div class="settings-group" id="sgAniList">
       <h2 class="settings-group-title">
         AniList
@@ -2762,7 +3086,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
         </div>
       </div>
 
-      <div class="settings-block">
+      <div class="settings-block" id="downloadsSettingsBlock" style="display:none;">
         <h3>Downloads</h3>
         <div class="form-section">
           <div class="settings-row"><span>Heruntergeladene Kapitel</span><span class="storage-legend-value" id="settingsDownloadsSize">&ndash;</span></div>
@@ -2820,6 +3144,17 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
       <div class="heatmap-wrap"><div class="heatmap" id="activityHeatmap"></div></div>
       <div class="heatmap-legend">weniger&nbsp;<span class="cell"></span><span class="cell l1"></span><span class="cell l2"></span><span class="cell l3"></span><span class="cell l4"></span>&nbsp;mehr</div>
     </div>
+
+      <div class="settings-block">
+        <h3>Wochen&uuml;bersicht (8 Wochen)</h3>
+        <div class="week-bars" id="weekBars"></div>
+      </div>
+
+      <div class="settings-block">
+        <h3>Fortschritts-Chronik</h3>
+        <div class="progress-chronicle" id="progressChronicle"></div>
+        <p class="row-hint">Deine zuletzt gelesenen Reihen mit aktuellem Fortschritt &ndash; tippen &ouml;ffnet das Detail-Sheet.</p>
+      </div>
 
     <div class="settings-block">
       <h3>Verlauf</h3>
@@ -3008,13 +3343,17 @@ function loadSettings() {
     readerTurn: "slide", readerProgress: true,
     // Komfort im Hauptbildschirm
     searchNotes: true, textSelectable: false,
-    coverProgressRing: true, notifyDetails: true, quietHours: false, searchApi: "mangadex" };
+    coverProgressRing: true, notifyDetails: true, quietHours: false,
+    // MangaDex API-Client (OAuth2 Password-Grant)
+    mdClientId: "", mdClientSecret: "", mdUsername: "", mdPassword: "" };
   try {
     var raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) {
       var loaded = Object.assign(defaults, JSON.parse(raw));
-      delete loaded.mdAccount; delete loaded.mdToken; delete loaded.mdAccessToken;
-      delete loaded.mdRefreshToken; delete loaded.mdTokenExpiresAt;
+      // Veraltete Auth-Felder weg, OAuth2-Token aber erhalten (die app-eigene
+      // Client-Credentials-Verknuepfung bleibt bestehen).
+      delete loaded.mdAccount; delete loaded.mdToken;
+      delete loaded.mdRefreshToken;
       return loaded;
     }
   } catch (e) {}
@@ -3154,9 +3493,15 @@ function linkifyNotes(text) {
 var API_MIN_INTERVAL = 1200;
 var DOWNLOAD_DELAY = 700;
 var _apiLastAt = 0, _apiQueue = Promise.resolve();
+function apiMinIntervalFor(url) {
+  // AniList erlaubt rund 90 Anfragen/Minute; 700 ms sind sicher, und der
+  // Sammel-Request drosselt fast nur noch fuer Titel-Fallbacks. Alles andere
+  // (Jikan/Kitsu/Allgemein) behaelt den grosszuegigen Standardabstand.
+  return (url && url.indexOf("graphql.anilist.co") >= 0) ? 700 : API_MIN_INTERVAL;
+}
 function throttledFetch(url, options) {
   function run() {
-    var wait = Math.max(0, API_MIN_INTERVAL - (Date.now() - _apiLastAt));
+    var wait = Math.max(0, apiMinIntervalFor(url) - (Date.now() - _apiLastAt));
     return new Promise(function (resolve) { setTimeout(resolve, wait); }).then(function () {
       _apiLastAt = Date.now();
       return fetch(url, options);
@@ -3236,7 +3581,7 @@ function compressFileToBase64(file) {
 // gespeichert (Cover erscheint dann nur online, aber ohne Fehler).
 // -----------------------------------------------------------------------
 function searchAniListCovers(query) {
-  var gql = "query ($search: String) { Page(perPage: 10) { media(search: $search, type: MANGA, sort: SEARCH_MATCH) { id title { romaji english } coverImage { large medium } } } }";
+  var gql = "query ($search: String) { Page(perPage: 10) { media(search: $search, type: MANGA, sort: SEARCH_MATCH) { id title { romaji english } coverImage { extraLarge large medium } } } }";
   return throttledFetch("https://graphql.anilist.co", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -4227,6 +4572,15 @@ function renderDetailContent(item) {
   popBadge.textContent = item.popularity ? Number(item.popularity).toLocaleString("de-DE") + " Leser" : "";
   favBadge.textContent = item.favourites ? Number(item.favourites).toLocaleString("de-DE") + " Favoriten" : "";
   badgesWrap.style.display = [scoreBadge, readBadge, typeBadge, popBadge, favBadge].some(function (el) { return el.textContent; }) ? "" : "none";
+  // Ohne Bibliothekseintrag (Entdecken-Detail) gibt es keinen Lesefortschritt,
+  // keine eigene Bewertung und keinen Lesehistorie-Block - die bleiben weg.
+  var dTransient = !!item.transient;
+  var progBig = document.querySelector(".detail-progress-big");
+  if (progBig) progBig.style.display = dTransient ? "none" : "";
+  var rateBlock = document.querySelector(".detail-rate-block");
+  if (rateBlock) rateBlock.style.display = dTransient ? "none" : "";
+  var histSec = document.getElementById("detailReadingHistory");
+  if (histSec && histSec.parentElement) histSec.parentElement.style.display = dTransient ? "none" : "";
   // Genres als Chips (Klick filtert die Bibliothek danach)
   var genreWrap = document.getElementById("detailGenreWrap");
   var genreRow = document.getElementById("detailGenreChips");
@@ -4242,7 +4596,8 @@ function renderDetailContent(item) {
         document.querySelectorAll("#tagFilters .chip").forEach(function (c) { c.classList.toggle("active", c.getAttribute("data-tag") === activeTags[0]); });
         historyExpanded = false;
         closeDetail();
-        renderAll();
+        if (item.transient) switchMainView("library"); // Entdecken: direkt gefiltert in die Bibliothek
+        else renderAll();
         updateFilterActiveDot();
         showToast("Gefiltert nach \u201e" + activeTags[0] + "\u201c");
       });
@@ -4299,15 +4654,17 @@ function openDetail(id) {
   if (!item) return;
   currentDetailId = id;
   historyExpanded = false;
+  delete detailChaptersOpen[item.id]; // Kapitel anfangs zugeklappt
   if (item.hasUpdate) { item.hasUpdate = false; saveState(true); renderAll(); }
   renderDetailContent(item);
   renderDetailSyncLine(item);
+  renderDetailChrome(item); // Bibliothek: Bearbeiten/Sync sehen, kein Hinzufuegen-Button
   showOverlay(detailOverlay);
   // Beim Oeffnen kurz mit AniList abgleichen (max. alle paar Minuten),
   // damit Score, Leser, Favoriten und Kapitelstand immer frisch sind.
   if (settings.syncOnOpen !== false) setTimeout(function () { if (currentDetailId === id) maybeSyncDetail(item); }, 260);
 }
-function closeDetail() { hideOverlay(detailOverlay); currentDetailId = null; }
+function closeDetail() { hideOverlay(detailOverlay); currentDetailId = null; currentDiscoverIndex = null; }
 
 document.getElementById("detailCloseBtn").addEventListener("click", closeDetail);
 detailOverlay.addEventListener("click", function(e){ if (e.target === detailOverlay) closeDetail(); });
@@ -4391,7 +4748,7 @@ var readerPageIndex = 0;
 // welcher Seite die naechste Seite hereinkommt.
 var readerTurnDir = 1;
 var readerItem = null;
-// Ist gesetzt, wenn ein Kapitel einer Fremd-API (ComicK, Manganato, Consumet)
+// Ist gesetzt, wenn ein Kapitel einer Fremd-API (ComicK, Jikan, MangaDex Global)
 // gelesen wird. Dann kommt der Inhalt nicht von MangaDex, sondern aus dem JSON
 // der jeweiligen API -- oder offline aus der IndexedDB des Download-Centers.
 var readerExternal = null;
@@ -4468,7 +4825,9 @@ function readerUseDataSaver() {
 }
 function readerImageUrl(baseUrl, hash, file, saver) {
   var direct = baseUrl + "/" + (saver ? "data-saver" : "data") + "/" + hash + "/" + encodeURIComponent(file);
-  return MANGADEX_API === "https://api.mangadex.org" ? direct : MANGADEX_API + "/image?url=" + encodeURIComponent(direct);
+  // MangaDex blockiert direktes Hotlinking: Jede Lese-Seiten-URL geht durch
+  // den Worker (config.js), der die Kopfzeilen setzt.
+  return proxyTargetUrl(direct);
 }
 // --- Helligkeit --------------------------------------------------------
 function applyReaderBrightness() {
@@ -5279,7 +5638,7 @@ function openInAppReader(item) {
     else showReaderStatus((err && err.message) || "Der MangaDex-Reader konnte nicht geladen werden.");
   });
 }
-// Reader fuer ein Kapitel aus einer Fremd-API (ComicK, Manganato, Consumet).
+// Reader fuer ein Kapitel aus einer Fremd-API (ComicK, Jikan, MangaDex Global).
 // Die Kapitelliste kommt bereits fertig vom API-Katalog; jede Zeile traegt ihre
 // Download-ID, damit der Offline-Speicher genauso greift wie bei MangaDex.
 function openApiReader(manga, chapters, startIndex) {
@@ -5287,7 +5646,7 @@ function openApiReader(manga, chapters, startIndex) {
   readerExternal = { api: manga.api, mangaId: manga.id, mangaTitle: manga.title };
   readerItem = null;
   readerChapterList = chapters.map(function (c) {
-    return { id: dlIdForChapter(c.api, c.id), api: c.api, apiChapterId: c.id, number: c.number, title: c.title || "" };
+    return { id: String(c.id), api: c.api, apiChapterId: c.id, number: c.number, title: c.title || "" };
   });
   readerOverlay.classList.add("open");
   readerOverlay.setAttribute("aria-hidden", "false");
@@ -5316,7 +5675,10 @@ function openApiReader(manga, chapters, startIndex) {
   loadReaderChapter(Math.max(0, Math.min(startIndex || 0, readerChapterList.length - 1)));
 }
 document.getElementById("detailReadInside").addEventListener("click", function () {
-  openInAppReader(findItem(currentDetailId));
+  // Im Bibliotheksdetail ist es der echte Eintrag; im Entdecken-Detail der
+  // transiente Kandidat aus _discoverTransient.
+  var item = findItem(currentDetailId) || window._discoverTransient[currentDetailId];
+  openInAppReader(item);
 });
 function closeReader() {
   readerRequestId++;
@@ -5596,13 +5958,18 @@ filterToggleBtn.addEventListener("click", function () {
 });
 function updateFilterActiveDot() {
   var anyActive = activeStatus !== "alle" || activeTags.length > 0 || activeType !== "alle" || activeAuthor !== "alle" || activeSmartFolder !== "keine" || sortMode !== "updated";
+  // Katalog-Filter leuchten ebenfalls, wenn etwas gesetzt ist.
+  anyActive = anyActive || afVal("fContentRating") || afVal("fDemographic") || afVal("fOriginalLang") || afVal("fPubStatus") ||
+    afVal("fSortBy") || afVal("fYear") ||
+    (document.getElementById("fHasAvailable") && document.getElementById("fHasAvailable").checked) ||
+    (typeof afSelectedTags !== "undefined" && (afSelectedTags || []).length > 0);
   document.getElementById("filterActiveDot").style.display = anyActive ? "" : "none";
 }
 
 document.getElementById("search").addEventListener("input", function (e) {
   // Im API-Katalog durchsucht dieselbe Leiste die aktive API statt der Bibliothek.
-  if (currentMainView === "api") { scheduleApiSearch(e.target.value); return; }
-  searchTerm = e.target.value; renderAll();
+  if (currentMainView === "api") { scheduleApiSearch(e.target.value); scheduleMdxSuggest(e.target.value); return; }
+  searchTerm = e.target.value; scheduleLibSuggest(e.target.value); renderAll();
 });
 document.getElementById("sortSelect").addEventListener("change", function (e) {
   sortMode = e.target.value; renderAll(); updateFilterActiveDot();
@@ -6150,6 +6517,16 @@ function renderSettingsUI() {
   renderStorageStatus();
   document.getElementById("syncOnOpenToggle").checked = settings.syncOnOpen !== false;
   document.getElementById("autoLinkToggle").checked = settings.autoLinkAniList !== false;
+  syncCatalogSettingToggles();
+  // MangaDex API-Client
+  document.getElementById("mdClientId").value = settings.mdClientId || "";
+  document.getElementById("mdClientSecret").value = settings.mdClientSecret || "";
+  document.getElementById("mdUsername").value = settings.mdUsername || "";
+  document.getElementById("mdPassword").value = settings.mdPassword || "";
+  updateMdTokenStatus();
+  updateMdLoginButton();
+  var loginStatus = document.getElementById("mdLoginStatus");
+  if (loginStatus) { loginStatus.textContent = "\u2013"; loginStatus.className = "row-hint md-status"; }
   applyCustomization();
   renderInsights();
   renderStats();
@@ -6212,6 +6589,61 @@ document.getElementById("statsNotifToggle").addEventListener("change", function 
 document.getElementById("hapticToggle").addEventListener("change", function (e) { settings.haptics = e.target.checked; saveSettings(); if (settings.haptics) triggerHaptic(); });
 document.getElementById("syncOnOpenToggle").addEventListener("change", function (e) { settings.syncOnOpen = e.target.checked; saveSettings(); });
 document.getElementById("autoLinkToggle").addEventListener("change", function (e) { settings.autoLinkAniList = e.target.checked; saveSettings(); });
+// MangaDex API-Client: Zugangsdaten speichern, alten Token verwerfen, damit sofort ein neuer geholt wird.
+document.getElementById("mdClientId").addEventListener("input", function (e) { settings.mdClientId = e.target.value.trim(); saveSettings(); mdInvalidateToken(); updateMdLoginButton(); });
+document.getElementById("mdClientSecret").addEventListener("input", function (e) { settings.mdClientSecret = e.target.value.trim(); saveSettings(); mdInvalidateToken(); updateMdLoginButton(); });
+document.getElementById("mdUsername").addEventListener("input", function (e) { settings.mdUsername = e.target.value.trim(); saveSettings(); mdInvalidateToken(); updateMdLoginButton(); });
+document.getElementById("mdPassword").addEventListener("input", function (e) { settings.mdPassword = e.target.value.trim(); saveSettings(); mdInvalidateToken(); updateMdLoginButton(); });
+// "Anmelden": Token holen und gegen /auth/check pruefen. Gruen bei Erfolg,
+// rot bei Fehler, neutral waehrend des Tests.
+function mdLoginTest() {
+  var statusEl = document.getElementById("mdLoginStatus");
+  var btn = document.getElementById("mdLoginBtn");
+  function setStatus(text, cls) {
+    if (statusEl) { statusEl.textContent = text; statusEl.className = "row-hint md-status" + (cls ? " " + cls : ""); }
+  }
+  if (!settings.mdClientId || !settings.mdClientSecret || !settings.mdUsername || !settings.mdPassword) {
+    setStatus("Bitte Client ID, Secret, Username und Passwort eingeben.", "err");
+    return Promise.resolve(false);
+  }
+  setStatus("Pr\u00fcfe Verbindung \u2026");
+  if (btn) { btn.disabled = true; btn.textContent = "Pr\u00fcfe \u2026"; }
+  return ensureMdToken().then(function (token) {
+    if (!token) throw new Error("kein-token");
+    // /auth/check existiert nicht ueber den Worker (404); daher eine minimale
+    // MangaDex-Abfrage (erlaubter Pfad), die den Token tatsächlich benutzt.
+    return mdApi("/manga?limit=1");
+  }).then(function (res) {
+    var total = (res && (res.total || (res.data && res.data.length))) || 0;
+    setStatus("Anmeldung erfolgreich! Verbindung steht \u2013 MangaDex antwortet: " + (res && res.result ? res.result : "ok") + (total ? ", Eintr\u00e4ge: " + total : "") + ".", "ok");
+    updateMdTokenStatus();
+    return true;
+  }).catch(function (err) {
+    // Ungueltiges Client Secret / falsche Daten -> klare, hinhweisende Meldung.
+    if (mdToken.authError === "invalid_secret") {
+      setStatus("Ung\u00fcltiges Client Secret. Bitte \u00fcberpr\u00fcfe deine Entwickler-Einstellungen auf MangaDex.", "err");
+    } else {
+      setStatus("Anmeldung fehlgeschlagen: " + mdSearchErrorMessage(err), "err");
+    }
+    updateMdTokenStatus();
+    return false;
+  }).then(function (ok) {
+    if (btn) { btn.disabled = !mdCredentialsReady(); btn.textContent = "Anmelden"; }
+    return ok;
+  });
+}
+// Alle vier Felder muessen sinnvoll gefuellt sein, sonst bleibt "Anmelden" aus.
+function mdCredentialsReady() {
+  return settings.mdClientId.trim().length >= 8 &&
+         settings.mdClientSecret.trim().length >= 8 &&
+         settings.mdUsername.trim().length >= 2 &&
+         settings.mdPassword.trim().length >= 4;
+}
+function updateMdLoginButton() {
+  var btn = document.getElementById("mdLoginBtn");
+  if (btn) btn.disabled = !mdCredentialsReady();
+}
+document.getElementById("mdLoginBtn").addEventListener("click", function () { mdLoginTest(); });
 document.getElementById("preferredPlatform").addEventListener("change", function (e) {
   settings.preferredPlatform = e.target.value; saveSettings(); renderSettingsUI();
 });
@@ -6222,6 +6654,81 @@ document.getElementById("progressRingToggle").addEventListener("change", functio
 document.getElementById("searchNotesToggle").addEventListener("change", function (e) { settings.searchNotes = e.target.checked; saveSettings(); });
 document.getElementById("notifyDetailsToggle").addEventListener("change", function (e) { settings.notifyDetails = e.target.checked; saveSettings(); });
 document.getElementById("quietHoursToggle").addEventListener("change", function (e) { settings.quietHours = e.target.checked; saveSettings(); });
+
+// --- Einstellungen: Katalog & Vorschlaege (selbst gestaltete Schalter) ------
+var CATALOG_TOGGLE_DEFS = [
+  ["ctSuggestApiToggle", "suggestApi"],
+  ["ctSuggestLibToggle", "suggestLib"],
+  ["ctSuggestAnilistToggle", "suggestAnilist"],
+  ["ctAnilistCoversToggle", "anilistCovers"],
+  ["ctEndlessScrollToggle", "endlessScroll"],
+  ["ctCoverFallbackToggle", "otherSourceFallback"]
+];
+function syncCatalogSettingToggles() {
+  CATALOG_TOGGLE_DEFS.forEach(function (d) {
+    var el = document.getElementById(d[0]);
+    if (el) el.checked = settings[d[1]] !== false;
+  });
+  updateMdAccountStatus();
+}
+CATALOG_TOGGLE_DEFS.forEach(function (d) {
+  var el = document.getElementById(d[0]);
+  if (el) el.addEventListener("change", function (e) {
+    settings[d[1]] = e.target.checked;
+    saveSettings();
+    if (d[1] === "suggestApi") scheduleMdxSuggest(document.getElementById("search").value);
+    if (d[1] === "suggestLib") scheduleLibSuggest(document.getElementById("search").value);
+    showToast(e.target.checked ? "Eingeschaltet" : "Ausgeschaltet");
+  });
+});
+
+// --- MangaDex-Konto: Status, Abmelden, eigene Verfolgungen laden -----------
+function updateMdAccountStatus() {
+  var el = document.getElementById("mdAccountStatus");
+  if (!el) return;
+  el.textContent = mdCredentialsReady() ? ("Angemeldet: " + (settings.mdUsername || "Konto")) : "Gast-Modus (ohne Anmeldung)";
+}
+function mdLogout() {
+  ["mdClientSecret", "mdUsername", "mdPassword"].forEach(function (k) { settings[k] = ""; });
+  saveSettings();
+  mdInvalidateToken();
+  ["mdClientSecret", "mdUsername", "mdPassword"].forEach(function (id) {
+    var el = document.getElementById(id); if (el) el.value = "";
+  });
+  var st = document.getElementById("mdLoginStatus");
+  if (st) { st.textContent = "Abgemeldet. Die Suche l\u00e4uft unauthentifiziert im Gast-Modus."; st.className = "row-hint md-status"; }
+  updateMdLoginButton();
+  updateMdAccountStatus();
+  updateMdTokenStatus();
+  showToast("Von MangaDex abgemeldet");
+}
+// Eigene Verfolgungen (User Follows) direkt in den Katalog legen.
+function mdLoadFollows() {
+  return ensureMdToken().then(function (token) {
+    if (!token) throw new Error("Nicht angemeldet \u2013 bitte zuerst oben \u201eAnmelden\u201c nutzen.");
+    return mdApi("/user/follows/manga?limit=20&offset=0&includes[]=cover_art&includes[]=author&includes[]=artist");
+  }).then(function (res) {
+    var list = ((res && res.data) || []).map(function (m) {
+      return { api: "mangadex", id: m.id, title: mdTitleOf(m) || "(ohne Titel)",
+        cover: mdCoverFor(m, "small"), year: (m.attributes && m.attributes.year) || "",
+        anilistId: mdAnilistId(m) };
+    }).filter(function (x) { return x.id; });
+    if (!list.length) { showToast("Deine MangaDex-Liste ist leer."); return; }
+    if (currentMainView !== "api") switchMainView("api");
+    apiResults = list;
+    apiMode = "search";
+    discoverOffset = 0;
+    hasMoreDiscover = false;
+    renderApiResults(apiResults);
+    setApiStatus("Deine MangaDex-Verfolgungen: " + list.length + " Titel.");
+    applyAniListCovers();
+    showToast("Meine Manga geladen (" + list.length + ")");
+  }).catch(function (err) {
+    showToast("Follows laden fehlgeschlagen: " + mdSearchErrorMessage(err));
+  });
+}
+document.getElementById("mdLogoutBtn").addEventListener("click", function () { triggerHaptic(); mdLogout(); });
+document.getElementById("mdFollowsBtn").addEventListener("click", function () { triggerHaptic(); mdLoadFollows(); });
 
 // -----------------------------------------------------------------------
 // Reader-Einstellungen: eine einzige Verdrahtung fuer alle Regler.
@@ -7038,10 +7545,76 @@ document.getElementById("recommendationsBtn").addEventListener("click", function
 // MODUL 10: MangaDex v5 API Integration
 // =========================================================================
 var MANGADEX_API = window.MANGADEX_PROXY_URL || "https://api.mangadex.org";
-function mdApi(endpoint, opts) {
-  opts = opts || {};
+// OAuth2-Token-Endpunkt (Keycloak). Client-ID und Secret kommen aus den
+// Einstellungen (localStorage), der Token wird hier gecacht und erneuert.
+var MANGADEX_AUTH_URL = "https://auth.mangadex.org/realms/mangadex/protocol/openid-connect/token";
+var mdToken = { token: null, expiresAt: 0, lastError: "", authError: "" };
+function mdLoadTokenFromStorage() {
+  try {
+    var tok = settings.mdAccessToken || "";
+    var exp = Number(settings.mdTokenExpiresAt) || 0;
+    if (tok && exp) { mdToken.token = tok; mdToken.expiresAt = exp; }
+  } catch (e) {}
+}
+function mdSaveTokenToStorage() {
+  try {
+    settings.mdAccessToken = mdToken.token || "";
+    settings.mdTokenExpiresAt = mdToken.expiresAt || 0;
+    saveSettings();
+  } catch (e) {}
+}
+function mdInvalidateToken() {
+  mdToken.token = null; mdToken.expiresAt = 0;
+  settings.mdAccessToken = ""; settings.mdTokenExpiresAt = 0;
+  saveSettings(); updateMdTokenStatus();
+}
+// Vor jeder Suche oder Kapitel-Abfrage: gueltigen Token sorgen.
+// Modus B (Entwickler): Ein "Personal Client" erlaubt keinen reinen
+// client_credentials-Flow. Deshalb wird hier der Password-Grant verwendet.
+// Fehlt ein Zugangsdatum, laeuft die Suche unauthentifiziert im Gast-Modus.
+function ensureMdToken() {
+  if (!settings.mdClientId || !settings.mdClientSecret || !settings.mdUsername || !settings.mdPassword) {
+    mdToken.lastError = "";
+    updateMdTokenStatus();
+    return Promise.resolve(null);   // Gast-Modus
+  }
+  if (mdToken.token && Date.now() < mdToken.expiresAt - 30000) return Promise.resolve(mdToken.token);
+  var form = "grant_type=password" +
+    "&client_id=" + encodeURIComponent(settings.mdClientId) +
+    "&client_secret=" + encodeURIComponent(settings.mdClientSecret) +
+    "&username=" + encodeURIComponent(settings.mdUsername) +
+    "&password=" + encodeURIComponent(settings.mdPassword);
+  return fetch(MANGADEX_AUTH_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+    body: form
+  }).then(function (r) {
+    if (!r.ok) return r.text().then(function (t) { throw new Error("auth-http-" + r.status + ": " + t.slice(0, 160)); });
+    return r.json();
+  }).then(function (json) {
+    if (!json || !json.access_token) throw new Error("auth-kein-token");
+    mdToken.token = json.access_token;
+    var ttl = Number(json.expires_in) || 3600;
+    mdToken.expiresAt = Date.now() + Math.max(60, ttl - 30) * 1000;
+    mdToken.lastError = "";
+    mdToken.authError = "";
+    mdSaveTokenToStorage();
+    updateMdTokenStatus();
+    return mdToken.token;
+  }).catch(function (err) {
+    // Anmeldung schlaegt fehl -> Gast-Modus, damit die Suche nie blockiert.
+    // Eine 400/401 des Auth-Servers bedeutet aber meist ein falscher Secret.
+    var msg = (err && err.message) || "Auth-Fehler";
+    mdToken.authError = /^auth-http-4/.test(msg) ? "invalid_secret" : "";
+    mdToken.lastError = mdToken.authError === "invalid_secret" ? "invalid_secret" : msg;
+    updateMdTokenStatus();
+    return null;
+  });
+}
+function mdApiRequest(endpoint, opts, token) {
   var url = MANGADEX_API + endpoint;
   var headers = Object.assign({ "Content-Type": "application/json", "Accept": "application/json" }, opts.headers || {});
+  if (token) headers["Authorization"] = "Bearer " + token;
   return throttledFetch(url, {
     method: opts.method || "GET",
     headers: headers,
@@ -7050,9 +7623,43 @@ function mdApi(endpoint, opts) {
     if (r.status === 401) throw new Error("md-http-401");
     if (!r.ok) return r.text().then(function (t) { throw new Error("md-http-" + r.status + ": " + t.slice(0, 200)); });
     return r.json();
+  });
+}
+function mdApi(endpoint, opts) {
+  opts = opts || {};
+  // Token holen (oder Gast-Modus) und als Bearer mitgeben. Schlägt das
+  // Anmelden fehl, wird einmal als Gast versucht; ein 401 (falsche Daten,
+  // abgelaufener Token) ebenfalls -- die Suche laeuft immer weiter.
+  return ensureMdToken().then(function (token) {
+    return mdApiRequest(endpoint, opts, token).catch(function (err) {
+      if (err && err.message === "md-http-401") {
+        mdInvalidateToken();
+        return mdApiRequest(endpoint, opts, null);
+      }
+      return Promise.reject(err);
+    });
   }).catch(function (err) {
     throw new Error("MangaDex nicht erreichbar: " + ((err && err.message) || "Netzwerkfehler"));
   });
+}
+mdLoadTokenFromStorage();
+// Statuszeile im MangaDex-Einstellungsblock: zeigt Token und Gast-Modus.
+function updateMdTokenStatus() {
+  var el = document.getElementById("mdTokenStatus");
+  if (!el) return;
+  var ready = settings.mdClientId && settings.mdClientSecret && settings.mdUsername && settings.mdPassword;
+  if (!ready) {
+    el.textContent = settings.mdClientId || settings.mdClientSecret ? "Teilausstattung \u2192 Gast-Modus" : "Nicht eingerichtet (Gast-Modus)";
+    return;
+  }
+  if (mdToken.token && Date.now() < mdToken.expiresAt - 30000) {
+    var secs = Math.max(0, Math.round((mdToken.expiresAt - Date.now()) / 1000));
+    el.textContent = "Token aktiv \u00b7 " + Math.floor(secs / 60) + " Min.";
+  } else if (mdToken.lastError) {
+    el.textContent = "Anmeldung fehlgeschlagen \u2192 Gast-Modus";
+  } else {
+    el.textContent = "Bereit (Token bei Bedarf)";
+  }
 }
 // Cover-Art-URL aus MangaDex Response extrahieren
 function mdCoverFor(manga, quality) {
@@ -7065,12 +7672,22 @@ function mdTitleOf(manga) {
   var attr = manga.attributes || {};
   var t = attr.title || {};
   if (t.en) return t.en;
+  if (t["ja-ro"]) return t["ja-ro"];
+  if (t["ko-ro"]) return t["ko-ro"];
   if (t.ja) return t.ja;
   if (t.ko) return t.ko;
+  if (t.zh) return t.zh;
+  // Alt-Titel: Englischen/Romaji zuerst, damit die AniList-Suche
+  // eine passende Cover-Quelle findet.
   var alt = Array.isArray(attr.altTitles) ? attr.altTitles : [];
-  for (var i = 0; i < alt.length; i++) {
-    var k = Object.keys(alt[i])[0];
-    if (k) return alt[i][k];
+  for (var a = 0; a < alt.length; a++) {
+    if (alt[a].en) return alt[a].en;
+    if (alt[a]["ja-ro"]) return alt[a]["ja-ro"];
+    if (alt[a]["ko-ro"]) return alt[a]["ko-ro"];
+  }
+  for (var b = 0; b < alt.length; b++) {
+    var k = Object.keys(alt[b])[0];
+    if (k) return alt[b][k];
   }
   return "";
 }
@@ -7431,7 +8048,74 @@ function renderActivity() {
       });
     });
   }
+  renderWeekBars();
+  renderProgressChronicle();
   renderHeatmapInto("activityHeatmap", "activityHeatmapMonths", "activity");
+}
+// Wochenbalken: Ereignisse des Verlaufs je der letzten 8 Wochen.
+function renderWeekBars() {
+  var el = document.getElementById("weekBars");
+  if (!el) return;
+  var now = new Date();
+  var counts = [], labels = [], starts = [];
+  for (var i = 7; i >= 0; i--) {
+    var end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (7 * i) + 1, 0, 0, 0, 0).getTime();
+    var start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (7 * i) - 6, 0, 0, 0, 0).getTime();
+    starts.push([start, end]);
+    var d = new Date(start);
+    labels.push(String(d.getDate()) + "." + String(d.getMonth() + 1) + ".");
+  }
+  var feed = activityFeed();
+  var cool = starts.map(function (pair) {
+    return feed.filter(function (a) {
+      var t = new Date(a.date).getTime();
+      return t >= pair[0] && t < pair[1];
+    }).length;
+  });
+  var max = Math.max.apply(null, cool.concat([1]));
+  el.innerHTML = cool.map(function (c, i) {
+    var pct = max ? (c / max * 100) : 0;
+    return '<div class="week-bar-row">' +
+      '<span class="week-bar-label">' + labels[i] + '</span>' +
+      '<span class="week-bar-track"><span class="week-bar-fill" style="width:' + Math.max(2, pct) + '%"></span></span>' +
+      '<span class="week-bar-count">' + c + '</span>' +
+    '</div>';
+  }).join("");
+}
+// Fortschritts-Chronik: zuletzt gelesene Reihen mit Fortschrittsbalken.
+function renderProgressChronicle() {
+  var el = document.getElementById("progressChronicle");
+  if (!el) return;
+  var rows = state.filter(function (it) { return (it.chapter || 0) > 0; })
+    .sort(function (a, b) { return new Date(b.lastUpdated) - new Date(a.lastUpdated); })
+    .slice(0, 10);
+  if (!rows.length) {
+    el.innerHTML = '<p class="activity-empty">Noch kein Lese-Fortschritt. Sobald du Kapitel markierst, erscheinen deine Reihen hier.</p>';
+    return;
+  }
+  el.innerHTML = rows.map(function (it) {
+    var total = Number(it.totalChapters) || 0;
+    var ch = Number(it.chapter) || 0;
+    var pct = total ? Math.min(100, Math.round((ch / total) * 100)) : 0;
+    var letter = escapeHtml((it.title || "?").trim().charAt(0).toUpperCase());
+    return '<div class="pc-item" data-pc-id="' + escapeHtml(String(it.id)) + '">' +
+      (coverSrc(it) ? '<img class="pc-cover" src="' + escapeHtml(coverSrc(it)) + '" alt="" loading="lazy">' : '<span class="pc-cover">' + letter + '</span>') +
+      '<span class="pc-body">' +
+        '<span class="pc-title">' + escapeHtml(it.title || "?") + '</span>' +
+        '<span class="pc-meta">Kapitel ' + ch + (total ? " von " + total : "") + (pct ? " \u00b7 " + pct + "%" : "") + '</span>' +
+        '<span class="pc-bar"><i style="width:' + pct + '%"></i></span>' +
+      '</span>' +
+      '<button type="button" class="btn-ghost pc-btn">Weiterlesen</button>' +
+    '</div>';
+  }).join("");
+  el.querySelectorAll("[data-pc-id]").forEach(function (row) {
+    row.addEventListener("click", function () {
+      var it = findItem(row.getAttribute("data-pc-id"));
+      if (!it) return;
+      closeActivity();
+      openDetail(it.id);
+    });
+  });
 }
 // Die Zahl an der Glocke verschwindet, sobald man einmal in der Glocke war.
 // Kurz warten, damit man sie beim Oeffnen noch sieht, dann ausblenden.
@@ -7769,16 +8453,13 @@ document.addEventListener("touchend", onPullEnd);
 document.addEventListener("touchcancel", onPullEnd);
 
 // =========================================================================
-// MODUL 13: API-KATALOG, DOWNLOAD-CENTER & OFFLINE-READER
+// MODUL 13: MANGADEX-SUCHE (mit Filtern), DOWNLOAD-CENTER & OFFLINE-READER
 //
-// Vier Dienste stehen zur Wahl: MangaDex (Standard), ComicK, Manganato (ueber
-// die MangaHook-API) und Consumet/MangaPark. Jeder Dienst wird von einem kleinen
-// Adapter bedient, der die drei Schritte Suche -> Kapitelliste -> Seiten-URLs
-// kennt. Alle Fremd-Abrufe laufen ueber den Cloudflare-Worker (config.js): die
-// Ziel-URL wird angehaengt, der Worker holt sie und setzt die CORS-Kopfzeilen,
-// so fallen die CORS-Sperren weg. Bilder landen parallel als Blobs in der
-// IndexedDB; ein einmal geladenes Kapitel steht offline sofort bereit, ganz
-// gleich von welchem Dienst es stammt.
+// Der Katalog ist ein reines MangaDex-Suchsystem im Stil der offiziellen Seite:
+// Die Filter werden als URL-Parameter uebersetzt und die Treffer kommen aus der
+// v5-API. Lese-Seiten und Kapitel laufen ueber denselben Weg wie der Reader
+// (MangaDex@Home ueber den Worker). Bilder landen parallel als Blobs in der
+// IndexedDB; ein einmal geladenes Kapitel steht offline sofort bereit.
 // =========================================================================
 var DOWNLOAD_DB_NAME = "mangalounge-downloads";
 var DOWNLOAD_STORE_META = "chapters";
@@ -7792,104 +8473,279 @@ var downloadsTotalBytes = 0;  // belegter Platz aller Downloads
 var dlDbPromise = null;       // offene Datenbank (einmal geoeffnet, dann geteilt)
 var detailChaptersCache = {}; // Kapitellisten je Bibliothekseintrag
 var detailChaptersLoading = {}; // laufende Abrufe, damit nichts doppelt laedt
-
-// --- Die Dienste ---------------------------------------------------------
-// Anzeigename, kurzer Name fuer den Umschalter, Beschreibung und Host (nur zur
-// Anzeige). Die eigentlichen Endpunkte stecken weiter unten in API_ADAPTERS.
-var API_CATALOG = [
-  { id: "mangadex",  name: "MangaDex",             short: "MangaDex",  desc: "Offizielle v5-API \u00b7 deutsche und englische Kapitel", host: "api.mangadex.org" },
-  { id: "comick",    name: "ComicK",               short: "ComicK",    desc: "Aggregator \u00b7 viele Sprachen", host: "api.comick.fun" },
-  { id: "manganato", name: "Manganato",            short: "Manganato", desc: "MangaKakalot \u00fcber die MangaHook-API", host: "mangahook-api.vercel.app" },
-  { id: "consumet",  name: "Consumet (MangaPark)", short: "Consumet",  desc: "MangaPark \u00fcber die Consumet-API", host: "api.consumet.org" }
-];
-var API_INFO = {};
-API_CATALOG.forEach(function (a) { API_INFO[a.id] = a; });
-function apiInfo(id) { return API_INFO[id] || API_INFO.mangadex; }
-function activeApiId() {
-  var id = settings.searchApi;
-  return API_INFO[id] ? id : "mangadex";
-}
-// Basis-Host je Dienst. MangaDex laeuft ueber die bestehenden /manga-Routen des
-// Workers, die uebrigen ueber den generischen ?url=-Zweig.
-var API_BASES = {
-  comick: "https://api.comick.fun",
-  manganato: "https://mangahook-api.vercel.app",
-  consumet: "https://api.consumet.org"
-};
-// Bild-CDN von ComicK (b2key -> volle Adresse). Der zweite Host ist der Ausweichweg.
-var COMICK_IMG_BASE = "https://meo3.comick.pictures/";
+// Pro Titel gemerktes Aufklappen der Kapitelliste (nur fuer die Sitzung).
+// Beim Offnen des Sheets wird es zurueckgesetzt -> anfangs zugeklappt.
+var detailChaptersOpen = {};
 
 // --- Zustand des Katalogs ------------------------------------------------
-var apiResults = [];           // aktuelle Suchtreffer
+var apiResults = [];           // aktuelle Suchtreffer (MangaDex)
+var apiMode = "discover";      // "discover" = Entdecken-Gitter, "search" = Trefferliste
 var apiChapterManga = null;    // Manga der angezeigten Kapitelliste
 var apiChapterList = [];       // angezeigte Kapitel
 var apiSearchRequestId = 0;    // verwirft veraltete Suchantworten
 var apiChaptersRequestId = 0;  // verwirft veraltete Kapitelantworten
+var discoverRequestId = 0;     // verwirft veraltete Entdecken-Antworten
+var apiDiscoverObserver = null; // IntersectionObserver fuer Endlos-Scrollen
+var discoverAutoFailed = false; // Auto-Nachladen pausieren, bis ein Klick klappt
+var discoverOffset = 0;       // aktuelle Seitenposition fuer "Mehr laden"
+var hasMoreDiscover = true;   // gibt es auf der letzten Seite 20 Treffer?
 var apiSearchTimer = null;
 
 // --- Proxy & JSON-Zugriff -----------------------------------------------
 // Fremde Hosts erlauben kein CORS. Deshalb laeuft jeder Abruf durch den Worker:
 // die Ziel-URL wird angehaengt, der Worker holt sie und setzt die CORS-Kopfzeilen.
 function proxyTargetUrl(target) {
-  var base = window.MANGADEX_PROXY_URL || "";
+  var base = (window.MANGADEX_PROXY_URL || "").replace(/\/+$/, "");
   if (!base) return target;
-  return base.replace(/\/+$/, "") + "?url=" + encodeURIComponent(target);
-}
-// Ausweich-Host fuer ComicK-Bilder, falls der Standard-CDN nicht antwortet.
-function alternativeImageUrl(url) {
-  if (/meo3\.comick\.pictures/.test(url)) return url.replace("meo3.comick.pictures", "meo.comick.pictures");
-  if (/(^|\/\/)meo\.comick\.pictures/.test(url)) return url.replace("meo.comick.pictures", "meo3.comick.pictures");
-  return "";
-}
-function apiFetch(target) {
-  return fetch(proxyTargetUrl(target), { mode: "cors", credentials: "omit", headers: { "Accept": "application/json, text/plain, */*" } })
-    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); });
-}
-function apiFetchJson(target) {
-  return apiFetch(target).then(function (txt) {
-    try { return JSON.parse(txt); } catch (e) { throw new Error("Antwort war kein JSON"); }
-  });
-}
-// Fehlermeldung je Dienst -- der Proxy ist der haeufigste Stolperstein.
-function apiErrorMessage(err, id) {
-  var name = apiInfo(id).short;
-  var msg = (err && err.message) || "";
-  if (/failed to fetch|networkerror|load failed|fetch/i.test(msg)) {
-    return name + " ist \u00fcber den Worker nicht erreichbar (Proxy pr\u00fcfen).";
-  }
-  return name + ": " + (msg || "Unbekannter Fehler");
+  // Schon durch den Proxy gegangen? Dann unverändert lassen, sonst baut sich
+  // der Proxy in sich selbst auf.
+  if (target && target.indexOf(base + "?url=") === 0) return target;
+  return base + "?url=" + encodeURIComponent(target);
 }
 
-// --- Adapter je Dienst ---------------------------------------------------
-// Drei Schritte, gleiche Form fuer alle Dienste:
-//   search(query)         -> [{ api, id, title, cover, year }]
-//   chapters(mangaId)     -> [{ api, id, number, title }]
-//   pages(manga, chapter) -> { urls: [...], viaProxy: bool }
-function imageFieldUrl(value) {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  return value.img || value.url || value.image || value.src || "";
+// --- MangaDex-Filter (Layout der offiziellen MangaDex-Seite) ----------------
+// Die Werte werden 1:1 als URL-Parameter der MangaDex-Suche uebersetzt.
+function afVal(id) { var el = document.getElementById(id); return el ? el.value : ""; }
+// Bevorzugte Uebersetzungssprachen: de + en als Basis, erweitert um die
+// Systemsprache (wenn von MangaDex unterstuetzt).
+function mdPreferredLanguages() {
+  var base = ["de", "en"];
+  try {
+    var supported = ["de","en","ja","ko","zh","es","fr","pt","ru","it","pl","nl","sv","fi","no","da"];
+    var codes = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
+    for (var i = 0; i < codes.length; i++) {
+      var short = String(codes[i] || "").toLowerCase().split("-")[0];
+      if (supported.indexOf(short) >= 0 && base.indexOf(short) < 0) base.push(short);
+    }
+  } catch (e) {}
+  return base;
 }
-function comickCoverUrl(m) {
-  var cov = (m && m.md_covers && m.md_covers[0]) || (m && m.cover) || null;
-  var key = cov && (cov.b2key || cov.filename || cov.name);
-  if (!key) return "";
-  return /^https?:/i.test(key) ? key : COMICK_IMG_BASE + key;
+function mdAppendLangFilter(p) {
+  mdPreferredLanguages().forEach(function (l) { p.append("availableTranslatedLanguage[]", l); });
 }
+// --- Genre-/Tag-Filter: Chips mit Mehrfachauswahl -------------------------
+// Die Tag-Liste kommt aus /manga/tag (einmal geladen und gemaerkt); Angaben
+// gehen ausschliesslich als URL-Parameter (includedTags[]) in die Abfrage.
+var afSelectedTags = [];   // gewaehlte Tag-UUIDs
+var mdTagCache = null;     // [{id, name}] - HTML5-Zwischenlager in der Session
+function ensureTagChips() {
+  var box = document.getElementById("afTags");
+  if (!box) return;
+  if (mdTagCache) { renderTagChips(); return; }
+  box.innerHTML = '<span class="row-hint">Lade Tags &hellip;</span>';
+  mdApi("/manga/tag").then(function (res) {
+    mdTagCache = ((res && res.data) || []).map(function (t) {
+      var nm = (t.attributes && t.attributes.name) || {};
+      return { id: t.id, name: nm.de || nm.en || "" };
+    }).filter(function (x) { return x.id && x.name; });
+    renderTagChips();
+  }).catch(function () {
+    box.innerHTML = '<span class="row-hint">Tags nicht verf&uuml;gbar (keine Verbindung).</span>';
+  });
+}
+function renderTagChips() {
+  var box = document.getElementById("afTags");
+  if (!box || !mdTagCache) return;
+  box.innerHTML = mdTagCache.map(function (t) {
+    return '<button type="button" class="af-tag' + (afSelectedTags.indexOf(t.id) >= 0 ? " active" : "") +
+      '" data-tag-id="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + '</button>';
+  }).join("");
+  box.querySelectorAll("[data-tag-id]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var id = btn.getAttribute("data-tag-id");
+      var i = afSelectedTags.indexOf(id);
+      if (i >= 0) { afSelectedTags.splice(i, 1); btn.classList.remove("active"); }
+      else { afSelectedTags.push(id); btn.classList.add("active"); }
+      triggerHaptic();
+      updateFilterActiveDot();
+      runMangaDexSearch();
+    });
+  });
+}
+function buildMangaDexQuery(query) {
+  var p = new URLSearchParams();
+  p.set("title", query);
+  p.set("limit", "20");
+  p.append("includes[]", "cover_art");
+  p.append("includes[]", "author");
+  p.append("includes[]", "artist");
+  var sort = afVal("fSortBy");
+  if (sort) p.append("order[" + sort + "]", "desc");
+  var cr = afVal("fContentRating");
+  if (cr) p.append("contentRating[]", cr);
+  var dem = afVal("fDemographic");
+  if (dem) p.append("publicationDemographic[]", dem);
+  var ol = afVal("fOriginalLang");
+  if (ol) p.append("originalLanguage[]", ol);
+  var ps = afVal("fPubStatus");
+  if (ps) p.append("status[]", ps);
+  var yr = afVal("fYear");
+  if (yr) p.append("year[]", yr);
+  var hasAvail = document.getElementById("fHasAvailable");
+  if (hasAvail && hasAvail.checked) p.append("hasAvailableChapters", "true");
+  afSelectedTags.forEach(function (t) { p.append("includedTags[]", t); });
+  if (afSelectedTags.length) p.append("includedTagsMode", "OR");
+  mdAppendLangFilter(p);
+  var hasTranslated = document.getElementById("fHasTranslated");
+  if (hasTranslated && hasTranslated.checked) {
+    var extra = (afVal("fTranslatedLang") || "de");
+    if (mdPreferredLanguages().indexOf(extra) < 0) p.append("availableTranslatedLanguage[]", extra);
+  }
+  return p.toString();
+}
+// Suchtreffer aus der MangaDex-API in einheitliche Form bringen. Die AniList-ID
+// wird aus der Beziehung gelesen, damit das Cover praezise zugeordnet wird.
+function mdAnilistId(manga) {
+  var attr = (manga && manga.attributes) || {};
+  // Primaere Quelle: attributes.links.al - MangaDex verlinkt AniList dort
+  // (z.B. links: {al: "105398", ...}). In den Relationships steckt die ID
+  // NICHT; nur darauf zu gucken liess die schnelle Cover-Sammelabfrage leer.
+  if (attr.links && attr.links.al) {
+    var n = Number(attr.links.al);
+    if (n && n > 0) return n;
+  }
+  // Sicherungsquelle fuer aeltere Formate: anilist-Relationship mit URL.
+  var rel = (manga.relationships || []).filter(function (r) { return r.type === "anilist"; })[0];
+  if (!rel || !rel.attributes) return null;
+  var m = String(rel.attributes.externalUrl || "").match(/anilist\.co\/manga\/(\d+)/);
+  return m ? Number(m[1]) : null;
+}
+function searchMangaDexFiltered(query) {
+  return mdApi("/manga?" + buildMangaDexQuery(query)).then(function (res) {
+    var list = (res && res.data) || [];
+    return list.map(function (m) {
+      return {
+        api: "mangadex", id: m.id, title: mdTitleOf(m) || "(ohne Titel)",
+        cover: mdCoverFor(m, "small"), year: (m.attributes && m.attributes.year) || "",
+        anilistId: mdAnilistId(m)
+      };
+    }).filter(function (x) { return x.id; });
+  });
+}
+function discoverEndpoint(offset) {
+  // Das Filter-Panel wirkt 1:1 auf die Entdecken-Abfrage - ausschliesslich als
+  // URL-Parameter, an Ansicht oder Adapter wird nichts veraendert.
+  var p = new URLSearchParams();
+  p.set("limit", "20");
+  p.set("offset", String(offset || 0));
+  var sort = afVal("fSortBy");
+  // Ohne Suchtext ist "relevance" sinnlos -> dann wie bisher nach Folgern.
+  if (!sort || sort === "relevance") sort = "followedCount";
+  p.append("order[" + sort + "]", "desc");
+  p.append("includes[]", "cover_art");
+  p.append("includes[]", "author");
+  p.append("includes[]", "artist");
+  var cr = afVal("fContentRating");
+  if (cr) p.append("contentRating[]", cr);
+  var dem = afVal("fDemographic");
+  if (dem) p.append("publicationDemographic[]", dem);
+  var ol = afVal("fOriginalLang");
+  if (ol) p.append("originalLanguage[]", ol);
+  var ps = afVal("fPubStatus");
+  if (ps) p.append("status[]", ps);
+  var yr = afVal("fYear");
+  if (yr) p.append("year[]", yr);
+  var hasAvail = document.getElementById("fHasAvailable");
+  if (hasAvail && hasAvail.checked) p.append("hasAvailableChapters", "true");
+  afSelectedTags.forEach(function (t) { p.append("includedTags[]", t); });
+  if (afSelectedTags.length) p.append("includedTagsMode", "OR");
+  mdAppendLangFilter(p);
+  var hasTranslated = document.getElementById("fHasTranslated");
+  if (hasTranslated && hasTranslated.checked) {
+    var extra = (afVal("fTranslatedLang") || "de");
+    if (mdPreferredLanguages().indexOf(extra) < 0) p.append("availableTranslatedLanguage[]", extra);
+  }
+  return "/manga?" + p.toString();
+}
+// "Entdecken": die aktuell am haeufigsten gefoligten Mangas. Laeuft automatisch,
+// wenn das Katalog-Feld leer ist.
+function loadDiscover() {
+  discoverOffset = 0;
+  var endpoint = discoverEndpoint(0);
+  var reqId = ++discoverRequestId;
+  apiChapterManga = null; apiChapterList = [];
+  var wrap = document.getElementById("apiChaptersWrap"); if (wrap) wrap.style.display = "none";
+  var el = document.getElementById("apiResults");
+  if (el) el.innerHTML = '<p class="activity-empty">Beliebte Titel werden geladen \u2026</p>';
+  setApiStatus("Beliebte Titel werden geladen \u2026");
+  return mdApi(endpoint).then(function (res) {
+    if (reqId !== discoverRequestId) return;
+    var list = (res && res.data) || [];
+    hasMoreDiscover = list.length >= 20;
+    apiResults = list.map(function (m) {
+      return {
+        api: "mangadex", id: m.id, title: mdTitleOf(m) || "(ohne Titel)",
+        cover: mdCoverFor(m, "small"), year: (m.attributes && m.attributes.year) || "",
+        anilistId: mdAnilistId(m)
+      };
+    }).filter(function (x) { return x.id; });
+    apiMode = "discover";
+    renderApiResults(apiResults);
+    setApiStatus(apiResults.length ? "Entdecken: " + apiResults.length + " beliebte Titel \u2027 tippe einen an" : "Entdecken: nichts gefunden");
+  }).catch(function (err) {
+    if (reqId !== discoverRequestId) return;
+    apiMode = "discover";
+    apiResults = [];
+    if (el) el.innerHTML = '<p class="activity-empty">' + escapeHtml(mdSearchErrorMessage(err)) + '</p>';
+    setApiStatus(mdSearchErrorMessage(err));
+  });
+}
+function loadMoreDiscover() {
+  if (loadMoreDiscover._busy) return;
+  loadMoreDiscover._busy = true;
+  discoverAutoFailed = false;
+  var btn = document.getElementById("apiLoadMoreBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "Lade \u2026"; }
+  var nextOffset = discoverOffset + 20;
+  discoverRequestId++;
+  var reqId = discoverRequestId;
+  return mdApi(discoverEndpoint(nextOffset)).then(function (res) {
+    if (reqId !== discoverRequestId) return;
+    var list = (res && res.data) || [];
+    hasMoreDiscover = list.length >= 20;
+    var newItems = list.map(function (m) {
+      return {
+        api: "mangadex", id: m.id, title: mdTitleOf(m) || "(ohne Titel)",
+        cover: mdCoverFor(m, "small"), year: (m.attributes && m.attributes.year) || "",
+        anilistId: mdAnilistId(m)
+      };
+    }).filter(function (x) { return x.id && !apiResults.some(function (y) { return y.id === x.id; }); });
+    apiResults = apiResults.concat(newItems);
+    discoverOffset = nextOffset;
+    apiMode = "discover";
+    renderApiResults(apiResults);
+    setApiStatus("Entdecken: " + apiResults.length + " beliebte Titel \u2027 tippe einen an");
+  }).catch(function (err) {
+    if (reqId !== discoverRequestId) return;
+    // Bei Fehlern stoppt das automatische Nachladen, damit es keine
+    // Endlosschleife gibt - ein Klick auf "Mehr laden" probiert es erneut.
+    discoverAutoFailed = true;
+    if (btn) { btn.disabled = false; btn.textContent = "Mehr laden"; }
+    setApiStatus(mdSearchErrorMessage(err));
+  }).then(function () { loadMoreDiscover._busy = false; });
+}
+function resetAdvancedFilters() {
+  var defaults = [["fSortBy", ""], ["fContentRating", ""], ["fDemographic", ""], ["fOriginalLang", ""], ["fPubStatus", ""], ["fYear", ""]];
+  defaults.forEach(function (pair) { var el = document.getElementById(pair[0]); if (el) el.value = pair[1]; });
+  var tr = document.getElementById("fHasTranslated"); if (tr) tr.checked = false;
+  var lang = document.getElementById("fTranslatedLang"); if (lang) lang.value = "de";
+  var avail = document.getElementById("fHasAvailable"); if (avail) avail.checked = false;
+  afSelectedTags = [];
+  renderTagChips();
+}
+function mdSearchErrorMessage(err) {
+  var msg = (err && err.message) || "";
+  if (/auth-http-|auth-kein-token/.test(msg)) return "MangaDex-Anmeldung fehlgeschlagen \u2013 Gast-Modus.";
+  if (/failed to fetch|networkerror|load failed|fetch/i.test(msg)) return "MangaDex ist \u00fcber den Worker nicht erreichbar (Proxy pr\u00fcfen).";
+  return "MangaDex-Fehler: " + (msg || "Unbekannt");
+}
+
+// --- MangaDex-Adapter ------------------------------------------------------
+// Reader und Download greifen weiterhin ueber diesen Adapter, damit die bewaehrten
+// Komfort-Pfade (Vorladen, "Offline zuerst", Fortschrittsring) unveraendert
+// bleiben. Inhalte und Seiten-URLs laufen ueber MangaDex.
 var API_ADAPTERS = {
-  // --- MangaDex: laeuft ueber die /manga-Routen des Workers -----------------
   mangadex: {
-    search: function (query) {
-      return mdSearch(query, 20).then(function (list) {
-        return list.map(function (entry) {
-          var m = entry.data || entry;
-          return {
-            api: "mangadex", id: m.id, title: mdTitleOf(m) || "(ohne Titel)",
-            cover: mdCoverFor(m, "small"), year: (m.attributes && m.attributes.year) || ""
-          };
-        }).filter(function (x) { return x.id; });
-      });
-    },
     chapters: function (mangaId) {
       return mdGetChapterList(mangaId, ["de", "en"]).then(function (list) {
         return list.map(function (c) {
@@ -7904,113 +8760,12 @@ var API_ADAPTERS = {
         var saver = readerUseDataSaver();
         var files = ((saver ? data.dataSaver : data.data) || data.data || data.dataSaver || []);
         if (!files.length) throw new Error("Keine Seiten gefunden");
-        return { urls: files.map(function (f) { return readerImageUrl(payload.baseUrl, data.hash, f, saver); }), viaProxy: false };
-      });
-    }
-  },
-  // --- ComicK: JSON-API ----------------------------------------------------
-  comick: {
-    search: function (query) {
-      var url = API_BASES.comick + "/v1.0/search/?q=" + encodeURIComponent(query) + "&limit=20";
-      return apiFetchJson(url).then(function (data) {
-        var list = Array.isArray(data) ? data : ((data && (data.data || data.results)) || []);
-        return list.map(function (m) {
-          return {
-            api: "comick", id: String(m.hid || m.slug || m.id || ""),
-            title: m.title || m.name || "(ohne Titel)", cover: comickCoverUrl(m), year: m.year || ""
-          };
-        }).filter(function (x) { return x.id; });
-      });
-    },
-    chapters: function (mangaId) {
-      var url = API_BASES.comick + "/comic/" + encodeURIComponent(mangaId) + "/chapters?lang=en&limit=500&chap-order=1";
-      return apiFetchJson(url).then(function (data) {
-        var list = (data && data.chapters) || [];
-        return list.map(function (c) {
-          return { api: "comick", id: String(c.hid || c.id || ""), number: String(c.chap || c.chapter || "?"), title: c.title || "" };
-        }).filter(function (x) { return x.id; });
-      });
-    },
-    pages: function (manga, chapter) {
-      var url = API_BASES.comick + "/chapter/" + encodeURIComponent(chapter.id);
-      return apiFetchJson(url).then(function (data) {
-        var ch = (data && data.chapter) || data || {};
-        var imgs = ch.images || ch.md_images || [];
-        var urls = imgs.map(function (im) {
-          var key = im && (im.b2key || im.name || "");
-          if (!key) return "";
-          return /^https?:/i.test(key) ? key : COMICK_IMG_BASE + key;
-        }).filter(Boolean);
-        return { urls: urls, viaProxy: true };
-      });
-    }
-  },
-  // --- Manganato: MangaHook-API (REST) -------------------------------------
-  manganato: {
-    search: function (query) {
-      var url = API_BASES.manganato + "/api/search/" + encodeURIComponent(query) + "?page=1";
-      return apiFetchJson(url).then(function (data) {
-        var list = (data && data.mangaList) || [];
-        return list.map(function (m) {
-          return { api: "manganato", id: String(m.id || ""), title: m.title || "(ohne Titel)", cover: m.image || "", year: "" };
-        }).filter(function (x) { return x.id; });
-      });
-    },
-    chapters: function (mangaId) {
-      var url = API_BASES.manganato + "/api/manga/" + encodeURIComponent(mangaId);
-      return apiFetchJson(url).then(function (data) {
-        var list = (data && data.chapterList) || [];
-        return list.map(function (c) {
-          var num = String(c.name || c.path || "?").replace(/^\s*chapter\s*/i, "").trim();
-          return { api: "manganato", id: String(c.id || c.path || ""), number: num || "?", title: c.name || "" };
-        }).filter(function (x) { return x.id; });
-      });
-    },
-    pages: function (manga, chapter) {
-      var url = API_BASES.manganato + "/api/manga/" + encodeURIComponent(manga.id) + "/" + encodeURIComponent(chapter.id);
-      return apiFetchJson(url).then(function (data) {
-        var imgs = (data && data.images) || [];
-        return { urls: imgs.map(imageFieldUrl).filter(Boolean), viaProxy: true };
-      });
-    }
-  },
-  // --- Consumet (MangaPark) ------------------------------------------------
-  consumet: {
-    search: function (query) {
-      var url = API_BASES.consumet + "/manga/mangapark/" + encodeURIComponent(query) + "?page=1";
-      return apiFetchJson(url).then(function (data) {
-        var list = (data && data.results) || (Array.isArray(data) ? data : []);
-        return list.map(function (m) {
-          return { api: "consumet", id: String(m.id || ""), title: m.title || "(ohne Titel)", cover: imageFieldUrl(m.image), year: m.releaseDate || "" };
-        }).filter(function (x) { return x.id; });
-      });
-    },
-    chapters: function (mangaId) {
-      var url = API_BASES.consumet + "/manga/mangapark/info?id=" + encodeURIComponent(mangaId);
-      return apiFetchJson(url).then(function (data) {
-        var list = (data && data.chapters) || [];
-        return list.map(function (c) {
-          return { api: "consumet", id: String(c.id || ""), number: String(c.number || c.title || "?"), title: c.title || "" };
-        }).filter(function (x) { return x.id; });
-      });
-    },
-    pages: function (manga, chapter) {
-      var url = API_BASES.consumet + "/manga/mangapark/read?chapterId=" + encodeURIComponent(chapter.id);
-      return apiFetchJson(url).then(function (data) {
-        var pages = (data && (data.pages || data.results)) || (Array.isArray(data) ? data : []);
-        return { urls: pages.map(imageFieldUrl).filter(Boolean), viaProxy: true };
+        // readerImageUrl() jagt jede Seite zwingend durch den Proxy.
+        return { urls: files.map(function (f) { return readerImageUrl(payload.baseUrl, data.hash, f, saver); }) };
       });
     }
   }
 };
-// Download-ID: Kapitel-IDs verschiedener Dienste koennen sich ueberschneiden,
-// deshalb bekommt jede fremde ID einen Praefix. MangaDex behaelt seine rohe
-// Kapitel-ID, weil der eingebaute Reader und der Detail-Dialog dieselbe ID
-// verwenden -- so greift "Offline zuerst" ohne Umwege bei allen Wegen.
-function dlIdForChapter(api, chapterId) {
-  if (api === "mangadex") return String(chapterId);
-  return "api:" + api + ":" + chapterId;
-}
 
 // --- IndexedDB des Download-Centers -------------------------------------
 // Zwei Ablagen: die Metadaten liegen klein und einzeln, die Bilder als Blobs
@@ -8165,24 +8920,16 @@ function dlClearAll() {
 }
 
 // --- Downloads ausfuehren -------------------------------------------------
-function fetchImageBlob(url, viaProxy) {
-  var target = viaProxy ? proxyTargetUrl(url) : url;
-  return fetch(target, { mode: "cors", credentials: "omit" }).then(function (r) {
+// Bilder holen. Jede Manga-Seiten-URL lauf dabei zwingend ueber den Proxy
+// (Hotlinking-Schutz, CORS, User-Agent).
+function fetchImageBlob(url) {
+  return fetch(proxyTargetUrl(url), { mode: "cors", credentials: "omit" }).then(function (r) {
     if (!r.ok) throw new Error("http-" + r.status);
     return r.blob();
-  }).catch(function (err) {
-    // Manche Bild-CDN haben einen zweiten Host -- einmal ausweichen.
-    var alt = alternativeImageUrl(url);
-    if (!alt) throw err;
-    var altTarget = viaProxy ? proxyTargetUrl(alt) : alt;
-    return fetch(altTarget, { mode: "cors", credentials: "omit" }).then(function (r) {
-      if (!r.ok) throw new Error("http-" + r.status);
-      return r.blob();
-    });
   });
 }
 // Bilder parallel holen (begrenzte Zahl gleichzeitig), Fortschritt in die Task.
-function downloadUrlPool(urls, viaProxy, task) {
+function downloadUrlPool(urls, task) {
   return new Promise(function (resolve) {
     var blobs = new Array(urls.length);
     var next = 0, active = 0;
@@ -8192,7 +8939,7 @@ function downloadUrlPool(urls, viaProxy, task) {
     }
     function startOne(i) {
       active++;
-      fetchImageBlob(urls[i], viaProxy).then(function (blob) {
+      fetchImageBlob(urls[i]).then(function (blob) {
         blobs[i] = blob; task.done++;
       }).catch(function () {}).then(function () {
         active--; onDownloadProgress(task); pump();
@@ -8232,7 +8979,7 @@ function startChapterDownload(opts) {
     if (!urls.length) throw new Error("Keine Seiten gefunden");
     task.total = urls.length; task.phase = "pages";
     paintChapterRings();
-    return downloadUrlPool(urls, !!opts.viaProxy, task);
+    return downloadUrlPool(urls, task);
   }).then(function (blobs) {
     var kept = blobs.filter(Boolean);
     if (!kept.length) throw new Error("Bilder nicht erreichbar");
@@ -8352,73 +9099,305 @@ function renderDownloadCenter() {
 }
 
 // --- API-Katalog zeichnen ------------------------------------------------
-// Der Umschalter sitzt in der Suchleiste, die Dienstliste im Katalog selbst.
-function renderApiSwitch() {
-  var el = document.getElementById("apiSwitch");
-  if (!el) return;
-  var cur = activeApiId();
-  el.innerHTML = API_CATALOG.map(function (a) {
-    return '<button type="button" role="tab" data-api="' + a.id + '"' +
-      (a.id === cur ? ' class="active" aria-selected="true"' : ' aria-selected="false"') + '>' + escapeHtml(a.short) + '</button>';
-  }).join("");
-}
-function renderApiCatalog() {
-  var el = document.getElementById("apiServices");
-  if (!el) return;
-  var cur = activeApiId();
-  el.innerHTML = API_CATALOG.map(function (a) {
-    var on = a.id === cur;
-    return '<button type="button" class="api-service' + (on ? ' active' : '') + '" data-api-select="' + a.id + '">' +
-      '<span class="api-service-body">' +
-        '<span class="api-service-name">' + escapeHtml(a.name) + '</span>' +
-        '<span class="api-service-desc">' + escapeHtml(a.desc) + '</span>' +
-      '</span>' +
-      (on
-        ? '<span class="api-service-check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>'
-        : '<span class="api-service-pick">Ausw\u00e4hlen</span>') +
-    '</button>';
-  }).join("");
-}
 function setApiStatus(text) {
   var el = document.getElementById("apiStatus");
   if (el) el.textContent = text;
 }
-// Beschriftung der Suchleiste an den aktiven Dienst anpassen.
-function setApiSearchLabel() {
-  var input = document.getElementById("search");
-  if (!input) return;
-  if (currentMainView === "api") input.placeholder = "Titel \u00fcber " + apiInfo(activeApiId()).short + " suchen";
+// Titel auf MangaDex suchen. Liest alle Filter aus und baut daraus die
+// offizielle MangaDex-Query. Im Katalog von der Suchleiste aus ausgeloert.
+// Ist das Feld leer, läuft stattdessen der Entdecken-Modus.
+function runMangaDexSearch() {
+  var query = String(document.getElementById("search").value || "").trim();
+  var el = document.getElementById("apiResults");
+  var wrap = document.getElementById("apiChaptersWrap");
+  // Mit leerem Suchfeld suchen ist erlaubt, sobald mindestens ein Filter
+  // gesetzt ist - dann laeuft der gefilterte Entdecken-Modus.
+  var filtersActive = !!(afVal("fContentRating") || afVal("fDemographic") || afVal("fOriginalLang") || afVal("fPubStatus") ||
+    (document.getElementById("fHasTranslated") && document.getElementById("fHasTranslated").checked) || afVal("fSortBy") ||
+    afVal("fYear") || (document.getElementById("fHasAvailable") && document.getElementById("fHasAvailable").checked) ||
+    (afSelectedTags || []).length > 0);
+  if (query.length < 2 && !filtersActive) {
+    apiResults = []; apiChapterManga = null; apiChapterList = [];
+    if (el) el.innerHTML = "";
+    if (wrap) wrap.style.display = "none";
+    setApiStatus("Mindestens zwei Zeichen eingeben.");
+    return;
+  }
+  if (query.length < 2) { loadDiscover(); return; }
+  var reqId = ++apiSearchRequestId;
+  apiChapterManga = null; apiChapterList = [];
+  if (wrap) wrap.style.display = "none";
+  if (el) el.innerHTML = '<p class="activity-empty">Suche auf MangaDex \u2026</p>';
+  setApiStatus("Suche auf MangaDex \u2026");
+  searchMangaDexFiltered(query).then(function (items) {
+    if (reqId !== apiSearchRequestId) return;
+    apiResults = items;
+    apiMode = "search";
+    renderApiResults(items);
+    setApiStatus(items.length ? items.length + " Treffer auf MangaDex" : "Keine Treffer auf MangaDex");
+  }).catch(function (err) {
+    if (reqId !== apiSearchRequestId) return;
+    var message = mdSearchErrorMessage(err);
+    if (el) el.innerHTML = '<p class="activity-empty">' + escapeHtml(message) + '</p>';
+    setApiStatus(message);
+  });
 }
-// Dienst wechseln. Ergebnisse der alten Wahl werden verworfen.
-function selectApi(id) {
-  if (!API_INFO[id]) return;
-  settings.searchApi = id;
-  saveSettings();
-  renderApiSwitch();
-  renderApiCatalog();
-  setApiSearchLabel();
-  apiSearchRequestId++;
-  apiChaptersRequestId++;
-  apiResults = []; apiChapterManga = null; apiChapterList = [];
-  var resultsEl = document.getElementById("apiResults"); if (resultsEl) resultsEl.innerHTML = "";
-  var wrap = document.getElementById("apiChaptersWrap"); if (wrap) wrap.style.display = "none";
-  setApiStatus("Such-API: " + API_INFO[id].name + " \u00b7 oben nach einem Titel suchen");
+// Entprellte Suche: tippen, kurz warten, dann erst anfragen.
+function scheduleApiSearch() {
+  clearTimeout(apiSearchTimer);
+  apiSearchTimer = setTimeout(runMangaDexSearch, 520);
+}
+
+// --- Auto-Vorschlaege: waehrend des Tippens dich mit MangaDex-Titeln -------
+// Bei mindestens zwei Zeichen holt eine entprellte Abfrage bis 8 Titel
+// ("Auto-Vervollstaendigung"): Titel + kleines Cover im Dropdown unter der
+// Leiste. Ein Tip uebernimmt den Titel und startet sofort die Vollsuche.
+var apiSuggestRequestId = 0;
+var apiSuggestTimer = null;
+function apiSuggestHide() {
+  var dd = document.getElementById("apiSuggest");
+  if (dd) { dd.classList.remove("open"); dd.setAttribute("aria-hidden", "true"); dd.innerHTML = ""; }
+}
+function apiSuggestRender(items) {
+  var dd = document.getElementById("apiSuggest");
+  if (!dd) return;
+  if (!items.length) { apiSuggestHide(); return; }
+  dd.innerHTML = items.map(function (it, i) {
+    var letter = escapeHtml((it.title || "?").trim().charAt(0).toUpperCase());
+    return '<button type="button" class="ac-item" data-suggest="' + i + '">' +
+      '<span class="ac-cover">' + letter +
+        (it.cover ? '<img src="' + escapeHtml(it.cover) + '" alt="" loading="lazy" onerror="this.remove()">' : '') +
+      '</span>' +
+      '<span class="ac-title">' + escapeHtml(it.title) + '</span>' +
+      '<span class="ac-badge">MangaDex</span>' +
+    '</button>';
+  }).join("");
+  dd.classList.add("open");
+  dd.setAttribute("aria-hidden", "false");
+  dd.querySelectorAll("[data-suggest]").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var item = items[Number(btn.getAttribute("data-suggest"))];
+      apiSuggestHide();
+      if (!item) return;
+      var input = document.getElementById("search");
+      if (input) input.value = item.title;
+      triggerHaptic();
+      runMangaDexSearch();
+    });
+  });
+}
+function scheduleMdxSuggest(value) {
+  clearTimeout(apiSuggestTimer);
+  var query = String(value || "").trim();
+  if (settings.suggestApi === false || currentMainView !== "api" || query.length < 2) { apiSuggestHide(); return; }
+  apiSuggestTimer = setTimeout(function () {
+    var p = new URLSearchParams();
+    p.set("title", query);
+    p.set("limit", "8");
+    p.append("order[relevance]", "desc");
+    p.append("includes[]", "cover_art");
+    var cr = afVal("fContentRating");
+    if (cr) p.append("contentRating[]", cr);
+    mdAppendLangFilter(p);
+    var reqId = ++apiSuggestRequestId;
+    mdApi("/manga?" + p.toString()).then(function (res) {
+      if (reqId !== apiSuggestRequestId) return;
+      var list = ((res && res.data) || []).map(function (m) {
+        return { title: mdTitleOf(m) || "(ohne Titel)", cover: mdCoverFor(m, "small"), anilistId: mdAnilistId(m) };
+      }).filter(function (x) { return x.title; });
+      apiSuggestRender(list);
+      // Cover-Upgrade fuer ALLE Vorschlaege - unabhaengig davon, ob der Titel
+      // schon in der Bibliothek liegt. AniList-Treffer landen im 7-Tage-Cache
+      // und stehen beim naechsten Tippen sofort bereit (per ID gebunden).
+      if (settings.suggestAnilist === false || !list.length) return;
+      var ids = list.map(function (x) { return x.anilistId; }).filter(Boolean);
+      var ready = ids.length ? anilistCoversBulk(ids).catch(function () {}) : Promise.resolve();
+      ready.then(function () {
+        if (reqId !== apiSuggestRequestId) return;
+        var chain = Promise.resolve();
+        var upgraded = 0;
+        list.forEach(function (x) {
+          chain = chain.then(function () {
+            if (reqId !== apiSuggestRequestId) return;
+            var url = x.anilistId ? anilistCoverCached("al:" + x.anilistId) : "";
+            if (url) { x.cover = url; upgraded++; return; }
+            if (x.anilistId || !x.title) return;
+            return anilistCoverFor({ id: x.title, title: x.title }).then(function (u) {
+              if (u) { x.cover = u; upgraded++; }
+            }).catch(function () {});
+          });
+        });
+        chain.then(function () {
+          if (reqId !== apiSuggestRequestId || !upgraded) return;
+          var dd = document.getElementById("apiSuggest");
+          if (dd && dd.classList.contains("open")) apiSuggestRender(list);
+        });
+      });
+    }).catch(function () { apiSuggestHide(); });
+  }, 320);
+}
+
+// --- Bibliotheks-Vorschlaege: rein lokal, nur Titel, die tatsaechlich im ---
+// Regal liegen. Kein Netzwerk - gefiltert wird der Titel-Text (unabhaengig
+// von Gross-/Kleinschreibung). Ein Tipp oeffnet gleich das Detail-Sheet.
+function libSuggestHide() {
+  var dd = document.getElementById("libSuggest");
+  if (dd) { dd.classList.remove("open"); dd.setAttribute("aria-hidden", "true"); dd.innerHTML = ""; }
+}
+function libSuggestRender(list) {
+  var dd = document.getElementById("libSuggest");
+  if (!dd) return;
+  if (!list.length) { libSuggestHide(); return; }
+  dd.innerHTML = list.map(function (it, i) {
+    var letter = escapeHtml((it.title || "?").trim().charAt(0).toUpperCase());
+    return '<button type="button" class="ac-item" data-lib-suggest="' + i + '">' +
+      '<span class="ac-cover">' + letter +
+        (coverSrc(it) ? '<img src="' + escapeHtml(coverSrc(it)) + '" alt="" loading="lazy" onerror="this.remove()">' : '') +
+      '</span>' +
+      '<span class="ac-title">' + escapeHtml(it.title) + '</span>' +
+      '<span class="ac-badge">Bibliothek</span>' +
+    '</button>';
+  }).join("");
+  dd.classList.add("open");
+  dd.setAttribute("aria-hidden", "false");
+  dd.querySelectorAll("[data-lib-suggest]").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var it = list[Number(btn.getAttribute("data-lib-suggest"))];
+      libSuggestHide();
+      if (!it) return;
+      triggerHaptic();
+      openDetail(it.id);
+    });
+  });
+}
+function scheduleLibSuggest(value) {
+  var q = String(value || "").trim().toLowerCase();
+  if (settings.suggestLib === false || currentMainView !== "library" || !q) { libSuggestHide(); return; }
+  var list = state.filter(function (it) {
+    return it.title && it.title.toLowerCase().indexOf(q) >= 0;
+  }).slice(0, 8);
+  libSuggestRender(list);
+}
+// Toggle-Verhalten der Suchleiste: Tippt man sie an, schliessen offene
+// Vorschlags-Dropdowns; ist keines offen (aber Text vorhanden), oeffnen sie.
+document.getElementById("search").addEventListener("click", function () {
+  var ddA = document.getElementById("apiSuggest");
+  var ddL = document.getElementById("libSuggest");
+  var anyOpen = (ddA && ddA.classList.contains("open")) || (ddL && ddL.classList.contains("open"));
+  if (anyOpen) { apiSuggestHide(); libSuggestHide(); return; }
+  var val = this.value || "";
+  if (currentMainView === "api" && val.trim().length >= 2) scheduleMdxSuggest(val);
+  else if (currentMainView !== "api" && val.trim()) scheduleLibSuggest(val);
+});
+// "I'm feeling lucky": ein zufaelliges, viel gefolgtes MangaDex-Manga, gleich zur
+// Kapitelliste -- statt eine lange Trefferliste zu waelzen.
+function luckyMangaDexSearch() {
+  var el = document.getElementById("apiResults");
+  var p = new URLSearchParams();
+  p.set("limit", "100");
+  p.set("order[followedCount]", "desc");
+  p.append("contentRating[]", "safe");
+  p.append("contentRating[]", "suggestive");
+  p.append("includes[]", "cover_art");
+  if (el) el.innerHTML = '<p class="activity-empty">Zufall wird ausgew\u00e4hlt \u2026</p>';
+  setApiStatus("Zufall wird ausgew\u00e4hlt \u2026");
   triggerHaptic();
+  mdApi("/manga?" + p.toString()).then(function (res) {
+    var list = (res && res.data) || [];
+    if (!list.length) throw new Error("Keine Kandidaten");
+    var pick = list[Math.floor(Math.random() * list.length)];
+    var manga = {
+      api: "mangadex", id: pick.id, title: mdTitleOf(pick) || "(ohne Titel)",
+      cover: mdCoverFor(pick, "small"), year: (pick.attributes && pick.attributes.year) || ""
+    };
+    apiResults = [manga];
+    renderApiResults(apiResults);
+    return openDiscoverDetail(0);
+  }).catch(function (err) {
+    var message = mdSearchErrorMessage(err);
+    if (el) el.innerHTML = '<p class="activity-empty">' + escapeHtml(message) + '</p>';
+    setApiStatus(message);
+  });
 }
 function renderApiResults(items) {
   var el = document.getElementById("apiResults");
   if (!el) return;
   if (!items.length) { el.innerHTML = '<p class="activity-empty">Keine Treffer.</p>'; return; }
-  el.innerHTML = '<div class="form-section">' + items.map(function (it, index) {
+  // Suche und Entdecken teilen sich dasselbe Cover-Raster - keine Zeilenliste.
+  el.innerHTML = renderApiGrid(items);
+  // Transiente Anzeige-Objekte des entdeckten Titels wieder freigeben, die in
+  // der neuen Trefferliste nicht mehr existieren (richtet sich nach der
+  // eindeutigen MangaDex-ID, nie nach dem Index).
+  (function () {
+    var t = window._discoverTransient;
+    Object.keys(t).forEach(function (key) {
+      if (key === currentDetailId) return;
+      var still = items.some(function (e) { return "apd-" + e.id === key; });
+      if (!still) delete t[key];
+    });
+  })();
+  if (apiMode === "discover" && hasMoreDiscover) {
+    el.insertAdjacentHTML("beforeend", '<div class="api-loadmore"><button id="apiLoadMoreBtn" class="btn-ghost" type="button">Mehr laden</button></div>');
+    var lm = document.getElementById("apiLoadMoreBtn");
+    if (lm) {
+      lm.addEventListener("click", function () { loadMoreDiscover(); });
+      // Unendliches Scrollen: kommt der "Mehr laden"-Button ins Sichtfeld,
+      // laedt die naechste Seite von selbst. Nach Fehlern gilt nur der Klick.
+      if (apiDiscoverObserver) apiDiscoverObserver.disconnect();
+      if (window.IntersectionObserver) {
+        apiDiscoverObserver = new IntersectionObserver(function (entries) {
+          if (!entries[0] || !entries[0].isIntersecting) return;
+          if (discoverAutoFailed) return;
+          if (settings.endlessScroll === false) return; // per Einstellung: nur "Mehr laden"
+          loadMoreDiscover();
+        }, { rootMargin: "220px 0px 0px" });
+        apiDiscoverObserver.observe(lm);
+      }
+    }
+  }
+  // Sobald die Treffer da sind, laufen die grossen AniList-Cover im Hintergrund.
+  applyAniListCovers();
+}
+function renderApiGrid(items) {
+  return '<div class="api-grid">' + items.map(function (it, index) {
+    // Der Hinzufuegen-Knopf nutzt dieselben Klassen (.cover-actions/.gh-btn)
+    // wie die Regal-Cover - gleiche Animation, gleiche Optik. Schon in der
+    // Bibliothek befindliche Titel erscheinen deaktiviert mit Haken.
+    var inLib = state.some(function (s) { return s.mdId === it.id; });
+    // Cover: Lader von MangaDex (schnell). Scheitert das Bild, kommt statt
+    // eines leeren Feldes eine Buchstaben-Kachel (wie im Regal); damit
+    // repariert die Jikan->Kitsu-Kette im Hintergrund.
+    var wrapCls = it.cover ? "api-cover-wrap" : "api-cover-wrap no-cover";
+    return '<div class="api-card" data-api-card="' + index + '" role="button" tabindex="0">' +
+      '<div class="' + wrapCls + '">' +
+        (it.cover
+          ? '<img class="api-card-cover" src="' + escapeHtml(it.cover) + '" alt="" loading="lazy" onerror="window.apiCoverBroken(this)">'
+          : '') +
+        '<div class="api-cover-fallback">' + escapeHtml((it.title || "?").trim().charAt(0).toUpperCase()) + '</div>' +
+        '<span class="cover-actions">' +
+          '<button type="button" class="gh-btn primary" data-api-add="' + index + '"' + (inLib ? " disabled" : "") + '>' +
+            (inLib ? "\u2713 In der Bibliothek" : "Hinzuf\u00fcgen") +
+          '</button>' +
+        '</span>' +
+      '</div>' +
+      '<span class="api-card-title">' + escapeHtml(it.title) + '</span>' +
+    '</div>';
+  }).join("") + '</div>';
+}
+function renderApiRows(items) {
+  return '<div class="form-section">' + items.map(function (it, index) {
     return '<button type="button" class="api-result" data-api-result="' + index + '">' +
       (it.cover
-        ? '<img class="api-result-cover" src="' + escapeHtml(it.cover) + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'
+        ? '<img class="api-result-cover" src="' + escapeHtml(it.cover) + '" alt="" loading="lazy" onerror="window.apiCoverBroken(this)">'
         : '<span class="api-result-cover"></span>') +
       '<span class="api-result-body">' +
         '<span class="api-result-title">' + escapeHtml(it.title) + '</span>' +
-        '<span class="api-result-meta">' + escapeHtml(apiInfo(it.api).name) + (it.year ? ' \u00b7 ' + escapeHtml(String(it.year)) : '') + '</span>' +
+        '<span class="api-result-meta">MangaDex' + (it.year ? ' \u00b7 ' + escapeHtml(String(it.year)) : '') + '</span>' +
       '</span>' +
       '<span class="api-result-go">Kapitel</span>' +
+      '<span class="api-result-add" data-api-add="' + index + '">\u00dcbernehmen</span>' +
     '</button>';
   }).join("") + '</div>';
 }
@@ -8429,15 +9408,18 @@ function renderApiChapters(manga, chapters) {
   apiChapterManga = manga;
   apiChapterList = chapters || [];
   if (titleEl) titleEl.innerHTML = escapeHtml(manga.title) +
-    '<span class="api-group-count">' + apiChapterList.length + ' Kapitel</span>';
-  if (!apiChapterList.length) { listEl.innerHTML = '<p class="activity-empty">Keine Kapitel gefunden.</p>'; return; }
+    '<span class="catalog-group-count">' + apiChapterList.length + ' Kapitel</span>';
+  if (!apiChapterList.length) {
+    listEl.innerHTML = '<p class="activity-empty">Keine Kapitel gefunden.</p>';
+    return;
+  }
   listEl.innerHTML = apiChapterList.map(function (ch, index) {
     return '<div class="chapter-row">' +
       '<span class="chapter-row-main">' +
         '<span class="chapter-row-num">Kapitel ' + escapeHtml(String(ch.number)) + '</span>' +
-        (ch.title ? '<span class="chapter-row-meta">' + escapeHtml(ch.title) + '</span>' : '') +
+        '<span class="chapter-row-meta">' + (ch.count ? ch.count + ' Seiten' : '') + (ch.volume ? ' \u00b7 Band ' + escapeHtml(ch.volume) : '') + '</span>' +
       '</span>' +
-      dlRingMarkup(dlIdForChapter(ch.api, ch.id)) +
+      dlRingMarkup(String(ch.id)) +
       '<button class="chapter-row-open" type="button" data-api-read="' + index + '">Lesen</button>' +
     '</div>';
   }).join("");
@@ -8448,45 +9430,9 @@ function renderApiChapters(manga, chapters) {
     });
   });
   apiChapterList.forEach(function (ch) {
-    dlDownloadHandlers[dlIdForChapter(ch.api, ch.id)] = function () { downloadApiChapter(manga, ch); };
+    dlDownloadHandlers[String(ch.id)] = function () { downloadApiChapter(manga, ch); };
   });
   paintChapterRings();
-}
-// Titel bei der aktiven API suchen. Im Katalog von der Suchleiste aus
-// ausgeloest (entprellt) -- siehe wireDownloadsUI.
-function runApiSearch(query) {
-  query = String(query || "").trim();
-  var el = document.getElementById("apiResults");
-  var wrap = document.getElementById("apiChaptersWrap");
-  if (query.length < 2) {
-    apiResults = []; apiChapterManga = null; apiChapterList = [];
-    if (el) el.innerHTML = "";
-    if (wrap) wrap.style.display = "none";
-    setApiStatus("Mindestens zwei Zeichen eingeben.");
-    return;
-  }
-  var api = activeApiId();
-  var reqId = ++apiSearchRequestId;
-  apiChapterManga = null; apiChapterList = [];
-  if (wrap) wrap.style.display = "none";
-  if (el) el.innerHTML = '<p class="activity-empty">Suche bei ' + escapeHtml(apiInfo(api).short) + ' \u2026</p>';
-  setApiStatus("Suche bei " + apiInfo(api).short + " \u2026");
-  API_ADAPTERS[api].search(query).then(function (items) {
-    if (reqId !== apiSearchRequestId) return;
-    apiResults = items;
-    renderApiResults(items);
-    setApiStatus(items.length ? items.length + " Treffer bei " + apiInfo(api).short : "Keine Treffer bei " + apiInfo(api).short);
-  }).catch(function (err) {
-    if (reqId !== apiSearchRequestId) return;
-    var message = apiErrorMessage(err, api);
-    if (el) el.innerHTML = '<p class="activity-empty">' + escapeHtml(message) + '</p>';
-    setApiStatus(message);
-  });
-}
-// Entprellte API-Suche: tippen, kurz warten, dann erst anfragen.
-function scheduleApiSearch(query) {
-  clearTimeout(apiSearchTimer);
-  apiSearchTimer = setTimeout(function () { runApiSearch(query); }, 520);
 }
 // Kapitelliste eines Treffers laden und unter der Trefferliste zeigen.
 function loadApiChapters(index) {
@@ -8501,39 +9447,365 @@ function loadApiChapters(index) {
   if (titleEl) titleEl.innerHTML = escapeHtml(manga.title) + '<span class="api-group-count">l\u00e4dt \u2026</span>';
   if (listEl) listEl.innerHTML = '<p class="activity-empty">Kapitel werden geladen \u2026</p>';
   if (wrap && wrap.scrollIntoView) { try { wrap.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
-  API_ADAPTERS[manga.api].chapters(manga.id).then(function (chapters) {
+  API_ADAPTERS.mangadex.chapters(manga.id).then(function (chapters) {
     if (reqId !== apiChaptersRequestId) return;
     renderApiChapters(manga, chapters);
   }).catch(function (err) {
     if (reqId !== apiChaptersRequestId) return;
     if (titleEl) titleEl.textContent = manga.title;
-    if (listEl) listEl.innerHTML = '<p class="activity-empty">' + escapeHtml(apiErrorMessage(err, manga.api)) + '</p>';
+    if (listEl) listEl.innerHTML = '<p class="activity-empty">' + escapeHtml(mdSearchErrorMessage(err)) + '</p>';
   });
 }
 // Ein Kapitel aus dem API-Katalog herunterladen. Die Seiten-URLs kommen aus dem
-// Adapter, gespeichert wird wie bei MangaDex (Blobs in die IndexedDB).
+// MangaDex-Adapter, gespeichert wird wie im Detail-Dialog (Blobs in die IndexedDB).
 function downloadApiChapter(manga, chapter) {
-  var id = dlIdForChapter(chapter.api, chapter.id);
   startChapterDownload({
-    id: id,
+    id: String(chapter.id),
     title: manga.title,
     number: chapter.number,
     mangaId: manga.id,
-    sourceId: chapter.api,
-    sourceName: apiInfo(chapter.api).name,
-    viaProxy: chapter.api !== "mangadex",
+    sourceId: "mangadex",
+    sourceName: "MangaDex",
     resolveUrls: function () {
-      return API_ADAPTERS[chapter.api].pages(manga, chapter).then(function (res) { return (res && res.urls) || []; });
+      return API_ADAPTERS.mangadex.pages(manga, chapter).then(function (res) { return (res && res.urls) || []; });
     }
   });
 }
-// Beim Oeffnen des Katalogs: Zustand und Beschriftungen auf den Stand bringen.
+// Filter-Panel oeffnen/schliessen. Der Pfeil-Drehung folgt aria-expanded.
+function toggleAdvancedFilters() {
+  var panel = document.getElementById("advancedFilters");
+  var btn = document.getElementById("advancedFiltersToggle");
+  if (!panel) return;
+  var open = panel.classList.toggle("open");
+  panel.setAttribute("aria-hidden", open ? "false" : "true");
+  if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) ensureTagChips(); // Genre-Chips erst beim Oeffnen laden (spart Requests)
+  triggerHaptic();
+}
+// Tags aufklappen/zu und suchen.
+document.getElementById("afTagsToggle").addEventListener("click", function () {
+  var btn = this;
+  var clip = document.getElementById("afTagsClip");
+  if (!btn || !clip) return;
+  var open = btn.classList.toggle("is-open");
+  clip.classList.toggle("is-open", open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) ensureTagChips();
+  triggerHaptic();
+});
+document.getElementById("afTagSearch").addEventListener("input", function (e) {
+  var q = (e.target.value || "").trim().toLowerCase();
+  var box = document.getElementById("afTags");
+  if (!box) return;
+  box.querySelectorAll(".af-tag").forEach(function (chip) {
+    var name = (chip.textContent || "").toLowerCase();
+    chip.style.display = (!q || name.indexOf(q) >= 0) ? "" : "none";
+  });
+});
+function closeAdvancedFilters() {
+  var panel = document.getElementById("advancedFilters");
+  var btn = document.getElementById("advancedFiltersToggle");
+  if (panel && panel.classList.contains("open")) {
+    panel.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+    if (btn) btn.setAttribute("aria-expanded", "false");
+  }
+}
+// Die Filterleiste laeuft jetzt über die ganze Breite in BEIDEN Ansichten:
+// in der Bibliothek oeffnet sie die Katalog-Sortierung/Tag-Liste, im
+// Entdecken-Katalog das MangaDex-Filterpanel. Das Panel selbst bleibt API-only.
+function applyFilterBarVisibility() {
+  var inApi = currentMainView === "api";
+  var toggle = document.getElementById("advancedFiltersToggle");
+  var panel = document.getElementById("advancedFilters");
+  var libPanel = document.getElementById("filterDropdown");
+  if (toggle) toggle.style.display = "";
+  if (panel) panel.style.display = inApi ? "" : "none";
+  if (!inApi) closeAdvancedFilters();
+}
+// Beim Oeffnen des Katalogs: Beschriftung und Status auf den Stand bringen.
+// Ist das Suchfeld leer, laeuft automatisch der Entdecken-Modus.
 function ensureApiCatalog() {
-  if (!API_INFO[settings.searchApi]) settings.searchApi = "mangadex";
-  renderApiSwitch();
-  renderApiCatalog();
-  setApiStatus("Such-API: " + apiInfo(activeApiId()).name + " \u00b7 oben nach einem Titel suchen");
-  setApiSearchLabel();
+  closeAdvancedFilters();
+  var query = String(document.getElementById("search").value || "").trim();
+  if (query.length < 2) { loadDiscover(); return; }
+  setApiStatus("MangaDex: Titel oben eingeben, Filter nach Belieben.");
+}
+
+// --- AniList-Bildintegration ----------------------------------------------
+// MangaDex ist Ratelimits ausgesetzt; die hochauflösenden Cover kommen primär von
+// AniList. Über die MangaDex→AniList-ID-Zuordnung wird coverImage.extraLarge geholt.
+// Liefert AniList nichts, bleibt das MangaDex-Cover bestehen (Fallback).
+var ANILIST_COVER_KEY = "mangalounge_anilist_covers_v1";
+var anilistCoverCache = {};
+var anilistCoverQueue = Promise.resolve();
+var anilistCoverGeneration = 0;   // Trefferwechsel verwaelt die laufende Schlange
+function loadAnilistCoverCache() {
+  try {
+    var raw = localStorage.getItem(ANILIST_COVER_KEY);
+    if (!raw) return;
+    var parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") anilistCoverCache = parsed;
+  } catch (e) {}
+}
+function saveAnilistCoverCache() {
+  // Cover werden nur fuer die aktuelle Anzeige aus der AniList geladen und nicht
+  // dauerhaft (localStorage / IndexedDB) verankert. Darum hier bewusst keine
+  // persistente Speicherung - nach Neustart laeuft die Anfrage erneut.
+  return;
+}
+// Cover ueber die AniList-ID (praezise Zuordnung).
+function anilistCoverById(id) {
+  var key = "al:" + id;
+  var hit = anilistCoverCache[key];
+  if (hit && (Date.now() - (Number(hit.at) || 0)) < 7 * 24 * 3600 * 1000) {
+    return Promise.resolve(hit.url || "");
+  }
+  var gql = "query ($id: Int) { Media(id: $id, type: MANGA) { id coverImage { extraLarge large } } }";
+  return throttledFetch("https://graphql.anilist.co", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({ query: gql, variables: { id: Number(id) } })
+  }).then(function (r) {
+    if (!r.ok) throw new Error("anilist-http-" + r.status);
+    return r.json();
+  }).then(function (json) {
+    var media = json.data && json.data.Media;
+    var url = media && media.coverImage && (media.coverImage.extraLarge || media.coverImage.large) || "";
+    if (!url) throw new Error("kein Cover");
+    anilistCoverCache[key] = { url: url, at: Date.now() };
+    saveAnilistCoverCache();
+    return url;
+  });
+}
+// Titel-Fallback: AniList-Abfrage nach (English/Romaji-)Titel. Liefert AniList
+// nichts, bleibt "" -> das MangaDex-Cover (eindeutig pro Manga) bleibt sichtbar.
+function anilistCoverTitleKey(title) {
+  return String(title || "").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+function anilistCoverByTitle(title) {
+  if (!title) return Promise.resolve("");
+  var key = anilistCoverTitleKey(title);
+  var hit = anilistCoverCache[key];
+  if (hit && (Date.now() - (Number(hit.at) || 0)) < 7 * 24 * 3600 * 1000) {
+    return Promise.resolve(hit.url || "");
+  }
+  var q = anilistCoverTitleKey(title);
+  if (!q) return Promise.resolve("");
+  return searchAniListCovers(title).then(function (list) {
+    var best = "";
+    for (var i = 0; i < list.length; i++) {
+      var url = list[i].coverImage && (list[i].coverImage.extraLarge || list[i].coverImage.large);
+      if (url) { best = url; break; }
+    }
+    if (!best) return "";
+    anilistCoverCache[key] = { url: best, at: Date.now() };
+    saveAnilistCoverCache();
+    return best;
+  }).catch(function () { return ""; });
+}
+// Ein Treffer: zuerst die eindeutige ID-Zuordnung, dann der Titel, zuletzt
+// das MangaDex-Cover als sauberer Fallback. So kommen die Cover aus AniList,
+// Fremdsprach-Titel suchen unter ihrem Englischen/Romaji-Namen (mdTitleOf).
+function anilistCoverFor(entry) {
+  if (!entry) return Promise.resolve("");
+  if (entry.anilistId) {
+    return anilistCoverById(entry.anilistId).catch(function () { return anilistCoverByTitle(entry.title); }).then(function (url) { return url || ""; });
+  }
+  return anilistCoverByTitle(entry.title);
+}
+// Hintergrund-Durchlauf ueber alle Treffer (Gitter und Liste). Laeuft ueber die
+// bestehende Throttle, daher nicht blockierend; ohne Cover bleibt MangaDex.
+// Streng gebundene Cover-Ausgabe: baut das Bild in der Karte des übergebenen
+// Index ein - aber nur, wenn diese Karte den auseinandergehörenden Crunch
+function swapDiscoverCover(listEl, index, url) {
+  if (!listEl || !url) return;
+  var row = listEl.querySelector('.api-card[data-api-card="' + index + '"]') ||
+            listEl.querySelector('.api-result[data-api-result="' + index + '"]');
+  if (!row) return;
+  var wrap = row.querySelector(".api-cover-wrap") || row;
+  var img = wrap.querySelector("img.api-card-cover");
+  if (!img) {
+    img = document.createElement("img");
+    img.className = "api-card-cover";
+    img.alt = "";
+    img.loading = "lazy";
+    img.addEventListener("error", function () { apiCoverBroken(img); });
+    if (wrap.firstChild) wrap.insertBefore(img, wrap.firstChild);
+    else wrap.appendChild(img);
+  }
+  img.src = url;
+  wrap.classList.remove("no-cover");
+}
+// Cache-Lesehilfe: Treffer gueltig bis 7 Tage.
+function anilistCoverCached(key) {
+  var hit = anilistCoverCache[key];
+  if (hit && (Date.now() - (Number(hit.at) || 0)) < 7 * 24 * 3600 * 1000) return hit.url || "";
+  return "";
+}
+// SAMMEL-Abfrage: bis 50 AniList-Cover in EINEN GraphQL-Request.
+// Fuer die Entdecken-Menge 1 Request statt 20 - der Origin der schnellen Ladung.
+function anilistCoversBulk(ids) {
+  var missing = (ids || []).filter(function (id) {
+    return !anilistCoverCached("al:" + id);
+  });
+  if (!missing.length) return Promise.resolve(0);
+  var gql = "query ($ids: [Int]) { Page(perPage: 50) { media(id_in: $ids, type: MANGA) { id coverImage { extraLarge large } } } }";
+  return throttledFetch("https://graphql.anilist.co", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({ query: gql, variables: { ids: missing.map(Number) } })
+  }).then(function (r) {
+    if (!r.ok) throw new Error("anilist-http-" + r.status);
+    return r.json();
+  }).then(function (json) {
+    if (json.errors) throw new Error("anilist-graphql-error");
+    var media = (json.data && json.data.Page && json.data.Page.media) || [];
+    media.forEach(function (m) {
+      var url = m.coverImage && (m.coverImage.extraLarge || m.coverImage.large);
+      if (url) anilistCoverCache["al:" + m.id] = { url: url, at: Date.now() };
+    });
+    saveAnilistCoverCache();
+    return media.length;
+  });
+}
+// Jikan -> Kitsu, falls kein AniList-Treffer existiert und auch das MangaDex-
+// Cover fehlt oder sich weigert. Ergebnisse landen wie die AniList-Cover im
+// 7-Tage-Cache ("os:"), damit kein zweites Nachladen anfaellt.
+function otherSourceCover(entry) {
+  if (!entry || !entry.title) return Promise.resolve("");
+  if (settings.otherSourceFallback === false) return Promise.resolve("");
+  var cacheKey = "os:" + (anilistCoverTitleKey(entry.title));
+  var hit = anilistCoverCache[cacheKey];
+  if (hit && (Date.now() - (Number(hit.at) || 0)) < 7 * 24 * 3600 * 1000) {
+    return Promise.resolve(hit.url || "");
+  }
+  function kitsuCover() {
+    return searchKitsuManga(entry.title).then(function (k) {
+      return k && k.posterImage && k.posterImage.original ? (k.posterImage.original.url || "") : "";
+    }).catch(function () { return ""; });
+  }
+  return searchJikanManga(entry.title).then(function (j) {
+    var u = j && j.images && j.images.jpg && (j.images.jpg.large_image_url || j.images.jpg.image_url);
+    if (u) return u;
+    return kitsuCover();
+  }).catch(kitsuCover).then(function (url) {
+    if (url) anilistCoverCache[cacheKey] = { url: url, at: Date.now() };
+    return url;
+  });
+}
+// Bilder-Fehler-Meldung: broken <img> im Entdecken-Raster. Merkt sich den
+// Fehler (eindeutig je Manga) und stoesst EINMAL eine Reparatur ueber die
+// Jikan->Kitsu-Kette an; vorher bleibt der Buchstaben-Platzhalter sichtbar.
+window.apiCoverBroken = function (img) {
+  if (img && img.parentElement && img.parentElement.classList) img.parentElement.classList.add("no-cover");
+  var card = img.closest && img.closest("[data-api-card], [data-api-result]");
+  if (!card) return;
+  var index = Number(card.getAttribute("data-api-card") || card.getAttribute("data-api-result"));
+  var entry = apiResults[index];
+  if (!entry) return;
+  entry._coverError = true;
+  if (entry._coverFixing) return;
+  entry._coverFixing = true;
+  var listEl = document.getElementById("apiResults");
+  anilistCoverQueue = anilistCoverQueue.then(function () {
+    entry._coverFixing = false;
+    var cur = apiResults[index];
+    if (!cur || cur.id !== entry.id) return;
+    return otherSourceCover(entry).then(function (url) {
+      var cur2 = apiResults[index];
+      if (!cur2 || cur2.id !== entry.id || !url) return;
+      cur2.cover = url;
+      cur2._coverError = false;
+      cur2._coverDone = true;
+      swapDiscoverCover(listEl, index, url);
+    });
+  });
+};
+function applyAniListCovers() {
+  if (settings.anilistCovers === false) return; // per Einstellung ausgeschaltet
+  var gen = ++anilistCoverGeneration;
+  var listEl = document.getElementById("apiResults");
+  if (!listEl || !apiResults.length) return;
+  // 1) Schnell-Ladeteil: alle AniList-IDs EINER der Treffer werden in EINER
+  //    Sammelabfrage geholt (bis 50 Titel pro Request) - statt 20
+  //    hintereinander gedrosselten Einzelabfragen sant so nach ~1 s da,
+  //    nicht nach 20 s.
+  var ids = apiResults.filter(function (e) { return e.anilistId && e.title; })
+                      .map(function (e) { return e.anilistId; });
+  anilistCoversBulk(ids).catch(function () {}).then(function () {
+    if (gen !== anilistCoverGeneration) return;
+    apiResults.forEach(function (entry, index) {
+      if (!entry.title || entry._coverDone) return;
+      var url = entry.anilistId ? anilistCoverCached("al:" + entry.anilistId) : "";
+      if (!url) return;
+      entry.cover = url;
+      entry._coverDone = true;
+      swapDiscoverCover(listEl, index, url);
+    });
+    // 2) Fuer alles Restliche: Titel-Fallback (AniList), dann - nur wenn
+    //    MangaDex selbst gar kein oder ein defektes Cover hat -
+    //    Jikan -> Kitsu. Alles weitergebunden per MangaDex-ID.
+    apiResults.forEach(function (entry, index) {
+      if (!entry.title || entry._coverDone) return;
+      anilistCoverQueue = anilistCoverQueue.then(function () {
+        if (gen !== anilistCoverGeneration) return;
+        return anilistCoverFor(entry).then(function (url) {
+          if (gen !== anilistCoverGeneration) return;
+          var cur = apiResults[index];
+          if (!cur || cur.id !== entry.id) return;
+          if (url) {
+            entry.cover = url;
+            entry._coverDone = true;
+            entry._coverFromAniList = true;
+            swapDiscoverCover(listEl, index, url);
+          }
+          // Ohne AniList-Treffer: Jikan/Kitsu versuchen - aber nur, wenn der
+          // Titel gar kein MangaDex-Cover hat. Defekte Cover repariert der
+          // eigene Weg ueber apiCoverBroken.
+          if (url || entry.cover) return;
+          return otherSourceCover(entry).then(function (alt) {
+            if (gen !== anilistCoverGeneration || !alt) return;
+            var cur2 = apiResults[index];
+            if (!cur2 || cur2.id !== entry.id) return;
+            if (cur2.cover) return;
+            cur2.cover = alt;
+            cur2._coverDone = true;
+            swapDiscoverCover(listEl, index, alt);
+          });
+        });
+      });
+    });
+  });
+}
+// Ein Treffer direkt in die Bibliothek uebernehmen. Das AniList-Cover wird dabei
+// komprimiert in die IndexedDB ausgelagert (wie beim AniList-Abgleich), oder -
+// blockiert das Bild - als reiner Link gehalten.
+function addApiResultToLibrary(index) {
+  var entry = apiResults[index];
+  if (!entry || !entry.title) return;
+  var now = new Date().toISOString();
+  var newItem = {
+    id: uid(), title: entry.title, chapter: null, status: "aktiv", tags: [], notes: "", url: "",
+    coverBase64: "", coverUrl: entry.cover || "", readHistory: [], lastUpdated: now, createdAt: now,
+    aniListId: null, totalChapters: null, originType: "", description: "", averageScore: null, genres: [],
+    releaseDate: "", endDate: "", authors: [], volumes: null, studios: [], staff: [], altTitles: [],
+    popularity: null, favourites: null, anilistExtras: null, readerUrl: "", userRating: 0, releaseDay: "",
+    hasUpdate: false, statusManual: false, finishedLogged: false, mdId: entry.id || null, mdSyncedChapter: 0, mdLastSyncAt: ""
+  };
+  state.unshift(newItem);
+  saveState(true);
+  fetchAndCompressRemoteCover(entry.cover || "").then(function (res) {
+    if (res.base64) { persistCoverForItem(newItem, res.base64); }
+    else { newItem.coverUrl = entry.cover || ""; }
+    saveState(true); renderAll();
+  }).catch(function () { newItem.coverUrl = entry.cover || ""; saveState(true); });
+  mdResolveMangaForItem(newItem).then(function (resolved) { if (resolved) saveState(true); }).catch(function () {});
+  // Der gerade benutzte Knopf (Entdecken-Cover oder Trefferzeile) springt
+  // sofort in den Hinzugefuegt-Zustand, ohne das Gitter neu zu rendern.
+  var addBtn = document.querySelector('[data-api-add="' + index + '"]');
+  if (addBtn) { addBtn.textContent = "\u2713 In der Bibliothek"; addBtn.disabled = true; }
+  showToast("Zur Bibliothek hinzugef\u00fcgt");
 }
 
 // --- Kapitelliste im Detail ----------------------------------------------
@@ -8544,7 +9816,10 @@ function renderDetailChapters(item, chapters) {
     listEl.innerHTML = '<p class="activity-empty">Keine Kapitel gefunden.</p>';
     return;
   }
-  listEl.innerHTML = chapters.map(function (ch) {
+  // Kapitelliste beginnt zugeklappt; der Kopfzeigt die Anzahl und einen
+  // Chevron, die Liste klappt animiert auf und drueckt den Inhalt runter.
+  var open = !!detailChaptersOpen[item.id];
+  var rows = chapters.map(function (ch) {
     return '<div class="chapter-row">' +
       '<span class="chapter-row-main">' +
         '<span class="chapter-row-num">Kapitel ' + escapeHtml(ch.number) + '</span>' +
@@ -8554,6 +9829,24 @@ function renderDetailChapters(item, chapters) {
       '<button class="chapter-row-open" type="button" data-chapter-open="' + escapeHtml(ch.id) + '">Lesen</button>' +
     '</div>';
   }).join("");
+  listEl.innerHTML =
+    '<button type="button" class="chapter-toggle' + (open ? " is-open" : "") + '" data-chapter-toggle="1" aria-expanded="' + (open ? "true" : "false") + '">' +
+      '<span>' + (open ? "Kapitel zuklappen" : "Kapitel aufklappen (" + chapters.length + ")") + '</span>' +
+      '<svg class="chapter-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>' +
+    '</button>' +
+    '<div class="chapter-list-clip' + (open ? " is-open" : "") + '" data-chapter-list><div class="chapter-list-inner">' + rows + '</div></div>';
+  var toggleBtn = listEl.querySelector("[data-chapter-toggle]");
+  var listView = listEl.querySelector("[data-chapter-list]");
+  if (toggleBtn && listView) {
+    toggleBtn.addEventListener("click", function () {
+      var shown = listView.classList.toggle("is-open");
+      toggleBtn.classList.toggle("is-open", shown);
+      toggleBtn.setAttribute("aria-expanded", shown ? "true" : "false");
+      toggleBtn.querySelector("span").textContent = shown ? "Kapitel zuklappen" : "Kapitel aufklappen (" + chapters.length + ")";
+      detailChaptersOpen[item.id] = shown;
+      triggerHaptic();
+    });
+  }
   listEl.querySelectorAll("[data-chapter-open]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var chapterId = btn.getAttribute("data-chapter-open");
@@ -8610,18 +9903,19 @@ function switchMainView(name) {
   if (apiEl) apiEl.style.display = toApi ? "block" : "none";
   var fab = document.getElementById("fabAdd");
   if (fab) fab.style.display = toApi ? "none" : "";
-  // Die Suchleiste durchsucht im Katalog die aktive API, sonst die Bibliothek.
+  // Die Suchleiste durchsucht im Katalog MangaDex, sonst die Bibliothek.
   var searchInput = document.getElementById("search");
   if (searchInput) {
     searchInput.value = "";
-    searchInput.placeholder = toApi ? ("Titel \u00fcber " + apiInfo(activeApiId()).short + " suchen") : "Titel suchen";
+    searchInput.placeholder = toApi ? "MangaDex durchsuchen" : "Titel suchen";
   }
+  apiSuggestHide(); libSuggestHide(); // Vorschlaege gelten nur in der Ansicht, in der getippt wurde.
   searchTerm = "";
-  var switchEl = document.getElementById("apiSwitch");
-  if (switchEl) switchEl.style.display = toApi ? "" : "none";
   document.querySelectorAll("#navTabs button").forEach(function (b) {
     b.classList.toggle("active", b.getAttribute("data-nav") === currentMainView);
   });
+  // Filter-Leiste gezielt im API-Katalog zeigen, in der Bibliothek blenden.
+  applyFilterBarVisibility();
   if (toApi) ensureApiCatalog();
   else renderAll();
 }
@@ -8636,28 +9930,89 @@ function wireDownloadsUI() {
       switchMainView(btn.getAttribute("data-nav"));
     });
   }
-  // Umschalter in der Suchleiste und Dienstliste im Katalog setzen dieselbe API.
-  var apiSwitch = document.getElementById("apiSwitch");
-  if (apiSwitch) {
-    apiSwitch.addEventListener("click", function (e) {
-      var btn = e.target.closest && e.target.closest("[data-api]");
-      if (btn) selectApi(btn.getAttribute("data-api"));
+  // Filter-Panel oeffnen/schliessen, zuruecksetzen und Zufallssuche.
+  var filtersToggle = document.getElementById("advancedFiltersToggle");
+  if (filtersToggle) {
+    filtersToggle.addEventListener("click", function (e) {
+      // Nicht dem "Klick ausserhalb"-Handler melden, sonst schliesst es sofort wieder.
+      e.stopPropagation();
+      if (currentMainView === "library") {
+        // Bibliothek: dieselbe Leiste oeffnet die Sortier-/Tagliste.
+        var dd = document.getElementById("filterDropdown");
+        if (!dd) return;
+        var openNow = dd.classList.toggle("open");
+        filterToggleBtn.classList.toggle("active", openNow);
+        triggerHaptic();
+        return;
+      }
+      toggleAdvancedFilters();
     });
   }
-  var apiServices = document.getElementById("apiServices");
-  if (apiServices) {
-    apiServices.addEventListener("click", function (e) {
-      var btn = e.target.closest && e.target.closest("[data-api-select]");
-      if (btn) selectApi(btn.getAttribute("data-api-select"));
-    });
+  var filtersPanel = document.getElementById("advancedFilters");
+  if (filtersPanel) {
+    // Klick auf das Panel selbst nicht als "ausserhalb" werten.
+    filtersPanel.addEventListener("click", function (e) { e.stopPropagation(); });
   }
+  document.addEventListener("click", function (e) {
+    // Klicks in Suchleiste oder Vorschlagsliste sollen das Dropdown nicht
+    // schliessen (die Buttons stoppen das Event selbst);
+    if (e.target.closest && e.target.closest("#apiSuggest, #libSuggest, .searchbar")) return;
+    apiSuggestHide();
+    closeAdvancedFilters();
+  });
+  var afReset = document.getElementById("afReset");
+  if (afReset) afReset.addEventListener("click", function () {
+    triggerHaptic();
+    resetAdvancedFilters();
+    // Zurueck zum unmodalen Entdecken (leeres Suchfeld wuerde sonst nur eine
+    // Fehlermeldung zeigen).
+    if (currentMainView === "api") loadDiscover();
+  });
+  // "Filter anwenden und suchen": jede Filteraenderung greift sofort - mit
+  // Text laeuft die Titelsuche, ohne Text der gefilterte Entdecken-Modus.
+  ["fSortBy", "fContentRating", "fDemographic", "fOriginalLang", "fPubStatus", "fHasTranslated", "fTranslatedLang", "fYear", "fHasAvailable"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("change", function () {
+      if (currentMainView === "api") runMangaDexSearch();
+    });
+  });
+  var afLucky = document.getElementById("afLucky");
+  if (afLucky) afLucky.addEventListener("click", function () {
+    closeAdvancedFilters();
+    if (currentMainView !== "api") switchMainView("api");
+    luckyMangaDexSearch();
+  });
+  // "Zur Bibliothek hinzufuegen" im Entdecken-Detail: nimmt den Titel samt
+  // bereits geladenen AniList-Infos ueber, ohne die Daten nochmal zu holen.
+  var addLibBtn = document.getElementById("detailAddToLibBtn");
+  if (addLibBtn) addLibBtn.addEventListener("click", function () {
+    var item = window._discoverTransient[currentDetailId];
+    if (!item) return;
+    triggerHaptic();
+    addDiscoverToLibrary(item);
+  });
   var apiResultsEl = document.getElementById("apiResults");
   if (apiResultsEl) {
     apiResultsEl.addEventListener("click", function (e) {
+      // "Übernehmen" direkt in die Bibliothek legen (Rest der Zeile ignorieren).
+      var addBtn = e.target.closest && e.target.closest("[data-api-add]");
+      if (addBtn) {
+        triggerHaptic();
+        addApiResultToLibrary(Number(addBtn.getAttribute("data-api-add")));
+        return;
+      }
+      // Entdecken-Karte oder Trefferzeile: das Bibliotheks-Detail-Sheet
+      // oeffnen (Kapitel + AniList-Infos) statt die Kapitel unten anzuehaengen.
+      var card = e.target.closest && e.target.closest("[data-api-card]");
+      if (card) {
+        triggerHaptic();
+        openDiscoverDetail(Number(card.getAttribute("data-api-card")));
+        return;
+      }
       var btn = e.target.closest && e.target.closest("[data-api-result]");
       if (!btn) return;
       triggerHaptic();
-      loadApiChapters(Number(btn.getAttribute("data-api-result")));
+      openDiscoverDetail(Number(btn.getAttribute("data-api-result")));
     });
   }
 
@@ -8725,13 +10080,141 @@ function downloadMangaDexChapter(item, chapter) {
   });
 }
 
+// --- Entdecken-Detail: das Bibliotheks-Sheet, nur transient ----------------
+// Ein Tip auf eine Entdecken-Karte (oder Trefferzeile) oeffnet dasselbe
+// Detail-Menue wie in der Bibliothek: Kapitelliste, AniList-Infos (Score,
+// Leser, Favoriten), Genres, Beschreibung, Staff, Links. Nichts wird
+// dauerhaft gespeichert - erst ueber den Button "Zur Bibliothek hinzufuegen"
+// landet der Titel wirklich drin.
+if (!window._discoverTransient) window._discoverTransient = {}; // apd-<mdId> -> Anzeige-Objekt
+function renderDetailChrome(item) {
+  var transient = !!item.transient;
+  var editBtn = document.getElementById("detailEditBtn");
+  var syncBtn = document.getElementById("detailSyncBtn");
+  var addBtn = document.getElementById("detailAddToLibBtn");
+  if (editBtn) editBtn.style.display = transient ? "none" : "";
+  if (syncBtn) syncBtn.style.display = transient ? "none" : "";
+  if (addBtn) addBtn.style.display = transient ? "" : "none";
+}
+function buildDiscoverItem(entry) {
+  var id = "apd-" + entry.id;
+  var item = window._discoverTransient[id];
+  if (!item) {
+    item = {
+      id: id, title: entry.title, chapter: null, status: "aktiv", tags: [], notes: "",
+      url: "", coverUrl: entry.cover || "", readHistory: [],
+      aniListId: entry.anilistId || null, totalChapters: null,
+      originType: "", description: "", averageScore: null, genres: [],
+      releaseDate: "", endDate: "", authors: [], volumes: null, studios: [], staff: [], altTitles: [],
+      popularity: null, favourites: null, anilistExtras: null, readerUrl: "", userRating: 0, releaseDay: "",
+      hasUpdate: false, statusManual: true, finishedLogged: false, mdId: entry.id, mdSyncedChapter: 0,
+      mdLastSyncAt: "", transient: true
+    };
+    window._discoverTransient[id] = item;
+  }
+  return item;
+}
+function openDiscoverDetail(index) {
+  var entry = apiResults[index];
+  if (!entry || !entry.id) return;
+  currentDiscoverIndex = index;
+  var item = buildDiscoverItem(entry);
+  if (entry.cover) item.coverUrl = entry.cover; // frisches AniList-Cover aus dem Raster uebernehmen
+  currentDetailId = item.id;
+  historyExpanded = false;
+  delete detailChaptersOpen[item.id]; // Kapitel anfangs zugeklappt
+  renderDetailContent(item);
+  renderDetailChrome(item);
+  var line = document.getElementById("detailSyncLine");
+  if (line) line.textContent = "AniList-Infos werden geladen \u2026";
+  showOverlay(detailOverlay);
+  refreshDetailChapters(item);
+  enrichDiscoverItem(item, index);
+}
+// AniList-Daten nachladen, ohne die Bibliothek zu veraendern: Beschreibung,
+// Genres, Score, Leser, Favoriten, Staff, Alt-Titel, Typ. Mit aniListId wird
+// praezise gesucht, sonst faellt es auf eine exakte Titel-Deckung zurueck.
+function enrichDiscoverItem(item, index) {
+  var line = document.getElementById("detailSyncLine");
+  var p = item.aniListId
+    ? searchAniListByIdFull(item.aniListId)
+    : searchAniListFull(item.title).then(function (media) {
+        if (!media || !media.length) return null;
+        var wanted = titleKey(item.title);
+        for (var i = 0; i < media.length; i++) {
+          var titles = anilistAltTitles(media[i]);
+          for (var j = 0; j < titles.length; j++) {
+            if (titleKey(titles[j]) === wanted) return media[i];
+          }
+        }
+        return null;
+      });
+  return p.then(function (m) {
+    if (m) {
+      if (m.chapters) item.totalChapters = m.chapters;
+      if (m.status) { var mapped = mapAniListStatus(m.status); if (mapped) item.status = mapped; }
+      if (m.description) item.description = cleanDescription(m.description);
+      if (m.averageScore !== null && m.averageScore !== undefined) item.averageScore = m.averageScore;
+      if (Array.isArray(m.genres) && m.genres.length) item.genres = m.genres.slice();
+      if (m.popularity !== null && m.popularity !== undefined) item.popularity = m.popularity;
+      if (m.favourites !== null && m.favourites !== undefined) item.favourites = m.favourites;
+      var st = anilistStudios(m); if (st.length) item.studios = st;
+      var sf = anilistStaff(m); if (sf.length) item.staff = sf;
+      var at = anilistAltTitles(m); if (at.length) item.altTitles = at;
+      if (m.countryOfOrigin || m.format) { var ot = computeOriginType(m); if (ot) item.originType = ot; }
+      var cu = m.coverImage && (m.coverImage.extraLarge || m.coverImage.large || m.coverImage.medium);
+      if (cu) item.coverUrl = cu;
+    }
+    // Nur neu zeichnen, wenn das Sheet noch zu demselben Manga gehoert - nie
+    // Infos eines anderen Titels ins offene Menue schreiben.
+    var entry = apiResults[index];
+    if (currentDetailId === item.id && entry && entry.id === item.mdId) {
+      renderDetailContent(item);
+    }
+    if (line) line.textContent = "";
+  }).catch(function () {
+    if (line) line.textContent = "AniList-Infos sind gerade nicht erreichbar.";
+  });
+}
+// Gueltigen Index fuer ein transient Anzeigeobjekt holen - fuer den Fall, dass
+// sich die Trefferliste zwischenzeitlich veraendert hat. Schluessel ist die
+// eindeutige MangaDex-ID, nie der Index allein.
+function discoverIndexOf(item) {
+  if (!item || !item.transient) return -1;
+  return apiResults.findIndex(function (e) { return e.id === item.mdId; });
+}
+// "Zur Bibliothek hinzufuegen": aus dem transienten Sheet uebernimmt der
+// Titel mit all seinen bereits geladenen AniList-Daten in die Bibliothek -
+// ohne erneute AniList- oder MangaDex-Suche.
+function addDiscoverToLibrary(item) {
+  var idx = discoverIndexOf(item);
+  if (idx < 0) { showToast("Titel ist nicht mehr in der Liste"); return; }
+  var entry = apiResults[idx];
+  addApiResultToLibrary(idx);
+  var fresh = state[0];
+  if (fresh && fresh.title === entry.title) {
+    if (item.aniListId) fresh.aniListId = item.aniListId;
+    if (item.description) fresh.description = item.description;
+    if (item.genres && item.genres.length) fresh.genres = item.genres.slice();
+    if (item.staff && item.staff.length) fresh.staff = item.staff.slice();
+    if (item.altTitles && item.altTitles.length) fresh.altTitles = item.altTitles.slice();
+    if (item.studios && item.studios.length) fresh.studios = item.studios.slice();
+    if (item.popularity !== null && item.popularity !== undefined) fresh.popularity = item.popularity;
+    if (item.favourites !== null && item.favourites !== undefined) fresh.favourites = item.favourites;
+    if (item.averageScore !== null && item.averageScore !== undefined) fresh.averageScore = item.averageScore;
+    if (item.totalChapters !== null && item.totalChapters !== undefined) fresh.totalChapters = item.totalChapters;
+    if (item.originType) fresh.originType = item.originType;
+    fresh.mdId = item.mdId;
+    saveState(true);
+    renderAll();
+  }
+  closeDetail();
+}
+
 // --- Start: Metadaten einlesen, Speicher fortschreiben -------------------
 function initDownloads() {
-  if (!API_INFO[settings.searchApi]) settings.searchApi = "mangadex";
-  renderApiSwitch();
-  // Der Umschalter erscheint erst im Katalog -- in der Bibliothek stoert er nur.
-  var switchEl = document.getElementById("apiSwitch");
-  if (switchEl) switchEl.style.display = "none";
+  loadAnilistCoverCache();
+  applyFilterBarVisibility();
   wireDownloadsUI();
   return dlOpenDb().then(function () { return dlRefreshIndex(); }).then(function () {
     updateDownloadBadge();
@@ -8779,7 +10262,7 @@ setTimeout(autoSyncAniList, 1600);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js?v=53").catch(function () {});
+    navigator.serviceWorker.register("sw.js?v=81").catch(function () {});
   });
 }
 </script>
