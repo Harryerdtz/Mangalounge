@@ -7612,7 +7612,7 @@ document.getElementById("recommendationsBtn").addEventListener("click", function
 var MANGADEX_API = window.MANGADEX_PROXY_URL || "https://api.mangadex.org";
 // OAuth2-Token-Endpunkt (Keycloak). Client-ID und Secret kommen aus den
 // Einstellungen (localStorage), der Token wird hier gecacht und erneuert.
-var MANGADEX_AUTH_URL = "https://auth.mangadex.org/realms/mangadex/protocol/openid-connect/token";
+var MANGADEX_AUTH_URL = (window.MANGADEX_PROXY_URL ? window.MANGADEX_PROXY_URL.replace(/\/$/, "") + "/auth/token" : "https://auth.mangadex.org/realms/mangadex/protocol/openid-connect/token");
 var mdToken = { token: null, expiresAt: 0, lastError: "", authError: "" };
 function mdLoadTokenFromStorage() {
   try {
@@ -10327,7 +10327,7 @@ setTimeout(autoSyncAniList, 1600);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js?v=89").catch(function () {});
+    navigator.serviceWorker.register("sw.js?v=90").catch(function () {});
   });
 }
 </script>

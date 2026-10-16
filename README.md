@@ -122,11 +122,11 @@ Wenn du eine aktualisierte `index.html` bekommst, tauschst du sie im Repo aus
 die alte Kopie wegwirft:
 
 1. In `sw.js` die Zeile
-   `var CACHE_NAME = "mangalounge-cache-v89";` auf `v60`, `v61`, … ändern.
+   `var CACHE_NAME = "mangalounge-cache-v90";` auf `v60`, `v61`, … ändern.
 2. In `index.html` ganz unten dieselbe Nummer in
-   `navigator.serviceWorker.register("sw.js?v=89")` anpassen.
+   `navigator.serviceWorker.register("sw.js?v=90")` anpassen.
 
-**Beide Nummern gehören zusammen.** Aktuell sind beide auf **v89**. Bleibt eine
+**Beide Nummern gehören zusammen.** Aktuell sind beide auf **v90**. Bleibt eine
 der beiden stehen, liefert der Service Worker weiter die alte Version aus,
 selbst wenn die neue Datei schon online ist.
 
