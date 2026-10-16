@@ -6,7 +6,7 @@ const USER_AGENT = "MangaLounge/1.0 (https://harryerdtz.github.io/Mangalounge/)"
 function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization",
     "Vary": "Origin"
   };
@@ -18,7 +18,7 @@ function corsHeaders(origin) {
 function proxyHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Accept, Range",
     "Vary": "Origin"
   };
@@ -58,6 +58,20 @@ export default {
       // Der generische Weg (Pfad "/") bekommt die offenen Kopfzeilen.
       const headers = (incoming.pathname === "/" || incoming.searchParams.has("url")) ? proxyHeaders() : corsHeaders(origin);
       return new Response(null, { status: 204, headers });
+    }
+    // Auth-Token-Proxy: Password-Grant laeuft ueber den Worker, damit CORS
+    // auf GitHub Pages nicht blockt (localhost war bisher zufaellig erlaubt).
+    if (incoming.pathname === "/auth/token" && request.method === "POST") {
+      const body = await request.text();
+      const resp = await fetch("https://auth.mangadex.org/realms/mangadex/protocol/openid-connect/token", {
+        method: "POST",
+        headers: { "Content-Type": request.headers.get("Content-Type") || "application/x-www-form-urlencoded", "Accept": "application/json" },
+        body
+      });
+      const out = new Headers(resp.headers);
+      Object.entries(corsHeaders(origin)).forEach(([k, v]) => out.set(k, v));
+      out.delete("set-cookie");
+      return new Response(resp.body, { status: resp.status, headers: out });
     }
     if (request.method !== "GET") {
       return new Response("Method not allowed", { status: 405, headers: corsHeaders(origin) });
