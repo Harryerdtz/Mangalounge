@@ -1,13 +1,13 @@
 const API_ORIGIN = "https://api.mangadex.org";
 const ALLOWED_ORIGIN = "https://harryerdtz.github.io";
-const ALLOWED_PREFIXES = ["/manga", "/at-home"];
+const ALLOWED_PREFIXES = ["/manga", "/at-home", "/user"];
 const USER_AGENT = "MangaLounge/1.0 (https://harryerdtz.github.io/Mangalounge/)";
 
 function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin": origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Accept",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization",
     "Vary": "Origin"
   };
 }
@@ -103,9 +103,10 @@ export default {
       return new Response("Not found", { status: 404, headers: corsHeaders(origin) });
     }
     const apiTarget = API_ORIGIN + incoming.pathname + incoming.search;
-    const response = await fetch(apiTarget, {
-      headers: { Accept: "application/json", "User-Agent": USER_AGENT }
-    });
+    const apiHeaders = { Accept: "application/json", "User-Agent": USER_AGENT };
+    const auth = request.headers.get("Authorization");
+    if (auth) apiHeaders["Authorization"] = auth;
+    const response = await fetch(apiTarget, { headers: apiHeaders });
     const headers = new Headers(response.headers);
     Object.entries(corsHeaders(origin)).forEach(([key, value]) => headers.set(key, value));
     headers.delete("set-cookie");
