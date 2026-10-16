@@ -65,7 +65,7 @@ export default {
       const body = await request.text();
       const resp = await fetch("https://auth.mangadex.org/realms/mangadex/protocol/openid-connect/token", {
         method: "POST",
-        headers: { "Content-Type": request.headers.get("Content-Type") || "application/x-www-form-urlencoded", "Accept": "application/json" },
+        headers: { "Content-Type": request.headers.get("Content-Type") || "application/x-www-form-urlencoded", "Accept": "application/json", "User-Agent": USER_AGENT },
         body
       });
       const out = new Headers(resp.headers);
