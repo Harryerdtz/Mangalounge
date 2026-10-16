@@ -1,121 +1,326 @@
-# MangaLounge selbst hosten (GitHub Pages)
+# MangaLounge
 
-Diese Dateien sind alles, was du brauchst:
+MangaLounge ist eine Web-App für deine Manga-Sammlung: Katalog, Lesestand,
+Statistik und ein eingebauter Reader. Die ganze App steckt in einer einzigen
+Datei (`index.html`), läuft komplett im Browser und speichert alles lokal auf
+dem Gerät. Vom Home-Bildschirm gestartet sieht sie aus und fühlt sich an wie
+eine normale App, inklusive Offline-Start.
 
-- `index.html` – die App
-- `manifest.json` – macht sie zur installierbaren PWA
-- `sw.js` – Service Worker, sorgt für echtes Offline-Funktionieren
-- `config.js` – URL des optionalen MangaDex-Proxys
-- `mangadex-proxy.js` – Cloudflare-Worker für den integrierten Reader
-- `icon-180.png`, `icon-512.png`, `favicon-32.png` – App-Icons (Home-Bildschirm, Browser-Tab)
-- `icon.svg` – Quelldatei der Icons (nur zum Nachbearbeiten, wird von der App nicht geladen)
+Diese Anleitung bringt die App in wenigen Minuten auf GitHub Pages und danach
+auf dein iPhone.
 
-## 1. Repository anlegen
+## Was die App kann
 
-1. Auf [github.com](https://github.com) einloggen, oben rechts **+ → New repository**.
-2. Name vergeben, z. B. `mangalounge`. Öffentlich (public) lassen – GitHub Pages ist im
-   kostenlosen Plan nur für öffentliche Repos verfügbar.
+Oben unter der Suche sitzt die Hauptnavigation mit zwei Registern:
+**Bibliothek** und **API-Katalog**. Rechts in der Kopfzeile sammelt ein
+Download-Symbol mit kleiner Zahl alle laufenden Downloads; ein Tipp öffnet das
+**Download-Center**.
+
+Kern der Bibliothek ist die Liste in Listen- oder Cover-Ansicht. Die Suche läuft
+über Titel, Alt-Titel, Autor, Tags, Studio und Notizen. Dazu kommen Filter nach
+Status, Typ und Autor, eine Sortierung nach Änderung, Bewertung oder fehlenden
+Kapiteln und fertige Sammlungen wie „Binge-Ready“ oder „Vergessene Schätze“.
+Jeder Titel hat eine Detailseite mit Kapitelstand, deiner Bewertung von 0 bis 10,
+AniList-Score, Tags, Notizen, Leseverlauf und einer Kapitelliste, aus der heraus
+sich einzelne Kapitel offline speichern lassen.
+
+Über AniList lassen sich Titel verknüpfen und abgleichen, neue Kapitel erkennt
+die App und meldet sie über die Glocke. Die Zahl daran zeigt, wie viele neue
+Kapitel noch offen sind; ein kleiner Punkt steht für alles andere Neue. Die
+Zahl verschwindet von selbst, sobald du einmal in der Glocke warst, und lässt
+sich dort mit einem Schalter ganz abschalten.
+
+Die Glocke ist gleichzeitig die Statistik: Lesefortschritt, gelesene Kapitel,
+Top-Autor und -Genre, Streak, Leseaktivität und Verlauf, alles in einem Blatt.
+Ein eingebauter Reader öffnet MangaDex direkt in der App, mit einer ganzen
+Reihe einzelner Schalter (siehe unten). Und im Backup-Bereich exportierst du
+die ganze Sammlung als JSON-Datei und spielst sie wieder ein.
+
+## Einstellungen
+
+Die Einstellungen sind in fünf Gruppen sortiert: **Darstellung**, **Bedienung**,
+**Reader**, **AniList** und **Daten**. Oben bleibt die Kopfzeile mit „Fertig“
+stehen, darunter sitzt die fixierte Register-Leiste, mit der du flüssig zu einer
+Gruppe springst – die aktuelle Gruppe ist dabei hervorgehoben und bleibt in der
+Leiste immer sichtbar.
+
+Die Gruppenköpfe sind so schlicht wie in den iOS-Einstellungen: klein, grau, in
+normaler Schreibung, ohne Symbol und ohne Linie. Darunter sitzt je Karte eine
+ebenso leise Beschriftung. Die Karten haben den Radius der iOS-Listen (10 px),
+die Zeilen sind 44 px hoch und der Text darin 17 px wie im System.
+
+## Die Dateien
+
+| Datei | Zweck |
+| --- | --- |
+| `index.html` | die App selbst (HTML, CSS und JavaScript in einer Datei) |
+| `manifest.json` | macht sie zur installierbaren PWA, mit Icons und Startverknüpfungen |
+| `sw.js` | Service Worker, cached die App für den Offline-Start |
+| `config.js` | Adresse des Proxys (MangaDex, API-Katalog, Downloads) |
+| `mangadex-proxy.js` | der Cloudflare-Worker dazu (MangaDex-API, Bilder und der generische `?url=`-Weg) |
+| `icon-180.png` | App-Icon für den Home-Bildschirm |
+| `icon-512.png` | App-Icon in groß |
+| `favicon-32.png` | kleines Icon für den Browser-Tab |
+| `icon.svg` | Quelldatei der Icons, nur zum Nachbearbeiten |
+
+## 1. Auf GitHub Pages hosten
+
+1. Auf [github.com](https://github.com) einloggen und oben rechts **+ → New
+   repository** wählen.
+2. Namen vergeben, zum Beispiel `mangalounge`. Das Repo muss **öffentlich**
+   sein, weil GitHub Pages im kostenlosen Plan nur öffentliche Repos ausliefert.
 3. **Create repository**.
+4. Im neuen Repo auf **Add file → Upload files** und die Dateien aus der Liste
+   oben hineinziehen (die README selbst braucht es dort nicht). Unten
+   **Commit changes**.
+5. **Settings → Pages** öffnen. Als **Source** „Deploy from a branch“ wählen,
+   Branch `main` und Ordner `/ (root)`, dann **Save**.
+6. Nach ein bis zwei Minuten steht oben die Adresse, meist
+   `https://DEIN-USERNAME.github.io/mangalounge/`.
 
-## 2. Dateien hochladen
+GitHub Pages liefert die Seite über HTTPS aus. Das braucht die App, damit der
+Service Worker startet.
 
-1. Im neuen Repo auf **Add file → Upload files**.
-2. Alle Dateien aus diesem Ordner reinziehen.
-3. Unten **Commit changes**.
+## 2. Auf dem iPhone einrichten
 
-## 3. GitHub Pages aktivieren
-
-1. Im Repo auf **Settings → Pages** (linkes Menü, unter „Code and automation“).
-2. Unter **Build and deployment → Source**: „Deploy from a branch“.
-3. Branch: `main`, Ordner: `/ (root)` → **Save**.
-4. Nach ca. 1–2 Minuten erscheint oben eine URL, meist:
-   `https://DEIN-USERNAME.github.io/mangalounge/`
-
-## 4. Auf dem iPhone einrichten
-
-1. Die URL aus Schritt 3 in **Safari** öffnen (wichtig: Safari, nicht Chrome – nur
-   Safari kann iOS-Webseiten zu echten Home-Bildschirm-Apps machen).
-2. Teilen-Symbol (Quadrat mit Pfeil nach oben) antippen.
-3. **Zum Home-Bildschirm** wählen, Name bestätigen, **Hinzufügen**.
-4. Das Icon liegt jetzt auf deinem Home-Bildschirm und startet ohne Adressleiste,
+1. Die Adresse aus Schritt 1 in **Safari** öffnen. Wichtig: Safari, nicht
+   Chrome. Nur Safari kann Webseiten zu echten Home-Bildschirm-Apps machen.
+2. Auf das Teilen-Symbol tippen (Quadrat mit Pfeil nach oben).
+3. **Zum Home-Bildschirm** wählen, Namen bestätigen, **Hinzufügen**.
+4. Das Icon liegt jetzt auf dem Home-Bildschirm und startet ohne Adressleiste,
    im Dark Mode deines iPhones, mit eigenem App-Icon.
 
-## Updates später
+Tipp: Ein langer Druck auf das App-Icon zeigt die Verknüpfungen
+**Weiterlesen**, **Neueste** und **Suche**, die direkt an der richtigen Stelle
+starten.
 
-Wenn du die App über mich weiter verbessern lässt, bekommst du wieder eine
-aktualisierte `index.html`. Zum Aktualisieren:
+## 3. MangaDex-Reader aktivieren
 
-1. Im Repo die alte `index.html` öffnen → Stift-Icon (bearbeiten) → Inhalt
-   komplett ersetzen → **Commit changes**. (Oder: alte Datei löschen, neue per
-   Upload hochladen.)
-2. In `sw.js` die Zeile `var CACHE_NAME = "mangalounge-cache-v38";` hochzählen
-   (`v39`, `v40`, …) – sonst liefert der Service Worker weiter die alte,
-   zwischengespeicherte Version aus, selbst wenn du die neue hochgeladen hast.
-   Die Nummer steht auch in `index.html` ganz unten in der Zeile
-   `navigator.serviceWorker.register("sw.js?v=38")` – beide zusammen ändern.
-3. Auf dem iPhone die App einmal komplett schließen (nach oben wischen im
-   App-Umschalter) und neu öffnen, damit sie die neue Version lädt.
+Der eingebaute Reader holt seine Bilder von der MangaDex-API, und die lässt
+sich aus dem Browser heraus nicht direkt aufrufen (CORS). Dafür liegt
+`mangadex-proxy.js` bei, ein kleiner Cloudflare Worker, der die Anfragen
+weiterleitet.
 
-Deine gespeicherten Mangas bleiben dabei erhalten – die liegen in `localStorage`
-deines iPhones, nicht in den Dateien selbst, und werden von einem Update der
-`index.html` nicht angerührt.
+Für dich ist das schon erledigt: In `config.js` ist bereits eine Worker-Adresse
+eingetragen, der Reader läuft also ohne weitere Schritte. Nur wenn du einen
+eigenen Worker betreiben willst:
+
+1. Bei Cloudflare Workers einen neuen Worker anlegen.
+2. Den Inhalt von `mangadex-proxy.js` hineinkopieren und deployen.
+3. Die Worker-Adresse in `config.js` eintragen:
+   `window.MANGADEX_PROXY_URL = "https://DEIN-WORKER.workers.dev";`
+4. `index.html`, `config.js` und `sw.js` zusammen hochladen.
+
+Der externe MangaDex-Link auf der Detailseite bleibt immer als Ausweg
+verfügbar.
+
+## Updates einspielen
+
+Wenn du eine aktualisierte `index.html` bekommst, tauschst du sie im Repo aus
+(über das Stift-Icon „bearbeiten“ oder einfach neu hochladen) und machst einen
+**Commit**. Danach zählst du die Versionsnummer hoch, damit der Service Worker
+die alte Kopie wegwirft:
+
+1. In `sw.js` die Zeile
+   `var CACHE_NAME = "mangalounge-cache-v53";` auf `v54`, `v55`, … ändern.
+2. In `index.html` ganz unten dieselbe Nummer in
+   `navigator.serviceWorker.register("sw.js?v=53")` anpassen.
+
+**Beide Nummern gehören zusammen.** Aktuell sind beide auf **v53**. Bleibt eine
+der beiden stehen, liefert der Service Worker weiter die alte Version aus,
+selbst wenn die neue Datei schon online ist.
+
+Zum Schluss die App auf dem iPhone einmal komplett schließen (im App-Umschalter
+nach oben wischen) und neu öffnen.
+
+## Wo deine Daten liegen
+
+Alle Mangas, Einstellungen und die Lesehistorie liegen im `localStorage` deines
+iPhones, nicht in den Dateien im Repo. Ein Update der `index.html` löscht
+deshalb nichts, und du kannst die App jederzeit auf einen anderen Webspace
+umziehen, ohne dass Daten verloren gehen.
+
+Zwei Dinge folgen daraus:
+
+- Die Daten hängen an der Adresse. Auf einer neuen URL fängst du leer an,
+  vorher also exportieren und dort importieren.
+- Werden die Safari-Websitedaten gelöscht oder das iPhone zurückgesetzt, ist
+  alles weg. Deshalb im Backup-Bereich der Einstellungen regelmäßig
+  **Exportieren** und die JSON-Datei in „Dateien“ ablegen.
 
 ## Der Reader
 
-Der integrierte Reader lässt sich komplett auf dich einstellen. Alles ist einzeln
-an- und abschaltbar – entweder in den Einstellungen unter **Reader** bzw.
-**Reader-Bedienung** oder direkt beim Lesen über das Zahnrad in der Leiste oben.
+Der Reader lässt sich komplett auf dich einstellen. Jeder Punkt ist einzeln an-
+und abschaltbar, entweder in den Einstellungen in der Gruppe **Reader** oder
+direkt beim Lesen über das Zahnrad in der oberen Leiste. Beide Stellen greifen
+auf dieselben Werte zu.
 
-- **Blättern:** Scroll oder Einzelseite, Seitenbreite, Abstand zwischen den Seiten.
-- **Wischen:** Wischen blättert (Einzelseite) bzw. wechselt das Kapitel (Scroll).
-- **Tipp-Zonen:** Tippen links/rechts blättert, in der Mitte erscheint die Leiste.
+- **Blättern:** Scroll oder Einzelseite, dazu Seitenbreite und Abstand.
+- **Bedienung:** Wischen blättert, Tipp-Zonen links und rechts blättern, ein
+  Doppeltipp vergrößert die Seite (im Einzelseiten-Modus).
 - **Leiste automatisch ausblenden:** Beim Lesen verschwindet die Leiste, ein
   kleiner Griff oben holt sie zurück.
-- **Doppeltipp vergrößert** die aktuelle Seite (Einzelseiten-Modus).
-- **Helligkeit:** eigener Regler, wirkt nur im Reader.
-- **Qualität:** Original, datensparend oder automatisch je nach Verbindung.
-- **Nahtlos weiterlesen:** das nächste Kapitel wird im Hintergrund vorgeladen und
-  am Kapitelende direkt geladen – abbrechbar durch Hochscrollen.
-- **Als gelesen markieren:** am Kapitelende, ab 80 % oder nur von Hand.
-- **Bildschirm bleibt an**, **Sleep-Timer** und **Tastatursteuerung** (Pfeile, Esc).
-- **Offline:** Kapitel lassen sich speichern; die Verwaltung zeigt alle
+- **Anzeige:** eigener Helligkeitsregler für den Reader, dazu die Bildqualität
+  nach Wahl (Original, datensparend oder automatisch je nach Verbindung).
+- **Nahtlos weiterlesen:** Das nächste Kapitel wird schon beim Lesen vorbereitet.
+  Am Kapitelende blendet der Reader ohne Ladepause um und springt an den Anfang
+  des neuen Kapitels. Hochscrollen bricht ab. Für dieses Vorladen lädt die App
+  das folgende Kapitel im Hintergrund – bei knappem Datentarif lohnt es sich,
+  den Schalter auszuschalten.
+- **Als gelesen markieren:** am Kapitelende, ab 80 Prozent oder nur von Hand.
+- **Extras:** Bildschirm bleibt an, Sleep-Timer und Tastatursteuerung (Pfeile,
+  Leertaste, Esc).
+- **Offline:** Kapitel lassen sich speichern. Die Verwaltung zeigt alle
   gespeicherten Kapitel mit Seitenzahl und Größe und erlaubt gezieltes Löschen.
-  Offline zuerst aus dem Cache lässt gespeicherte Kapitel auch im Flugmodus laden.
+  Offline zuerst aus dem Cache lässt gespeicherte Kapitel auch im Flugmodus
+  laden.
 
 Der Lesestand wird pro Titel als Kapitel **und** Seite gemerkt, damit
 „Weiterlesen“ wirklich an der richtigen Stelle landet.
 
+## API-Katalog und Downloads
+
+Der **API-Katalog** bündelt vier Dienste, die tatsächlich über eine Schnittstelle
+antworten:
+
+| Dienst | Suche | Kapitel & Seiten |
+| --- | --- | --- |
+| **MangaDex** (Standard) | `/manga?title=` | `/manga/{id}/aggregate`, `/at-home/server/{id}` |
+| **ComicK** | `/v1.0/search/` | `/comic/{id}/chapters`, `/chapter/{hid}` |
+| **Manganato** | MangaHook `/api/search/` | `/api/manga/{id}`, `/api/manga/{id}/{ch}` |
+| **Consumet** (MangaPark) | `/manga/mangapark/{query}` | `/manga/mangapark/info?id=`, `/manga/mangapark/read` |
+
+In der Suchleiste sitzt ein Umschalter für die aktive API; im Katalog steht für
+jeden Dienst eine Zeile mit Häkchen. Ist der Katalog geöffnet, durchsucht die
+Suchleiste den gewählten Dienst. Ein Treffer öffnet die Kapitelliste; jeder
+Eintrag hat einen runden Download-Knopf und **Lesen**.
+
+**Alles über den Worker.** Fremde Hosts erlauben kein CORS. Suche, Kapitellisten
+und Bilder laufen daher durch den Cloudflare-Worker (`config.js`): die Ziel-URL
+wird angehängt, der Worker holt sie und setzt die CORS-Kopfzeilen. MangaDex nutzt
+weiter seine `/manga`-Routen, alles andere den generischen `?url=`-Zweig.
+
+**Download-Center.** Das Symbol rechts in der Kopfzeile trägt eine kleine Zahl
+mit den gerade laufenden Downloads. Ein Tipp öffnet das Download-Center mit allen
+laufenden und fertigen Kapiteln, der belegten Gesamtgröße und einem Knopf
+**Alle löschen**. Der Ring des runden Knopfes füllt sich synchron zum
+Ladefortschritt; danach erscheint ein Haken. Bilder werden mit zehn parallelen
+Verbindungen geholt.
+
+**Wie gespeichert wird.** Kapitelbilder liegen als Binärdaten (Blobs) in der
+IndexedDB (`mangalounge-downloads`), geschlüsselt nach Kapitel-ID, die Metadaten
+unter `chapters`. Das ist deutlich geräumiger als der Text-Speicher und hält den
+`localStorage` frei.
+
+**Offline-Umschaltung.** Der Reader prüft vor jedem Kapitel, ob es als Download
+vorliegt – unabhängig davon, von welchem Dienst es stammt. Ist die App offline
+oder ist in den Reader-Einstellungen *Offline zuerst aus dem Cache* an, kommt das
+Kapitel ohne Netzwerkabruf direkt aus der IndexedDB. Objekt-URLs werden beim
+Kapitelwechsel und beim Schließen wieder freigegeben. Im Detail-Blatt und unter
+**Einstellungen → Daten → Downloads** stehen die belegte Größe und
+**Alle Downloads löschen**.
+
+## Markieren und Kopieren
+
+Auf dem Handy markiert langes Drücken standardmäßig keinen Text, kopiert nichts
+und öffnet kein Bild-Menü. Das stört beim Lesen mehr, als es hilft. Wenn du doch
+mal Text aus einer Beschreibung oder einem Link mitnehmen willst, schaltest du
+unter **Einstellungen → Bedienung** (oder im Reader-Zahnrad) *Text markieren
+erlauben* ein. Eingabefelder wie Notizen oder die Suche lassen sich immer ganz
+normal bearbeiten. Bilder bleiben in jedem Fall gesperrt.
+
+## Glas und Tiefe
+
+Glas sitzt nur dort, wo etwas über dem Inhalt schwebt: Kopfzeile, Sheets,
+Aufklapp-Menüs, der Plus-Knopf, Hinweisblasen und die runden Knöpfe auf Covern
+und im Reader. Im Inhalt selbst – Listenzeilen, Karten, Cover – steht bewusst
+kein Glas; dort trennt Farbe und Abstand, nicht Transparenz. Sonst verliert die
+Oberfläche ihre Richtung.
+
+Das Material besteht aus vier Teilen: einer Weichzeichnung, einer Anhebung der
+Sättigung, einer halbdurchlässigen Füllung und einer hellen Lichtkante an der
+Oberkante. Wo Inhalt unter eine Leiste taucht, blendet die App zusätzlich einen
+weichen Rand ein – der Text läuft nicht mehr hart an der Kante ab, sondern löst
+sich in der Unschärfe auf. Dieser Rand erscheint erst, wenn wirklich gescrollt
+wird, und ist oben stehengeblieben nicht zu sehen.
+
+Unter **Einstellungen → Darstellung → Glas-Effekt** stehen drei Stufen:
+
+- **Aus** – alles deckend, ohne Weichzeichnen.
+- **Subtil** (Standard) – 24 px Unschärfe, klar als Glas erkennbar.
+- **Stark** – 42 px Unschärfe und deutlich mehr Durchsicht.
+
+## Fenster ziehen
+
+Jedes Fenster – die Einstellungen, ein Detail, das Aktionsmenü, der Reader-Zahnrad
+und alle übrigen – lässt sich wie in iOS am oberen Griff nach unten ziehen und
+damit schließen. Der Griff ist dabei größer als der sichtbare Balken, damit der
+Finger ihn gut trifft.
+
+Wichtig ist das Verhalten am Anfang: Steht der Inhalt noch nicht ganz oben,
+scrollt das Ziehen zuerst. Erst wenn du oben angekommen bist, wird aus derselben
+Bewegung das Schließen – du musst also nicht loslassen und neu ansetzen. Nach
+oben oder zur Seite gezogen passiert nichts, dann bleibt normales Scrollen und
+Wischen erhalten.
+
+Losgelassen entscheidet die App anhand von zwei Dingen: Weit genug gezogen
+(mehr als ein Viertel der Fensterhöhe) **oder** kurz, aber schnell nach unten
+geschnippt. Sonst federt das Fenster zurück. Während des Zugs dunkelt der
+Hintergrund langsam ab, so wie man es vom System kennt. Auf dem Rechner geht das
+auch mit der Maus – außer *Text markieren erlauben* ist eingeschaltet, dann
+bleibt das Auswählen wichtiger.
+
+## Lesbarkeit und Systemeinstellungen
+
+Die Textfarben sind gegen Apples Richtlinien geprüft: kleine Hinweise und
+Feldbeschriftungen liegen jetzt bei mindestens 4,5:1 Kontrast, hell wie dunkel.
+Die Akzentfarbe hat zwei Aufgaben: `--accent` füllt Flächen (Chips, „Fertig“,
+Plus-Button), aus `--accent-text` kommen Text und Symbole. Aus jeder der sechs
+Paletten – und aus *Eigene Farbe* – rechnet die App beim Start eine Textvariante
+mit mindestens 4,6:1 heraus und wählt dazu die besser passende Schriftfarbe auf
+den gefüllten Flächen. So bleibt zum Beispiel iOS-Blau lesbar, ohne die
+Flächenfarbe zu verändern.
+
+Die beiden Bedienungshilfen des Systems werden beachtet:
+
+- **Transparenz reduzieren** – alle Glas-Flächen (Kopfzeile, Sheets, Hinweis-
+  blasen, runde Knöpfe auf dem Cover) werden deckend, der weiche Scroll-Rand
+  verschwindet.
+- **Kontrast erhöhen** – Trennlinien und Kartenränder werden kräftiger.
+
+Am Desktop und am Tablet zeigen Knöpfe, Felder und Links außerdem einen
+sichtbaren Tastaturfokus-Ring. Beim Tippen auf dem iPhone erscheint keiner.
+
 ## Gerätespeicher
 
-Eigene Cover liegen als Text im `localStorage`, der auf dem iPhone klein ist.
-In den Einstellungen unter **Gerätespeicher** siehst du, wie viel belegt ist, und
-kannst große Cover per Knopfdruck in eine größere lokale Ablage (IndexedDB)
-auslagern. Ein Backup enthält die Cover weiterhin, und du kannst sie jederzeit
-zurückholen.
+Cover liegen als Text im `localStorage`, der auf dem iPhone knapp ist. Unter
+**Einstellungen → Gerätespeicher** zeigt ein Balken, wohin der Platz geht:
+App-Daten, ausgelagerte Cover, heruntergeladene Kapitel und Offline-Kapitel,
+jeweils mit Größe und Anzahl.
 
-## Was sich durch das Selbst-Hosten ändert
+Große Cover wandern **von selbst** in eine geräumigere lokale Ablage
+(IndexedDB), sobald sie zu groß werden oder der Text-Speicher voll läuft – so
+kommt er nicht ins Straucheln. Den Automatismus schaltest du dort mit einem
+Schalter ab; „Alle Cover auslagern“ und „Cover zurückholen“ erledigen das
+Ganze auf einmal. Ein Backup (JSON) enthält die Cover weiterhin vollständig,
+egal ob sie gerade im Text- oder im Cover-Speicher liegen.
 
-- **Kein Zeitlimit / keine Abhängigkeit von Claude** – die Seite läuft dauerhaft
-  unter deiner eigenen URL.
-- **Keine CSP-Einschränkung mehr**: Die Artifact-Umgebung bei Claude erlaubt nur
-  Netzwerk-Anfragen an eine feste Liste von Domains, deshalb ging die
-  automatische AniList-Cover-Suche vorher nur über den Umweg „Tab öffnen und
-  Bild manuell hochladen“. Auf GitHub Pages gilt diese Einschränkung nicht mehr –
-  eine echte automatische Cover-Suche direkt per Klick wäre jetzt technisch
-  möglich. Das ist aber ein eigenes Stück Code (inkl. eines Sonderfalls, falls
-  AniLists Bilder-Server keine Bilder für Fremd-Domains freigibt) – sag Bescheid,
-  wenn ich das für dich nachrüsten soll, dann baue ich es gezielt für die
-  gehostete Version.
+## Bekannte Einschränkungen
 
-## MangaDex-Reader auf GitHub Pages
-
-GitHub Pages kann die MangaDex-API wegen CORS nicht direkt aus dem Browser aufrufen.
-Für den integrierten Reader liegt deshalb `mangadex-proxy.js` als Cloudflare-Worker bereit.
-
-1. Bei Cloudflare Workers einen neuen Worker anlegen.
-2. Den Inhalt von `mangadex-proxy.js` in den Worker kopieren und deployen.
-3. Die Worker-URL in `config.js` eintragen:
-   `window.MANGADEX_PROXY_URL = "https://DEIN-WORKER.workers.dev";`
-4. `index.html`, `config.js` und `sw.js` zusammen mit den übrigen Dateien auf GitHub Pages hochladen.
-
-Danach läuft der integrierte Reader über den Worker. Der externe MangaDex-Link bleibt als Fallback verfügbar.
+- Beim allerersten Start braucht die App kurz Internet (Schriftart und Icons).
+  Danach startet sie auch im Flugmodus.
+- Die automatische Cover-Suche über AniList ist noch nicht eingebaut.
+  Auf GitHub Pages wäre sie technisch möglich, das ist aber ein eigenes
+  Stück Code.
+- Der **API-Katalog** spricht die vier Dienste direkt über ihre JSON-Schnittstellen
+  an. Die Endpunkte stehen gesammelt in `API_BASES` und `API_ADAPTERS` in
+  `index.html`; ändert ein Dienst seine Adresse, ist das eine Zeile. Antwortet ein
+  Dienst nicht (ComicK/CDN, MangaHook-Deployment, Consumet-Instanz), meldet der
+  Katalog den Fehler sichtbar statt still zu scheitern.
+- Der **Worker muss neu deployt** werden, damit der generische `?url=`-Proxy
+  greift. Ohne das liefert er nur die MangaDex-Anfragen aus; Suche und Downloads
+  der übrigen Dienste melden dann einen Proxy-Fehler.
+- Die öffentliche Consumet-Instanz (`api.consumet.org`) ist zeitweise nicht
+  erreichbar; für zuverlässigen Betrieb lohnt ein eigener Consumet-Server.
+- Fremde Bild-CDN verlangen teils einen Referer. Der Worker setzt einen, das
+  deckt die gängigen Fälle ab, ist aber keine Garantie.
