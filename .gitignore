@@ -1,0 +1,6 @@
+.agents/
+.freebuff/
+AGENTS.md
+opencode.json
+.env
+node_modules/

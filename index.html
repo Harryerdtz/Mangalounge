@@ -136,6 +136,15 @@ header.navbar {
 }
 .navbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px 4px; }
 .navbar-inner, .searchbar-wrap, .filter-dropdown-inner { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
+
+/* Desktop: ganze Bildschirmflaeche nutzen statt 640px-Saeule. */
+@media (min-width: 1024px) {
+  .navbar-inner, .searchbar-wrap, .filter-dropdown-inner { max-width: none; }
+}
+/* iPhone / kleine Bildschirme: Touch-Ziele und Lesbarkeit. */
+@media (max-width: 480px) {
+  .searchbar-row { gap: 6px; }
+}
 .large-title { font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 30px; letter-spacing: -0.01em; margin: 0; }
 .icon-btn {
   width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent;
@@ -174,6 +183,22 @@ header.navbar {
 
 /* ===================== MAIN ===================== */
 .wrap { max-width: 640px; margin: 0 auto; padding: 0 18px; }
+
+/* Desktop: ganze Bildschirmflaeche nutzen statt 640px-Saeule. */
+@media (min-width: 1024px) {
+  .navbar-inner, .searchbar-wrap, .filter-dropdown-inner { max-width: none; padding-left: 32px; padding-right: 32px; }
+  .wrap { max-width: none; padding: 0 32px; }
+  .nav-tabs { max-width: none; padding-left: 32px; padding-right: 32px; }
+  .sheet { max-width: 720px; }
+}
+/* iPhone / kleine Bildschirme: Touch-Ziele und Lesbarkeit. */
+@media (max-width: 480px) {
+  .wrap { padding: 0 14px; }
+  .navbar-inner { padding: 8px 14px 4px; }
+  .searchbar-wrap { padding: 4px 14px 8px; }
+  .nav-tabs { padding: 2px 14px 10px; }
+  .large-title { font-size: 26px; }
+}
 .section-title { font-size: 20px; font-weight: 700; margin: 22px 2px 10px; letter-spacing: -0.01em; }
 .section-sub { font-size: 13px; color: var(--label-tertiary); margin: -6px 2px 12px; }
 
@@ -1641,6 +1666,11 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 
 /* Registerstreifen: die eigentliche Hauptnavigation der App. */
 .nav-tabs { display: flex; gap: 4px; padding: 2px 18px 10px; max-width: 640px; margin: 0 auto; }
+
+/* Desktop: ganze Bildschirmflaeche nutzen statt 640px-Saeule. */
+@media (min-width: 1024px) {
+  .nav-tabs { max-width: none; padding-left: 32px; padding-right: 32px; }
+}
 .nav-tabs button {
   flex: 1; min-height: 34px; border: none; border-radius: var(--radius-s);
   background: var(--fill-tertiary); color: var(--label-secondary);
