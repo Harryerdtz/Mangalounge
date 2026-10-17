@@ -134,7 +134,7 @@ header.navbar {
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
   border-bottom: 1px solid var(--glass-border);
 }
-.navbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px 4px; }
+.navbar-inner { display: flex; align-items: center; justify-content: space-between; padding: 8px 18px 2px; }
 .navbar-inner, .searchbar-wrap, .filter-dropdown-inner { width: 100%; max-width: 640px; margin-left: auto; margin-right: auto; }
 
 /* Desktop: ganze Bildschirmflaeche nutzen statt 640px-Saeule. */
@@ -156,11 +156,12 @@ header.navbar {
 }
 .icon-btn:active { background: var(--fill-tertiary); }
 
-.searchbar-wrap { padding: 4px 18px 8px; }
+.searchbar-wrap { padding: 2px 18px 6px; }
 .searchbar-row { display: flex; align-items: center; gap: 8px; }
 .searchbar { display: flex; align-items: center; gap: 6px; background: var(--fill-tertiary); border-radius: var(--radius-s);
-  padding: 0 10px; height: 36px; color: var(--label-secondary); flex: 1; min-width: 0; }
-.searchbar input { flex: 1; border: none; background: none; outline: none; color: var(--label); font-size: 15px; height: 100%; }
+  padding: 0 10px; height: 40px; color: var(--label-secondary); flex: 1; min-width: 0; }
+/* 16 px: darunter zoomt iOS beim Fokussieren automatisch in die Seite. */
+.searchbar input { flex: 1; border: none; background: none; outline: none; color: var(--label); font-size: 16px; height: 100%; }
 .searchbar input::placeholder { color: var(--label-tertiary); }
 .filter-toggle-btn { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
 .filter-toggle-btn.active { background: var(--fill-tertiary); color: var(--accent-text); }
@@ -176,13 +177,13 @@ header.navbar {
 
 .segmented { display: flex; background: var(--fill-tertiary); border-radius: var(--radius-s); padding: 2px; margin: 0 18px 8px; }
 .segmented button { flex: 1; border: none; background: transparent; color: var(--label-secondary);
-  font-size: 13px; font-weight: 500; padding: 7px 4px; border-radius: 8px; min-height: 32px; }
+  font-size: 13px; font-weight: 500; padding: 7px 4px; border-radius: 8px; min-height: 38px; }
 .segmented button.active { background: var(--bg-elevated); color: var(--label); box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
 
 .tag-row { display: flex; gap: 8px; overflow-x: auto; padding: 0 18px 12px; }
 .tag-row::-webkit-scrollbar { display: none; }
 .chip { border: none; background: var(--fill-tertiary); color: var(--label-secondary); padding: 10px 18px;
-  border-radius: 999px; font-size: 14px; white-space: nowrap; flex-shrink: 0; min-height: 42px; font-weight: 500; }
+  border-radius: 999px; font-size: 14px; white-space: nowrap; flex-shrink: 0; min-height: 44px; font-weight: 500; }
 .chip.active { background: var(--accent); color: var(--accent-on); }
 
 /* ===================== MAIN ===================== */
@@ -209,10 +210,16 @@ header.navbar {
    verkleinern, dass Name und alle vier Knoepfe in eine Zeile passen.
    Die Trefferflaechen der Knoepfe bleiben bei 44 px. */
 @media (max-width: 420px) {
-  .navbar-inner { padding: 8px 10px 4px; }
+  .navbar-inner { padding: 6px 10px 2px; }
   .navbar-brand { gap: 6px; }
   .navbar-brand .app-logo svg { width: 28px; height: 28px; }
   .large-title { font-size: 17px; }
+  /* Suchfeld, Tabs und Filterleiste muessen denselben Rand haben wie die
+     Titelzeile (vorher 14 px gegen 10 px, also 4 px Versatz). */
+  .searchbar-wrap { padding: 2px 10px 6px; }
+  .nav-tabs { padding: 0 10px 8px; }
+  .tag-row { padding: 0 10px 12px; }
+  .segmented { margin: 0 10px 8px; }
 }
 @media (max-width: 340px) {
   .large-title { display: none; }
@@ -227,6 +234,9 @@ header.navbar {
    -18px-Margin und das Regal schiebt sich 4 px aus dem Bild. */
 @media (max-width: 480px) {
   .shelf { margin: 0 -14px; padding: 2px 14px 6px; }
+}
+@media (max-width: 420px) {
+  .shelf { margin: 0 -10px; padding: 2px 10px 6px; }
 }
 .shelf-item { flex-shrink: 0; width: 92px; }
 .shelf-cover-wrap { position: relative; width: 92px; height: 124px; border-radius: var(--radius-m); overflow: hidden;
@@ -263,7 +273,7 @@ header.navbar {
 .tag-pill { font-size: 10.5px; color: var(--accent-2); background: var(--fill-tertiary); border-radius: 999px; padding: 2px 7px; }
 .row-trailing { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 .chapter-num { color: var(--accent-2); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; }
-.plus1-chip { min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--separator);
+.plus1-chip { min-height: 38px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--separator);
   background: var(--fill-tertiary); color: var(--accent-2); font-weight: 700; font-size: 13px; }
 
 .empty { padding: 60px 18px; text-align: center; color: var(--label-secondary); }
@@ -471,7 +481,10 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .detail-hero {
   position: relative;
   width: 100%;
+  /* War fest 340 px: auf kurzen Displays war damit die halbe Sheet-Hoehe weg,
+     bevor der Titel kam. dvh folgt der echten Geraetehoehe. */
   height: 340px;
+  height: clamp(220px, 34dvh, 340px);
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -490,7 +503,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 }
 .detail-hero-cover {
   position: relative; z-index: 1;
-  width: 160px; height: 228px;
+  width: clamp(116px, 34vw, 160px); height: auto; aspect-ratio: 2 / 3;
   border-radius: var(--radius-m);
   object-fit: cover;
   box-shadow: 0 16px 40px rgba(0,0,0,0.5);
@@ -499,7 +512,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 }
 .detail-hero-cover-fallback {
   position: relative; z-index: 1;
-  width: 160px; height: 228px;
+  width: clamp(116px, 34vw, 160px); height: auto; aspect-ratio: 2 / 3;
   border-radius: var(--radius-m);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Zilla Slab', Georgia, serif; font-size: 54px;
@@ -1721,7 +1734,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 /* Filter-Leiste unter der Suchleiste: dunkles, aufklappbares Panel. */
 .searchbar-wrap { position: relative; }
 .filter-open-btn {
-  display: flex; align-items: center; gap: 7px; margin: 10px 0 0; padding: 9px 14px; min-height: 40px;
+  display: flex; align-items: center; gap: 7px; margin: 10px 0 0; padding: 9px 14px; min-height: 44px;
   width: 100%;
   position: relative;
   border: 1px solid var(--separator); border-radius: var(--radius-s); background: var(--fill-tertiary);
