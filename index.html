@@ -319,9 +319,6 @@ header.navbar {
   width: 60px; height: 60px; margin: 0 auto 16px; border-radius: 20px;
   display: flex; align-items: center; justify-content: center;
   background: var(--fill-tertiary); color: var(--accent-text);
-  /* Symbol kann Emoji oder SVG sein: Emoji braucht eine Groesse, sonst klebt
-     es mit 16 px in der 60-px-Kachel. */
-  font-size: 26px; line-height: 1;
 }
 .empty-icon svg {
   width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6;
@@ -329,6 +326,19 @@ header.navbar {
 }
 .empty h2 { font-family: 'Zilla Slab', Georgia, serif; font-weight: 600; font-size: var(--fs-title); margin: 0 0 8px; color: var(--label); }
 .empty p { margin: 0; font-size: var(--fs-body); line-height: var(--lh-body); text-wrap: pretty; }
+/* Fehler sehen anders aus als „noch nichts da": dieselbe Ruhe, aber in der
+   Warnfarbe, damit ein misslungener Abruf nicht wie ein leerer Bereich wirkt. */
+.empty.is-error .empty-icon {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  color: var(--warning);
+}
+/* In Listen und Karten (Kapitel, Statistik) waere der grosse Block zu viel
+   Luft: kleinere Kachel, engere Abstaende, gleiche Struktur. */
+.empty.is-compact { padding: 26px 18px 30px; max-width: 360px; }
+.empty.is-compact .empty-icon { width: 48px; height: 48px; border-radius: 16px; margin-bottom: 12px; }
+.empty.is-compact .empty-icon svg { width: 22px; height: 22px; }
+.empty.is-compact h2 { font-size: var(--fs-heading); margin-bottom: 4px; }
+.empty.is-compact p { font-size: var(--fs-label); }
 
 /* Ladezustand: dieselbe Ruhe wie .empty, aber mit Dreher statt Symbol.
    Markup der Aufrufer: <div class="loading" aria-busy="true"><span class="spinner"></span>Text</div>.
@@ -1125,14 +1135,6 @@ input[type="range"].reader-range::-moz-range-thumb { width: 22px; height: 22px; 
 .activity-item .act-title { display: block; font-size: var(--fs-body); font-weight: 600; color: var(--label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .activity-item .act-msg { display: block; font-size: var(--fs-note); color: var(--label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .activity-item .act-time { font-size: var(--fs-caption); color: var(--label-tertiary); white-space: nowrap; flex-shrink: 0; }
-/* Zustaende, die als eine nackte Zeile erschienen: leer, laedt, Fehler.
-   Dieselbe Fuellung wie der Bibliotheks-Zustand, nur ohne Symbol - die
-   Lade- und Fehlerfaelle teilen sich hier noch dieselbe Klasse. */
-.activity-empty {
-  color: var(--label-secondary); font-size: var(--fs-body);
-  text-align: center; padding: 38px 22px 44px; line-height: var(--lh-body);
-  max-width: 46ch; margin: 0 auto; text-wrap: pretty;
-}
 .activity-item.act-update .act-icon { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent-text); }
 .activity-item.act-added .act-icon { background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2)); }
 .activity-item.act-rated .act-icon { background: color-mix(in srgb, #E0A93F 22%, transparent); color: var(--warning); }
@@ -4649,6 +4651,29 @@ function coverOrInitial(item, cls) {
   return '<div class="' + fbCls + '">' + initial + '</div>';
 }
 
+// Ein Zustand, der wie eine Zeile aussieht, wirkt wie ein Fehler; einer mit
+// Symbol, Titel und Satz wirkt wie ein Feature. Deshalb laufen alle leeren und
+// fehlgeschlagenen Bereiche durch diese eine Funktion. Die Symbole sind
+// monochrome Linien (wie der Bibliotheks-Zustand), damit sie die Akzentfarbe
+// tragen und nicht wie ein Emoji-Platzhalter wirken.
+var EMPTY_ICONS = {
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8L20.5 20.5"/>',
+  clock: '<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3.2 2"/>',
+  book: '<path d="M4.5 5.5A2.5 2.5 0 0 1 7 3h12.5v15H7a2.5 2.5 0 0 0-2.5 2.5z"/><path d="M4.5 20.5A2.5 2.5 0 0 1 7 18h12.5v3H7"/>',
+  download: '<path d="M12 4v10"/><path d="M8 10.5l4 4 4-4"/><path d="M5 19h14"/>',
+  file: '<path d="M7 3.5h6.5L19 9v11.5H7z"/><path d="M13.5 3.5V9H19"/><path d="M10 13h5"/><path d="M10 16.5h3.5"/>',
+  warning: '<path d="M12 4.5l8.2 14.2H3.8z"/><path d="M12 10v3.8"/><path d="M12 16.6v.4"/>',
+  dice: '<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01"/>'
+};
+function emptyState(icon, title, text, opts) {
+  opts = opts || {};
+  var glyph = EMPTY_ICONS[icon] || EMPTY_ICONS.search;
+  return '<div class="empty' + (opts.error ? ' is-error' : '') + (opts.compact ? ' is-compact' : '') + '">' +
+    '<div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24">' + glyph + '</svg></div>' +
+    '<h2>' + escapeHtml(title) + '</h2>' +
+    '<p>' + escapeHtml(text) + '</p></div>';
+}
+
 function renderShelf() {
   var seg = document.getElementById("shelfLimitSegmented");
   if (seg) seg.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", String(b.getAttribute("data-shelf-limit")) === String(settings.shelfLimit || 8)); });
@@ -5249,7 +5274,7 @@ function renderOfflineList() {
     '<span class="status-pill">Seiten <strong>' + offlineTotalPages() + '</strong></span>' +
     '<span class="status-pill">Gr\u00f6\u00dfe <strong id="offlineSizeValue">\u2026</strong></span>';
   if (!keys.length) {
-    list.innerHTML = '<p class="activity-empty">Noch keine Kapitel offline gespeichert. \u00d6ffne ein Kapitel im Reader und tippe oben auf das Download-Symbol.</p>';
+    list.innerHTML = emptyState("download", "Nichts offline", "\u00d6ffne ein Kapitel im Reader und tippe oben auf das Download-Symbol.", { compact: true });
     return;
   }
   list.innerHTML = keys.map(function (id) {
@@ -8462,7 +8487,7 @@ function renderActivity() {
     '<span class="status-pill">\u00d8 Bewertung <strong>' + (avgRating ? avgRating.toFixed(1).replace(".", ",") : "\u2014") + '</strong></span>' +
     '<span class="status-pill">Letztes <strong>' + (lastEntry ? relativeTime(lastEntry.date) : "\u2014") + '</strong></span>';
   if (!feed.length) {
-    list.innerHTML = '<p class="activity-empty">Noch nichts passiert. Neue Kapitel, Bewertungen, Statuswechsel und neu hinzugef\u00fcgte Reihen landen hier im Verlauf. Die Zahl an der Glocke zeigt dir, wie viele neue Kapitel noch offen sind \u2013 sie verschwindet von selbst, sobald du einmal hier warst, und l\u00e4sst sich oben abschalten.</p>';
+    list.innerHTML = emptyState("clock", "Noch nichts passiert", "Neue Kapitel, Bewertungen und Statuswechsel erscheinen hier, sobald es sie gibt. Die Zahl an der Glocke zeigt die offenen Kapitel und l\u00e4sst sich oben abschalten.");
   } else {
     list.innerHTML = feed.slice(0, 80).map(function (a) {
       var meta = ACTIVITY_META[a.type] || ACTIVITY_META.update;
@@ -8523,7 +8548,7 @@ function renderProgressChronicle() {
     .sort(function (a, b) { return new Date(b.lastUpdated) - new Date(a.lastUpdated); })
     .slice(0, 10);
   if (!rows.length) {
-    el.innerHTML = '<p class="activity-empty">Noch kein Lese-Fortschritt. Sobald du Kapitel markierst, erscheinen deine Reihen hier.</p>';
+    el.innerHTML = emptyState("book", "Noch kein Fortschritt", "Markiere ein Kapitel, dann erscheint die Reihe hier.", { compact: true });
     return;
   }
   el.innerHTML = rows.map(function (it) {
@@ -9129,7 +9154,7 @@ function loadDiscover() {
     if (reqId !== discoverRequestId) return;
     apiMode = "discover";
     apiResults = [];
-    if (el) el.innerHTML = '<p class="activity-empty">' + escapeHtml(mdSearchErrorMessage(err)) + '</p>';
+    if (el) el.innerHTML = emptyState("warning", "Beliebte Titel nicht geladen", mdSearchErrorMessage(err), { error: true });
     setApiStatus(mdSearchErrorMessage(err));
   });
 }
@@ -9517,7 +9542,7 @@ function renderDownloadCenter() {
       '<span class="status-pill">Gr\u00f6\u00dfe <strong>' + formatBytes(downloadsTotalBytes) + '</strong></span>';
   }
   if (!active.length && !done.length) {
-    listEl.innerHTML = '<p class="activity-empty">Noch keine Downloads. \u00d6ffne eine Reihe und tippe in der Kapitelliste auf den runden Knopf.</p>';
+    listEl.innerHTML = emptyState("download", "Keine Downloads", "\u00d6ffne eine Reihe und tippe in der Kapitelliste auf den runden Knopf.", { compact: true });
     return;
   }
   var html = "";
@@ -9585,7 +9610,7 @@ function runMangaDexSearch() {
   }).catch(function (err) {
     if (reqId !== apiSearchRequestId) return;
     var message = mdSearchErrorMessage(err);
-    if (el) el.innerHTML = '<p class="activity-empty">' + escapeHtml(message) + '</p>';
+    if (el) el.innerHTML = emptyState("warning", "Suche fehlgeschlagen", message, { error: true });
     setApiStatus(message);
   });
 }
@@ -9764,14 +9789,14 @@ function luckyMangaDexSearch() {
     return openDiscoverDetail(0);
   }).catch(function (err) {
     var message = mdSearchErrorMessage(err);
-    if (el) el.innerHTML = '<p class="activity-empty">' + escapeHtml(message) + '</p>';
+    if (el) el.innerHTML = emptyState("dice", "Kein Zufallstitel", message, { error: true });
     setApiStatus(message);
   });
 }
 function renderApiResults(items) {
   var el = document.getElementById("apiResults");
   if (!el) return;
-  if (!items.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">&#128269;</div><h2>Keine Treffer</h2><p>Andere Suche oder Filter versuchen.</p></div>'; return; }
+  if (!items.length) { el.innerHTML = emptyState("search", "Keine Treffer", "Andere Suche oder Filter versuchen."); return; }
   // Suche und Entdecken teilen sich dasselbe Cover-Raster - keine Zeilenliste.
   el.innerHTML = renderApiGrid(items);
   // Transiente Anzeige-Objekte des entdeckten Titels wieder freigeben, die in
@@ -9858,7 +9883,7 @@ function renderApiChapters(manga, chapters) {
   if (titleEl) titleEl.innerHTML = escapeHtml(manga.title) +
     '<span class="catalog-group-count">' + apiChapterList.length + ' Kapitel</span>';
   if (!apiChapterList.length) {
-    listEl.innerHTML = '<p class="activity-empty">Keine Kapitel gefunden.</p>';
+    listEl.innerHTML = emptyState("file", "Keine Kapitel", "F\u00fcr diese Reihe sind keine Kapitel hinterlegt.", { compact: true });
     return;
   }
   listEl.innerHTML = apiChapterList.map(function (ch, index) {
@@ -9901,7 +9926,7 @@ function loadApiChapters(index) {
   }).catch(function (err) {
     if (reqId !== apiChaptersRequestId) return;
     if (titleEl) titleEl.textContent = manga.title;
-    if (listEl) listEl.innerHTML = '<p class="activity-empty">' + escapeHtml(mdSearchErrorMessage(err)) + '</p>';
+    if (listEl) listEl.innerHTML = emptyState("warning", "Kapitel nicht geladen", mdSearchErrorMessage(err), { error: true, compact: true });
   });
 }
 // Ein Kapitel aus dem API-Katalog herunterladen. Die Seiten-URLs kommen aus dem
@@ -10265,7 +10290,7 @@ function renderDetailChapters(item, chapters) {
   var listEl = document.getElementById("detailChapters");
   if (!listEl) return;
   if (!chapters.length) {
-    listEl.innerHTML = '<p class="activity-empty">Keine Kapitel gefunden.</p>';
+    listEl.innerHTML = emptyState("file", "Keine Kapitel", "F\u00fcr diese Reihe sind keine Kapitel hinterlegt.", { compact: true });
     return;
   }
   // Kapitelliste beginnt zugeklappt; der Kopfzeigt die Anzahl und einen
@@ -10327,7 +10352,7 @@ function loadDetailChapters(item) {
     detailChaptersCache[item.id] = chapters || [];
     renderDetailChapters(item, chapters || []);
   }).catch(function () {
-    listEl.innerHTML = '<p class="activity-empty">Kapitel konnten nicht geladen werden.</p>';
+    listEl.innerHTML = emptyState("warning", "Kapitel nicht geladen", "Die Liste lie\u00df sich nicht abrufen. \u00d6ffne die Reihe sp\u00e4ter erneut.", { error: true, compact: true });
   }).then(function () { detailChaptersLoading[item.id] = false; });
 }
 function refreshDetailChapters(item) {
