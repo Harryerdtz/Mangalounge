@@ -504,6 +504,10 @@ input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid v
 .settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; min-height: 44px; }
 .settings-row:not(:last-child) { border-bottom: 1px solid var(--separator); }
 .settings-row .btn-ghost { color: var(--accent-text); background: none; border: none; font-size: var(--fs-body); font-weight: 500; min-height: 44px; }
+/* Seit die Beschriftung ein <label for> ist (OpenCode), nimmt sie die freie
+   Flaeche der Zeile mit: ein Tipp irgendwo links vom Schalter schaltet jetzt
+   mit, nicht mehr nur die 22 px des Schalters. */
+.settings-row > label { flex: 1 1 auto; cursor: pointer; }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--safe-bottom) + 90px);
