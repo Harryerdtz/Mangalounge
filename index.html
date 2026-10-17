@@ -10471,14 +10471,32 @@ function addDiscoverToLibrary(item) {
 
 // --- Start: Metadaten einlesen, Speicher fortschreiben -------------------
 // Scroll-Handler fuer den einklappbaren Large Title (Design-Hook fuer Freebuff):
-// ab 40 px Scroll setzt die Klasse .navbar-scrolled, ab 0 wird sie entfernt.
+// Einklappen ab 88 px, Ausklappen erst unter 8 px. Die Schwelle ist bewusst
+// keine einzelne Grenze: das Einklappen verkleinert den Header in der Fluss-
+// Hoehe um rund 40 px, der Browser korrigiert daraufhin scrollY um dieselben
+// 40 px (Scroll Anchoring). Bei einer Grenze wie 40 px springt scrollY dadurch
+// unter die Schwelle, die Klasse faellt ab, der Header waechst, scrollY springt
+// zurueck – das ergibt das Flackern. Der Abstand der beiden Schwellen (80 px)
+// ist groesser als die Hoehendifferenz, deshalb bleibt der Zustand stabil.
 (function () {
   var nav = document.querySelector("header.navbar");
   if (!nav) return;
+  var COLLAPSE_AT = 88;
+  var EXPAND_AT = 8;
+  var collapsed = false;
+  var frame = 0;
   function update() {
-    nav.classList.toggle("navbar-scrolled", (window.scrollY || 0) > 40);
+    frame = 0;
+    var y = window.scrollY || 0;
+    var next = collapsed ? y > EXPAND_AT : y > COLLAPSE_AT;
+    if (next === collapsed) return;
+    collapsed = next;
+    nav.classList.toggle("navbar-scrolled", collapsed);
   }
-  window.addEventListener("scroll", update, { passive: true });
+  function onScroll() {
+    if (!frame) frame = window.requestAnimationFrame(update);
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
   update();
 })();
 
