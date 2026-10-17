@@ -2882,8 +2882,8 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
             </div>
           </div>
           <div class="settings-row">
-            <span>OLED True Black</span>
-            <input type="checkbox" id="oledBlackToggle" style="width:22px;height:22px;">
+            <label for="oledBlackToggle">OLED True Black</label>
+            <input type="checkbox" id="oledBlackToggle" class="settings-check">
           </div>
           <p class="row-hint">Reines Schwarz im Dunkelmodus &ndash; auf OLED-Displays sparsamer.</p>
         </div>
@@ -2992,22 +2992,22 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
       <div class="settings-block">
         <h3>Anzeige</h3>
         <div class="form-section">
-          <div class="settings-row"><span>Lesefortschritt auf Covern</span><input type="checkbox" id="showProgressToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Update-Badges anzeigen</span><input type="checkbox" id="showBadgesToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Cover vergr&ouml;&szlig;ern bei Klick</span><input type="checkbox" id="coverZoomToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Fortschrittsring auf Covern</span><input type="checkbox" id="progressRingToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Weiterlesen-Regal anzeigen</span><input type="checkbox" id="shelfToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><label for="showProgressToggle">Lesefortschritt auf Covern</label><input type="checkbox" id="showProgressToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="showBadgesToggle">Update-Badges anzeigen</label><input type="checkbox" id="showBadgesToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="coverZoomToggle">Cover vergr&ouml;&szlig;ern bei Klick</label><input type="checkbox" id="coverZoomToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="progressRingToggle">Fortschrittsring auf Covern</label><input type="checkbox" id="progressRingToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="shelfToggle">Weiterlesen-Regal anzeigen</label><input type="checkbox" id="shelfToggle" class="settings-check"></div>
         </div>
       </div>
 
       <div class="settings-block">
         <h3>Verhalten</h3>
         <div class="form-section">
-          <div class="settings-row"><span>Suche auch in Notizen</span><input type="checkbox" id="searchNotesToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Neue Kapitel an der Glocke z&auml;hlen</span><input type="checkbox" id="statsNotifToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Haptisches Feedback</span><input type="checkbox" id="hapticToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Info &ouml;ffnen gleich mit AniList abgleichen</span><input type="checkbox" id="syncOnOpenToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Titel automatisch mit AniList verkn&uuml;pfen</span><input type="checkbox" id="autoLinkToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><label for="searchNotesToggle">Suche auch in Notizen</label><input type="checkbox" id="searchNotesToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="statsNotifToggle">Neue Kapitel an der Glocke z&auml;hlen</label><input type="checkbox" id="statsNotifToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="hapticToggle">Haptisches Feedback</label><input type="checkbox" id="hapticToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="syncOnOpenToggle">Info &ouml;ffnen gleich mit AniList abgleichen</label><input type="checkbox" id="syncOnOpenToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="autoLinkToggle">Titel automatisch mit AniList verkn&uuml;pfen</label><input type="checkbox" id="autoLinkToggle" class="settings-check"></div>
           <div class="seg-field">
             <span class="seg-label">Bewegung</span>
             <div class="segmented" id="motionSegmented">
@@ -3099,7 +3099,7 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
         <h3>Weiterlesen</h3>
         <div class="form-section">
           <div class="settings-row"><span>Nahtlos zum n&auml;chsten Kapitel</span><input type="checkbox" data-rset="readerSeamless" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Warmer Nachtmodus</span><input type="checkbox" id="readerNightToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><label for="readerNightToggle">Warmer Nachtmodus</label><input type="checkbox" id="readerNightToggle" class="settings-check"></div>
           <div class="form-row"><span class="form-label">Als gelesen markieren</span>
             <select data-rset-val="readerMarkMode">
               <option value="end">Am Kapitelende</option>
@@ -3208,12 +3208,12 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
       <div class="settings-block">
         <h3>Katalog &amp; Vorschläge</h3>
         <div class="form-section">
-          <div class="settings-row"><span>Auto-Vorschl&auml;ge im Katalog</span><input type="checkbox" id="ctSuggestApiToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>AniList-Cover in Vorschl&auml;gen (7-Tage-Cache)</span><input type="checkbox" id="ctSuggestAnilistToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Vorschl&auml;ge aus der Bibliothek</span><input type="checkbox" id="ctSuggestLibToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>AniList-Cover im Katalog</span><input type="checkbox" id="ctAnilistCoversToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Endloses Nachladen (Entdecken)</span><input type="checkbox" id="ctEndlessScrollToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Alternative Cover-Quellen (Jikan/Kitsu)</span><input type="checkbox" id="ctCoverFallbackToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><label for="ctSuggestApiToggle">Auto-Vorschl&auml;ge im Katalog</label><input type="checkbox" id="ctSuggestApiToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="ctSuggestAnilistToggle">AniList-Cover in Vorschl&auml;gen (7-Tage-Cache)</label><input type="checkbox" id="ctSuggestAnilistToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="ctSuggestLibToggle">Vorschl&auml;ge aus der Bibliothek</label><input type="checkbox" id="ctSuggestLibToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="ctAnilistCoversToggle">AniList-Cover im Katalog</label><input type="checkbox" id="ctAnilistCoversToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="ctEndlessScrollToggle">Endloses Nachladen (Entdecken)</label><input type="checkbox" id="ctEndlessScrollToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="ctCoverFallbackToggle">Alternative Cover-Quellen (Jikan/Kitsu)</label><input type="checkbox" id="ctCoverFallbackToggle" class="settings-check"></div>
           <p class="row-hint">Diese Schalter steuern die neuen Funktionen der Katalog-Ansicht und der Vorschlags-Listen. Alle bleiben im Ger&auml;t gespeichert.</p>
         </div>
       </div>
@@ -3276,9 +3276,9 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
       <div class="settings-block">
         <h3>Benachrichtigungen</h3>
         <div class="form-section">
-          <div class="settings-row"><span>Update-Hinweise erlauben</span><input type="checkbox" id="notificationsToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Kapitelnummer in der Meldung</span><input type="checkbox" id="notifyDetailsToggle" style="width:22px;height:22px;"></div>
-          <div class="settings-row"><span>Ruhezeiten (22&ndash;8 Uhr)</span><input type="checkbox" id="quietHoursToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><label for="notificationsToggle">Update-Hinweise erlauben</label><input type="checkbox" id="notificationsToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="notifyDetailsToggle">Kapitelnummer in der Meldung</label><input type="checkbox" id="notifyDetailsToggle" class="settings-check"></div>
+          <div class="settings-row"><label for="quietHoursToggle">Ruhezeiten (22&ndash;8 Uhr)</label><input type="checkbox" id="quietHoursToggle" class="settings-check"></div>
           <p class="row-hint" id="notificationsStatus">Benachrichtigungen werden beim AniList-Abgleich ausgel&ouml;st, wenn die App ge&ouml;ffnet ist.</p>
         </div>
       </div>
@@ -3311,7 +3311,7 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
             </div>
           </div>
           <p class="row-hint" id="storageStatus">Wird berechnet&hellip;</p>
-          <div class="settings-row"><span>Gro&szlig;e Cover automatisch auslagern</span><input type="checkbox" id="autoOffloadToggle" style="width:22px;height:22px;"></div>
+          <div class="settings-row"><label for="autoOffloadToggle">Gro&szlig;e Cover automatisch auslagern</label><input type="checkbox" id="autoOffloadToggle" class="settings-check"></div>
           <p class="row-hint">Ist das an, wandern gro&szlig;e Cover von selbst in eine ger&auml;umigere lokale Ablage (IndexedDB), sobald der Text-Speicher voll l&auml;uft. So kommt der knappe Ger&auml;tespeicher nicht ins Straucheln.</p>
           <div class="settings-row" style="display:none;" id="offloadRow"><span>Alle Cover auslagern</span><button class="btn-ghost" id="offloadBtn" type="button">Auslagern</button></div>
           <div class="settings-row" style="display:none;" id="restoreCoversRow"><span>Cover zur&uuml;ckholen</span><button class="btn-ghost" id="restoreCoversBtn" type="button">Zur&uuml;ckholen</button></div>
@@ -3347,8 +3347,8 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
 
     <div class="settings-block">
       <div class="settings-row" style="padding:0;">
-        <span>Neue Kapitel an der Glocke z&auml;hlen</span>
-        <input type="checkbox" id="bellCountToggle" style="width:22px;height:22px;">
+        <label for="bellCountToggle">Neue Kapitel an der Glocke z&auml;hlen</label>
+        <input type="checkbox" id="bellCountToggle" class="settings-check">
       </div>
     </div>
 
@@ -7147,6 +7147,13 @@ document.getElementById("settingsToggle").addEventListener("click", function () 
   document.querySelector("#settingsOverlay .sheet").scrollTop = 0;
   if (settingsTabState) settingsTabState.reset();
   updateEdgeEffects();
+  // Aktives Register in den sichtbaren Bereich scrollen (390px+ Displays).
+  (function () {
+    var tabs = document.getElementById("settingsTabs");
+    if (!tabs) return;
+    var active = tabs.querySelector("button.active") || tabs.querySelector("button");
+    if (active && active.scrollIntoView) { try { active.scrollIntoView({ inline: "center", block: "nearest" }); } catch (e) {} }
+  })();
 });
 document.getElementById("settingsClose").addEventListener("click", function () { hideOverlay(document.getElementById("settingsOverlay")); });
 document.getElementById("settingsOverlay").addEventListener("click", function (e) { if (e.target.id === "settingsOverlay") hideOverlay(e.currentTarget); });
@@ -8980,7 +8987,7 @@ function loadDiscover() {
   apiChapterManga = null; apiChapterList = [];
   var wrap = document.getElementById("apiChaptersWrap"); if (wrap) wrap.style.display = "none";
   var el = document.getElementById("apiResults");
-  if (el) el.innerHTML = '<p class="activity-empty">Beliebte Titel werden geladen \u2026</p>';
+  if (el) el.innerHTML = '<div class="loading" aria-busy="true"><span class="spinner"></span>Beliebte Titel werden geladen \u2026</div>';
   setApiStatus("Beliebte Titel werden geladen \u2026");
   return mdApi(endpoint).then(function (res) {
     if (reqId !== discoverRequestId) return;
@@ -9441,7 +9448,7 @@ function runMangaDexSearch() {
   var reqId = ++apiSearchRequestId;
   apiChapterManga = null; apiChapterList = [];
   if (wrap) wrap.style.display = "none";
-  if (el) el.innerHTML = '<p class="activity-empty">Suche auf MangaDex \u2026</p>';
+  if (el) el.innerHTML = '<div class="loading" aria-busy="true"><span class="spinner"></span>Suche auf MangaDex \u2026</div>';
   setApiStatus("Suche auf MangaDex \u2026");
   searchMangaDexFiltered(query).then(function (items) {
     if (reqId !== apiSearchRequestId) return;
@@ -9615,7 +9622,7 @@ function luckyMangaDexSearch() {
   p.append("contentRating[]", "safe");
   p.append("contentRating[]", "suggestive");
   p.append("includes[]", "cover_art");
-  if (el) el.innerHTML = '<p class="activity-empty">Zufall wird ausgew\u00e4hlt \u2026</p>';
+  if (el) el.innerHTML = '<div class="loading" aria-busy="true"><span class="spinner"></span>Zufall wird ausgew\u00e4hlt \u2026</div>';
   setApiStatus("Zufall wird ausgew\u00e4hlt \u2026");
   triggerHaptic();
   mdApi("/manga?" + p.toString()).then(function (res) {
@@ -9638,7 +9645,7 @@ function luckyMangaDexSearch() {
 function renderApiResults(items) {
   var el = document.getElementById("apiResults");
   if (!el) return;
-  if (!items.length) { el.innerHTML = '<p class="activity-empty">Keine Treffer.</p>'; return; }
+  if (!items.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">&#128269;</div><h2>Keine Treffer</h2><p>Andere Suche oder Filter versuchen.</p></div>'; return; }
   // Suche und Entdecken teilen sich dasselbe Cover-Raster - keine Zeilenliste.
   el.innerHTML = renderApiGrid(items);
   // Transiente Anzeige-Objekte des entdeckten Titels wieder freigeben, die in
@@ -9759,7 +9766,7 @@ function loadApiChapters(index) {
   apiChapterManga = manga; apiChapterList = [];
   if (wrap) wrap.style.display = "";
   if (titleEl) titleEl.innerHTML = escapeHtml(manga.title) + '<span class="api-group-count">l\u00e4dt \u2026</span>';
-  if (listEl) listEl.innerHTML = '<p class="activity-empty">Kapitel werden geladen \u2026</p>';
+  if (listEl) listEl.innerHTML = '<div class="loading" aria-busy="true"><span class="spinner"></span>Kapitel werden geladen \u2026</div>';
   if (wrap && wrap.scrollIntoView) { try { wrap.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {} }
   API_ADAPTERS.mangadex.chapters(manga.id).then(function (chapters) {
     if (reqId !== apiChaptersRequestId) return;
@@ -10185,7 +10192,7 @@ function loadDetailChapters(item) {
   if (!listEl) return;
   if (detailChaptersLoading[item.id]) return;
   detailChaptersLoading[item.id] = true;
-  listEl.innerHTML = '<p class="activity-empty">Kapitel werden geladen \u2026</p>';
+  listEl.innerHTML = '<div class="loading" aria-busy="true"><span class="spinner"></span>Kapitel werden geladen \u2026</div>';
   mdResolveMangaForItem(item).then(function (resolved) {
     if (!resolved || !resolved.mdId) throw new Error("Keine MangaDex-Verkn\u00fcpfung");
     return mdGetChapterList(resolved.mdId);
@@ -10333,13 +10340,7 @@ function wireDownloadsUI() {
     });
   }
 
-  var centerBtn = document.getElementById("downloadCenterBtn");
-  if (centerBtn) centerBtn.addEventListener("click", function () {
-    triggerHaptic();
-    dlRefreshIndex().then(function () { renderDownloadCenter(); updateDownloadBadge(); });
-    renderDownloadCenter();
-    showOverlay(document.getElementById("downloadCenterOverlay"));
-  });
+  // downloadCenterBtn entfernt (Dead Code) - Download-Center ist ausgeblendet.
   var centerClose = document.getElementById("downloadCenterClose");
   if (centerClose) centerClose.addEventListener("click", function () { hideOverlay(document.getElementById("downloadCenterOverlay")); });
   var centerClear = document.getElementById("downloadClearAll");
