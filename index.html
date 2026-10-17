@@ -2409,14 +2409,7 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
 
 <main class="wrap">
   <section id="continueSection">
-    <div class="section-head">
-      <h2 class="section-title">Weiterlesen</h2>
-      <div class="segmented segmented-compact" id="shelfLimitSegmented" role="group" aria-label="Anzahl der Cover">
-        <button type="button" data-shelf-limit="3">3</button>
-        <button type="button" data-shelf-limit="8" class="active">8</button>
-        <button type="button" data-shelf-limit="alle">Alle</button>
-      </div>
-    </div>
+    <h2 class="section-title">Weiterlesen</h2>
     <div class="shelf" id="shelf"></div>
   </section>
 
@@ -3003,6 +2996,14 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
               <button data-starttab="continue">Weiterlesen</button>
               <button data-starttab="active">Aktiv</button>
               <button data-starttab="all">Alle</button>
+            </div>
+          </div>
+          <div class="seg-field">
+            <span class="seg-label">Regal-Anzahl (Weiterlesen)</span>
+            <div class="segmented" id="shelfLimitSegmented">
+              <button data-shelf-limit="3">3</button>
+              <button data-shelf-limit="8" class="active">8</button>
+              <button data-shelf-limit="alle">Alle</button>
             </div>
           </div>
           <div class="settings-row">
