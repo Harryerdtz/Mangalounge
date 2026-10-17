@@ -145,7 +145,11 @@ header.navbar {
 @media (max-width: 480px) {
   .searchbar-row { gap: 6px; }
 }
-.large-title { font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 30px; letter-spacing: -0.01em; margin: 0; }
+.large-title { font-family: 'Zilla Slab', Georgia, serif; font-weight: 700; font-size: 22px; letter-spacing: -0.01em; margin: 0; }
+/* Marke und Aktionen als eigene Klassen statt Inline-Styles: so kann die
+   schmale Variante unten beide gezielt verkleinern. */
+.navbar-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.navbar-actions { display: flex; gap: 2px; }
 .icon-btn {
   width: 44px; height: 44px; border-radius: 50%; border: none; background: transparent;
   color: var(--label); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -197,7 +201,21 @@ header.navbar {
   .navbar-inner { padding: 8px 14px 4px; }
   .searchbar-wrap { padding: 4px 14px 8px; }
   .nav-tabs { padding: 2px 14px 10px; }
-  .large-title { font-size: 26px; }
+  /* Chip-Reihen und Segment-Schalter folgen demselben Rand wie .wrap. */
+  .tag-row { padding: 0 14px 12px; }
+  .segmented { margin: 0 14px 8px; }
+}
+/* Sehr schmale Geraete (iPhone SE / mini): Wortmarke und Abstaende so
+   verkleinern, dass Name und alle vier Knoepfe in eine Zeile passen.
+   Die Trefferflaechen der Knoepfe bleiben bei 44 px. */
+@media (max-width: 420px) {
+  .navbar-inner { padding: 8px 10px 4px; }
+  .navbar-brand { gap: 6px; }
+  .navbar-brand .app-logo svg { width: 28px; height: 28px; }
+  .large-title { font-size: 17px; }
+}
+@media (max-width: 340px) {
+  .large-title { display: none; }
 }
 .section-title { font-size: 20px; font-weight: 700; margin: 22px 2px 10px; letter-spacing: -0.01em; }
 .section-sub { font-size: 13px; color: var(--label-tertiary); margin: -6px 2px 12px; }
@@ -205,6 +223,11 @@ header.navbar {
 /* --- Weiterlesen-Regal (Signature Element) --- */
 .shelf { display: flex; gap: 14px; overflow-x: auto; padding: 2px 18px 6px; margin: 0 -18px; -webkit-overflow-scrolling: touch; }
 .shelf::-webkit-scrollbar { display: none; }
+/* Muss hinter der Regal-Regel stehen: gleiche Spezifitaet, sonst gewinnt das
+   -18px-Margin und das Regal schiebt sich 4 px aus dem Bild. */
+@media (max-width: 480px) {
+  .shelf { margin: 0 -14px; padding: 2px 14px 6px; }
+}
 .shelf-item { flex-shrink: 0; width: 92px; }
 .shelf-cover-wrap { position: relative; width: 92px; height: 124px; border-radius: var(--radius-m); overflow: hidden;
   background: var(--bg-elevated); border: 1px solid var(--separator); }
@@ -1718,28 +1741,43 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 }
 .advanced-filters.open { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
 .advanced-filters > .af-inner { min-height: 0; overflow: hidden; }
+/* Das Panel nutzt dieselben Tokens wie Karten und Sheets. Bewusst deckend
+   (--bg-elevated) statt Glas: es liegt selbst schon im Glas-Header, und ein
+   verschachtelter backdrop-filter sieht den Inhalt darunter nicht mehr.
+   max-height haelt es auf kurzen Displays im Bild und laesst es scrollen. */
 .af-panel {
-  background: #17171B; border: 1px solid rgba(255,255,255,.09); border-radius: 14px;
-  padding: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.38);
+  background: var(--bg-elevated); border: 1px solid var(--separator);
+  border-top-color: var(--surface-edge);
+  border-radius: var(--radius-l); padding: 14px; box-shadow: var(--shadow-soft);
+  max-height: min(60vh, 520px); overflow-y: auto; overscroll-behavior: contain;
 }
 .af-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 10px; }
 .af-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.af-field > span { font-size: 12px; color: rgba(255,255,255,.55); font-weight: 500; letter-spacing: .01em; }
-.af-field select {
-  background: #26262C; color: #EDEDF4; border: 1px solid rgba(255,255,255,.1);
-  border-radius: 9px; height: 38px; padding: 0 10px; font-family: inherit; font-size: 14px;
+.af-field > span { font-size: 12px; color: var(--label-tertiary); font-weight: 500; letter-spacing: .01em; }
+/* Auswahl und Eingabe teilen sich eine Regel. Vorher war nur select
+   gestylt, das Jahres-Feld fiel auf die Browser-Vorgabe zurueck (weisse Box
+   mit grauem Rand mitten im dunklen Panel). 16 px verhindert ausserdem den
+   Auto-Zoom von iOS beim Fokussieren. */
+.af-field select,
+.af-field input {
+  background: var(--bg); color: var(--label); border: 1px solid var(--separator);
+  border-radius: 9px; height: 40px; padding: 0 10px; font-family: inherit; font-size: 16px;
+  width: 100%;
 }
-.af-field select:focus { outline: none; border-color: var(--accent); }
+.af-field input::placeholder { color: var(--label-tertiary); }
+.af-lang select { width: auto; flex: 0 0 auto; }
+.af-field select:focus,
+.af-field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--fill-tertiary); }
 .af-lang { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 8px; }
-.af-check { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.85); font-size: 14px; padding-bottom: 9px; }
+.af-check { display: flex; align-items: center; gap: 8px; color: var(--label); font-size: 14px; padding-bottom: 9px; }
 .af-check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .af-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 .af-actions .btn-ghost {
-  height: 38px; padding: 0 16px; border-radius: 9px; background: rgba(255,255,255,.08);
-  color: #EDEDF4; border: 1px solid rgba(255,255,255,.12);
+  min-height: 40px; padding: 0 16px; border-radius: 9px; background: var(--fill-tertiary);
+  color: var(--label); border: 1px solid var(--separator);
 }
 .af-lucky {
-  height: 38px; padding: 0 18px; border: none; border-radius: 9px;
+  min-height: 40px; padding: 0 18px; border: none; border-radius: 9px;
   background: var(--accent); color: var(--accent-on); font-family: inherit; font-size: 14px; font-weight: 600;
 }
 
@@ -1875,7 +1913,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 .af-tags-search { margin: 8px 0 10px; }
 .af-tags-search input {
   width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--separator);
-  background: var(--fill-tertiary); color: var(--label); font-family: inherit; font-size: 14px;
+  background: var(--fill-tertiary); color: var(--label); font-family: inherit; font-size: 16px;
 }
 .af-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0 10px; max-height: 170px; overflow-y: auto; }
 .af-tag {
@@ -1936,7 +1974,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 
 <header class="navbar">
   <div class="navbar-inner">
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div class="navbar-brand">
       <span class="app-logo" id="appLogo" role="button" tabindex="0" aria-label="MangaLounge">
         <svg width="34" height="34" viewBox="0 0 48 48" fill="none" aria-hidden="true">
           <defs>
@@ -1957,9 +1995,9 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
           <path d="M36.6 26.9l1.25 3 3 1.25-3 1.25-1.25 3-1.25-3-3-1.25 3-1.25z" fill="var(--accent-2)"/>
         </svg>
       </span>
-      <h1 class="large-title" style="font-size:22px;">MangaLounge</h1>
+      <h1 class="large-title">MangaLounge</h1>
     </div>
-    <div style="display:flex;gap:2px;">
+    <div class="navbar-actions">
       <button class="icon-btn" id="downloadCenterBtn" aria-label="Download-Center" style="display:none;">
         <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>
         <span class="bell-count hidden" id="downloadCount"></span>
@@ -2005,26 +2043,26 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
         <div class="af-panel">
           <div class="af-grid">
             <label class="af-field">
-              <span>Sort by</span>
+              <span>Sortierung</span>
               <select id="fSortBy">
-                <option value="">None</option>
-                <option value="relevance">Relevance</option>
-                <option value="latestUploadedChapter">Latest Chapter</option>
-                <option value="followedCount">Followed Count</option>
-                <option value="year">Publication Year</option>
+                <option value="">Keine</option>
+                <option value="relevance">Relevanz</option>
+                <option value="latestUploadedChapter">Neuestes Kapitel</option>
+                <option value="followedCount">Beliebtheit</option>
+                <option value="year">Erscheinungsjahr</option>
               </select>
             </label>
             <label class="af-field">
-              <span>Content Rating</span>
+              <span>Inhaltsfreigabe</span>
               <select id="fContentRating">
-                <option value="">Any</option>
-                <option value="safe">Safe</option>
-                <option value="suggestive">Suggestive</option>
-                <option value="erotica">Erotica</option>
+                <option value="">Alle</option>
+                <option value="safe">Jugendfrei</option>
+                <option value="suggestive">Andeutend</option>
+                <option value="erotica">Erotik</option>
               </select>
             </label>
             <label class="af-field">
-              <span>Magazine Demographic</span>
+              <span>Zielgruppe</span>
               <select id="fDemographic">
                 <option value="">Any</option>
                 <option value="shounen">Shounen</option>
@@ -2034,30 +2072,30 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
               </select>
             </label>
             <label class="af-field">
-              <span>Original languages</span>
+              <span>Originalsprache</span>
               <select id="fOriginalLang">
-                <option value="">All languages</option>
-                <option value="ja">Japanese (ja)</option>
-                <option value="ko">Korean (ko)</option>
-                <option value="zh">Chinese (zh)</option>
+                <option value="">Alle Sprachen</option>
+                <option value="ja">Japanisch</option>
+                <option value="ko">Koreanisch</option>
+                <option value="zh">Chinesisch</option>
               </select>
             </label>
             <label class="af-field">
-              <span>Publication Status</span>
+              <span>Status</span>
               <select id="fPubStatus">
                 <option value="">Any</option>
-                <option value="ongoing">Ongoing</option>
-                <option value="completed">Completed</option>
-                <option value="hiatus">Hiatus</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="ongoing">Laufend</option>
+                <option value="completed">Abgeschlossen</option>
+                <option value="hiatus">Pausiert</option>
+                <option value="cancelled">Abgebrochen</option>
               </select>
             </label>
             <div class="af-field af-lang">
               <label class="af-check">
                 <input type="checkbox" id="fHasTranslated">
-                <span>Has translated chapters</span>
+                <span>Übersetzte Kapitel</span>
               </label>
-              <select id="fTranslatedLang" aria-label="bersetzte Sprache">
+              <select id="fTranslatedLang" aria-label="Übersetzte Sprache">
                 <option value="de">Deutsch (de)</option>
                 <option value="en">Englisch (en)</option>
               </select>
@@ -2070,7 +2108,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
               <span>&nbsp;</span>
               <label class="af-check">
                 <input type="checkbox" id="fHasAvailable">
-                <span>Mit verf&uuml;gbaren Kapiteln</span>
+                <span>Nur mit verfügbaren Kapiteln</span>
               </label>
             </label>
             <div class="af-field af-tags-field">
@@ -2089,8 +2127,8 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
             </div>
           </div>
           <div class="af-actions">
-            <button type="button" class="btn-ghost af-reset" id="afReset">Reset filters</button>
-            <button type="button" class="af-lucky" id="afLucky">I'm feeling lucky</button>
+            <button type="button" class="btn-ghost af-reset" id="afReset">Filter zurücksetzen</button>
+            <button type="button" class="af-lucky" id="afLucky">Überrasch mich</button>
           </div>
         </div>
       </div>
