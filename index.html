@@ -5743,6 +5743,18 @@ function renderReaderPages(chapter, payload) {
   }
   setTimeout(checkReaderChapterFinished, 300);
 }
+// Naechstes Kapitel vorladen (Prefetch) fuer fluessigeres Blaettern.
+// Laeuft im Hintergrund, Fehler werden ignoriert.
+function prefetchReaderChapter(index) {
+  if (!readerChapterList || index < 0 || index >= readerChapterList.length) return;
+  var ch = readerChapterList[index];
+  if (!ch || !ch.id || readerChapterPayloads[ch.id]) return;
+  if (readerExternal && readerExternal.api !== "mangadex") return;
+  API_ADAPTERS.mangadex.pages({ id: readerItem && readerItem.mdId }, ch).then(function (res) {
+    if (res && res.urls) readerChapterPayloads[ch.id] = { chapter: { hash: "prefetched", data: res.urls, dataSaver: res.urls }, urls: res.urls };
+  }).catch(function () {});
+}
+
 function loadReaderChapter(index) {
   if (index < 0 || index >= readerChapterList.length) {
     document.getElementById("readerNext").disabled = true;
@@ -5809,6 +5821,8 @@ function loadReaderChapter(index) {
     return;
   }
   loadFromNetwork();
+  // Naechstes Kapitel vorladen, sobald dieses geladen ist.
+  setTimeout(function () { prefetchReaderChapter(index + 1); }, 300);
 }
 // Kapitel einer Fremd-API: die Bild-URLs kommen aus dem JSON der jeweiligen
 // API, geholt ueber den Worker. Auch die Bilder laufen wegen CORS ueber den Proxy.
