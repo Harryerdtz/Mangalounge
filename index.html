@@ -8750,19 +8750,19 @@ function logoEggSparkle(logo) {
 function runLogoEgg() {
   var logo = document.getElementById("appLogo");
   if (!logo) return;
-  triggerHaptic();
-  logo.classList.remove("egg");
+  triggerHaptic("heavy");
+  logo.classList.remove("egg", "egg-super");
   void logo.offsetWidth;
-  logo.classList.add("egg");
-  setTimeout(function () { logo.classList.remove("egg"); }, 950);
+  logo.classList.add("egg", "egg-super");
+  setTimeout(function () { logo.classList.remove("egg", "egg-super"); }, 1400);
   logoEggSparkle(logo);
-  showToast("\uD83D\uDCD6 Kapitel \u221E \u2013 sch\u00f6n, dass du so genau hinsiehst.");
+  showToast("\uD83D\uDCD6 Kapitel \u221E \u2013 sch\u00f6n, dass du so genau hinsiehst. (5x Tippen = Mega-Egg)");
 }
 function logoTapped() {
   logoEggTaps++;
   clearTimeout(logoEggTimer);
   logoEggTimer = setTimeout(function () { logoEggTaps = 0; }, 900);
-  if (logoEggTaps >= 3) { logoEggTaps = 0; clearTimeout(logoEggTimer); runLogoEgg(); }
+  if (logoEggTaps >= 5) { logoEggTaps = 0; clearTimeout(logoEggTimer); runLogoEgg(); }
 }
 var appLogoEl = document.getElementById("appLogo");
 if (appLogoEl) {
