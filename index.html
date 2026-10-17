@@ -178,6 +178,9 @@ header.navbar {
   padding: 0 10px; height: 40px; color: var(--label-secondary); flex: 1; min-width: 0; }
 /* 16 px: darunter zoomt iOS beim Fokussieren automatisch in die Seite. */
 .searchbar input { flex: 1; border: none; background: none; outline: none; color: var(--label); font-size: var(--fs-body); height: 100%; }
+.searchbar input:focus,
+.searchbar input:focus-visible,
+.searchbar:focus-within { outline: none; box-shadow: none; }
 .searchbar input::placeholder { color: var(--label-tertiary); }
 .filter-toggle-btn { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
 .filter-toggle-btn.active { background: var(--fill-tertiary); color: var(--accent-text); }
