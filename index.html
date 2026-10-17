@@ -1569,6 +1569,17 @@ header.navbar {
 
 /* --- Segmentierte Steuerung: aktiver Teil als weiche Pille --- */
 .segmented { background: color-mix(in srgb, var(--label) 9%, transparent); }
+
+/* Kopfzeile eines Abschnitts: Titel links, kleine Steuerung rechts. Steht hier
+   (nach den Media-Queries), damit .segmented-compact deren Rand nicht erbt. */
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 2px 10px; }
+.section-head .section-title { margin: 0; }
+.segmented-compact { margin: 0; padding: 2px; flex-shrink: 0; }
+.segmented-compact button { flex: 0 0 auto; min-width: 40px; min-height: 34px; padding: 0 10px; font-size: var(--fs-note); position: relative; }
+/* Flaeche bleibt 34 px hoch, die Trefferflaeche reicht 44 px hoch. */
+.segmented-compact button::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%);
+}
 :root[data-style="apple"] .segmented button {
   transition: color var(--dur-2) var(--ease-out), background-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
 }
@@ -1871,11 +1882,11 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 .af-check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .af-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 .af-actions .btn-ghost {
-  min-height: 40px; padding: 0 16px; border-radius: 9px; background: var(--fill-tertiary);
+  min-height: 44px; padding: 0 16px; border-radius: 9px; background: var(--fill-tertiary);
   color: var(--label); border: 1px solid var(--separator);
 }
 .af-lucky {
-  min-height: 40px; padding: 0 18px; border: none; border-radius: 9px;
+  min-height: 44px; padding: 0 18px; border: none; border-radius: 9px;
   background: var(--accent); color: var(--accent-on); font-family: inherit; font-size: var(--fs-body); font-weight: 600;
 }
 
@@ -1953,8 +1964,21 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
   .api-card-cover, .api-cover-wrap::after, .api-card { transition: none; }
   .api-card:hover { transform: none; }
 }
-.api-loadmore { padding: 4px 14px 24px; }
-.api-loadmore button { width: 100%; }
+/* Fuss der Entdecken-Liste: Knopf, Hinweiszeile und Platzhalter-Karten.
+   Die Klassen .api-loadmore-hint und .api-skeleton werden von OpenCode
+   gesetzt (siehe Aufgabenliste in AGENTS.md). */
+/* .btn-ghost hatte keine Grundregel: ausserhalb einer .settings-row fiel der
+   Knopf auf Textshoehe zurueck (gemessen 22 px bei "Mehr laden"). */
+.btn-ghost { min-height: 44px; }
+.api-loadmore { padding: 6px 14px 28px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.api-loadmore button { width: 100%; max-width: 420px; min-height: 44px; }
+.api-loadmore-hint { font-size: var(--fs-note); color: var(--label-tertiary); text-align: center; line-height: var(--lh-body); max-width: 46ch; }
+.api-skeleton {
+  border-radius: var(--radius-m); background: var(--fill-tertiary);
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+@keyframes skeletonPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .api-skeleton { animation: none; } }
 
 /* Login-Bestätigung: neutral waehrend des Tests, gruen bei Erfolg, rot bei Fehler. */
 .md-status { font-size: var(--fs-label); color: var(--label-tertiary); margin-top: 8px; transition: color var(--dur-2) var(--ease-out); }
@@ -2054,11 +2078,22 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
   width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--separator);
   background: var(--fill-tertiary); color: var(--label); font-family: inherit; font-size: var(--fs-body);
 }
-.af-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 2px 0 10px; max-height: 170px; overflow-y: auto; }
+/* Genres und Tags liefen als Block nach unten und belegten bis zu 170 px
+   Hoehe. Jetzt eine Zeile, die seitlich weitergeht: das Panel wird kuerzer und
+   die Auswahl bleibt in einer Richtung. flex-shrink: 0 ist Pflicht, sonst
+   quetscht nowrap die Chips zusammen. */
+.af-tags {
+  display: flex; flex-wrap: nowrap; gap: 8px; padding: 2px 0 10px;
+  overflow-x: auto; overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.af-tags::-webkit-scrollbar { display: none; }
 .af-tag {
   font-size: var(--fs-label); padding: 8px 14px; border-radius: 999px;
   border: 1px solid var(--separator); background: var(--fill-tertiary); color: var(--label-secondary);
-  min-height: 44px; line-height: var(--lh-flat); cursor: pointer;
+  min-height: 44px; flex: 0 0 auto; line-height: var(--lh-flat); cursor: pointer;
   transition: background 160ms cubic-bezier(0.4, 0, 0.2, 1), color 160ms cubic-bezier(0.4, 0, 0.2, 1), transform 160ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .af-tag:hover { background: var(--fill-quaternary); }
