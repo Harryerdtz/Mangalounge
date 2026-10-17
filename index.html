@@ -1998,10 +1998,6 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
       <h1 class="large-title">MangaLounge</h1>
     </div>
     <div class="navbar-actions">
-      <button class="icon-btn" id="downloadCenterBtn" aria-label="Download-Center" style="display:none;">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>
-        <span class="bell-count hidden" id="downloadCount"></span>
-      </button>
       <button class="icon-btn" id="bellBtn" aria-label="Aktivitäten">
         <svg class="icon" viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 10-12 0c0 6.5-2.6 8.5-2.6 8.5h17.2S18 15 18 8.5"/><path d="M13.7 20a2 2 0 01-3.4 0"/></svg>
         <span class="bell-dot hidden" id="bellDot"></span>
@@ -2024,8 +2020,6 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
         <svg class="icon" viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input type="text" id="search" placeholder="Titel suchen">
       </div>
-      <!-- Versteckter Legacy-Button: Event-Handler verbleiben, Pflege im Code unnoetig. -->
-      <button class="icon-btn filter-toggle-btn" id="filterToggleBtn" style="display:none;" aria-hidden="true" tabindex="-1"></button>
     </div>
     <!-- Auto-Vorschlaege waehrend des Tippens (MangaDex-Titel) -->
     <div class="autocomplete-dropdown" id="apiSuggest" aria-hidden="true"></div>
@@ -2038,7 +2032,7 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
       <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 19h4"/></svg>
       <span class="notif-dot" id="filterActiveDot" style="display:none;"></span>
     </button>
-    <div class="advanced-filters" id="advancedFilters" aria-hidden="true">
+    <div class="advanced-filters filter-sheet" id="advancedFilters" aria-hidden="true">
       <div class="af-inner">
         <div class="af-panel">
           <div class="af-grid">
@@ -6028,11 +6022,7 @@ document.getElementById("filterReset").addEventListener("click", function () {
 });
 // Modul: einklappbarer Filterbereich
 var filterDropdown = document.getElementById("filterDropdown");
-var filterToggleBtn = document.getElementById("filterToggleBtn");
-filterToggleBtn.addEventListener("click", function () {
-  filterDropdown.classList.toggle("open");
-  filterToggleBtn.classList.toggle("active", filterDropdown.classList.contains("open"));
-});
+// filterToggleBtn entfernt (Dead Code) - Filter laufen ueber advancedFiltersToggle.
 function updateFilterActiveDot() {
   var anyActive = activeStatus !== "alle" || activeTags.length > 0 || activeType !== "alle" || activeAuthor !== "alle" || activeSmartFolder !== "keine" || sortMode !== "updated";
   // Katalog-Filter leuchten ebenfalls, wenn etwas gesetzt ist.
@@ -6518,6 +6508,7 @@ function applyTheme() {
   document.documentElement.style.setProperty("--accent", accent);
   document.documentElement.style.setProperty("--accent-2", gold);
   document.documentElement.style.setProperty("--accent-text", readableAccent(accent, dark ? "#1C1A17" : "#F2EFE7", dark));
+document.documentElement.style.setProperty("--accent-2-text", readableAccent(gold, dark ? "#1C1A17" : "#F2EFE7", dark));
   document.documentElement.style.setProperty("--accent-on", bestOnColor(accent));
   if (settings.mode === "system") document.documentElement.removeAttribute("data-theme");
   else document.documentElement.setAttribute("data-theme", settings.mode);
@@ -10074,7 +10065,6 @@ function wireDownloadsUI() {
         var dd = document.getElementById("filterDropdown");
         if (!dd) return;
         var openNow = dd.classList.toggle("open");
-        filterToggleBtn.classList.toggle("active", openNow);
         triggerHaptic();
         return;
       }
@@ -10352,6 +10342,18 @@ function addDiscoverToLibrary(item) {
 }
 
 // --- Start: Metadaten einlesen, Speicher fortschreiben -------------------
+// Scroll-Handler fuer den einklappbaren Large Title (Design-Hook fuer Freebuff):
+// ab 40 px Scroll setzt die Klasse .navbar-scrolled, ab 0 wird sie entfernt.
+(function () {
+  var nav = document.querySelector("header.navbar");
+  if (!nav) return;
+  function update() {
+    nav.classList.toggle("navbar-scrolled", (window.scrollY || 0) > 40);
+  }
+  window.addEventListener("scroll", update, { passive: true });
+  update();
+})();
+
 function initDownloads() {
   loadAnilistCoverCache();
   applyFilterBarVisibility();
