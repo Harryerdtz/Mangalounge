@@ -5505,6 +5505,9 @@ function markReaderChapterAsRead() {
   readerItem.lastUpdated = new Date().toISOString();
   pushHistory(readerItem, chapNum);
   triggerHaptic();
+  // Bidirektionaler Sync: Kapitel auf MangaDex als gelesen melden.
+  var chId = (readerChapterList && readerChapterList[readerChapterIndex]) ? readerChapterList[readerChapterIndex].id : null;
+  mdMarkChapterRead(readerItem, chId);
   saveState();
   renderAll();
   if (currentDetailId === readerItem.id) renderDetailContent(readerItem);
@@ -6911,6 +6914,17 @@ function mdLogout() {
   showToast("Von MangaDex abgemeldet");
 }
 // Eigene Verfolgungen (User Follows) direkt in den Katalog legen.
+// Kapitel auf MangaDex als gelesen markieren (bidirektionaler Sync).
+// Läuft best-effort im Hintergrund; Fehler werden still ignoriert.
+function mdMarkChapterRead(item, chapterId) {
+  if (!item || !item.mdId || !chapterId) return Promise.resolve();
+  if (!mdCredentialsReady()) return Promise.resolve();
+  return mdApi("/manga/" + item.mdId + "/read", {
+    method: "POST",
+    body: { chapterIds: [String(chapterId)] }
+  }).catch(function () {});
+}
+
 function mdLoadFollows() {
   return ensureMdToken().then(function (token) {
     if (!token) throw new Error("Nicht angemeldet \u2013 bitte zuerst oben \u201eAnmelden\u201c nutzen.");
@@ -7898,16 +7912,19 @@ function mdApi(endpoint, opts) {
     });
   }
   return ensureMdToken().then(function (token) {
-    return attempt(token).catch(function (err) {
-      // Einmaliger Retry bei Netzwerkfehler oder 5xx (voruebergehende Ausfaelle).
-      var msg = (err && err.message) || "";
-      if (/MangaDex nicht erreichbar|md-http-5/.test(msg)) {
-        return new Promise(function (resolve) { setTimeout(resolve, 2000); }).then(function () {
-          return ensureMdToken().then(function (t2) { return attempt(t2); });
-        });
-      }
-      return Promise.reject(err);
-    });
+    function runWithRetry(tok, triesLeft) {
+      return attempt(tok).catch(function (err) {
+        var msg = (err && err.message) || "";
+        if (triesLeft > 0 && (/MangaDex nicht erreichbar|md-http-5|md-http-429/.test(msg))) {
+          var delay = (4 - triesLeft) * 2000; // 2s, 4s, 6s
+          return new Promise(function (resolve) { setTimeout(resolve, delay); }).then(function () {
+            return ensureMdToken().then(function (t2) { return runWithRetry(t2, triesLeft - 1); });
+          });
+        }
+        return Promise.reject(err);
+      });
+    }
+    return runWithRetry(token, 3);
   }).catch(function (err) {
     throw new Error("MangaDex nicht erreichbar: " + ((err && err.message) || "Netzwerkfehler"));
   });
