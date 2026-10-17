@@ -7784,14 +7784,23 @@ function mdApiRequest(endpoint, opts, token) {
 }
 function mdApi(endpoint, opts) {
   opts = opts || {};
-  // Token holen (oder Gast-Modus) und als Bearer mitgeben. Schlägt das
-  // Anmelden fehl, wird einmal als Gast versucht; ein 401 (falsche Daten,
-  // abgelaufener Token) ebenfalls -- die Suche laeuft immer weiter.
-  return ensureMdToken().then(function (token) {
+  function attempt(token) {
     return mdApiRequest(endpoint, opts, token).catch(function (err) {
       if (err && err.message === "md-http-401") {
         mdInvalidateToken();
         return mdApiRequest(endpoint, opts, null);
+      }
+      return Promise.reject(err);
+    });
+  }
+  return ensureMdToken().then(function (token) {
+    return attempt(token).catch(function (err) {
+      // Einmaliger Retry bei Netzwerkfehler oder 5xx (voruebergehende Ausfaelle).
+      var msg = (err && err.message) || "";
+      if (/MangaDex nicht erreichbar|md-http-5/.test(msg)) {
+        return new Promise(function (resolve) { setTimeout(resolve, 2000); }).then(function () {
+          return ensureMdToken().then(function (t2) { return attempt(t2); });
+        });
       }
       return Promise.reject(err);
     });
