@@ -292,7 +292,7 @@ header.navbar {
 .tag-pill { font-size: var(--fs-caption); color: var(--accent-2-text, var(--accent-2)); background: var(--fill-tertiary); border-radius: 999px; padding: 2px 7px; }
 .row-trailing { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 .chapter-num { color: var(--accent-2-text, var(--accent-2)); font-variant-numeric: tabular-nums; font-weight: 700; font-size: var(--fs-body); }
-.plus1-chip { min-height: 38px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--separator);
+.plus1-chip { min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--separator);
   background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2)); font-weight: 700; font-size: var(--fs-label); }
 
 /* Leerer Zustand: statt nackter Zeile ein ruhiger Block mit Symbol, Titel
@@ -686,6 +686,12 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
   -webkit-tap-highlight-color: transparent;
 }
 .app-logo svg { display: block; }
+/* Logo ist ein Knopf mit 28 px Kantenlaenge; die Trefferflaeche waechst auf
+   44 px, ohne die Titelzeile zu vergroessern. */
+.app-logo::after {
+  content: ""; position: absolute; top: 50%; left: 50%; width: 44px; height: 44px;
+  transform: translate(-50%, -50%);
+}
 .app-logo.egg svg { animation: logoFlip 0.85s cubic-bezier(0.3, 0.9, 0.3, 1); }
 @keyframes logoFlip {
   0% { transform: rotateY(0deg) scale(1); }
@@ -911,10 +917,12 @@ input[type="range"].reader-range::-moz-range-thumb { width: 22px; height: 22px; 
 /* ===================== FILTER EXTRAS ===================== */
 .filter-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 18px 10px; }
 .filter-reset {
-  min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--separator);
+  min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--separator);
   background: transparent; color: var(--accent-text); font-size: var(--fs-label); font-weight: 600;
 }
 .filter-count { font-size: var(--fs-note); color: var(--label-tertiary); }
+/* Das Sortier-Auswahlfeld war mit 26 px die kleinste Flaeche im Filterkasten. */
+.filter-sort-row select { min-height: 40px; }
 
 /* ===================== HOVER-ANIMATIONEN ===================== */
 /* Nur auf Geraeten mit echtem Zeiger aktiv, Touch bleibt unberuehrt. */
@@ -1745,10 +1753,16 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 }
 .nav-tabs button {
   flex: 1; min-height: 34px; border: none; border-radius: var(--radius-s);
+  /* Die Flaeche bleibt 34 px hoch, damit der Header nicht waechst; die
+     Trefferflaeche reicht ueber ::after trotzdem 44 px hoch. */
+  position: relative;
   background: var(--fill-tertiary); color: var(--label-secondary);
   font-family: inherit; font-size: var(--fs-body); font-weight: 600; letter-spacing: -0.01em;
   transition: background-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out),
               transform var(--dur-2) var(--ease-spring);
+}
+.nav-tabs button::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%);
 }
 .nav-tabs button:active { transform: scale(0.97); }
 .nav-tabs button.active { background: var(--bg-elevated); color: var(--label); box-shadow: var(--shadow-1); }
@@ -1822,7 +1836,12 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 .af-lang select { width: auto; flex: 0 0 auto; }
 .af-field select:focus,
 .af-field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--fill-tertiary); }
-.af-lang { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 8px; }
+/* Sprachwahl stand neben dem langen Label und lief dadurch 90 px aus dem
+   Panel (select rechts bei 480 in einem 390 breiten Sheet). Untereinander wie
+   die uebrigen Felder passt sie in jede Zelle, auch bei 320 px. */
+.af-lang { flex-direction: column; align-items: stretch; gap: 5px; }
+.af-lang .af-check { padding-bottom: 0; }
+.af-lang select { width: 100%; }
 .af-check { display: flex; align-items: center; gap: 8px; color: var(--label); font-size: var(--fs-body); padding-bottom: 9px; }
 .af-check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .af-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
