@@ -319,6 +319,9 @@ header.navbar {
   width: 60px; height: 60px; margin: 0 auto 16px; border-radius: 20px;
   display: flex; align-items: center; justify-content: center;
   background: var(--fill-tertiary); color: var(--accent-text);
+  /* Symbol kann Emoji oder SVG sein: Emoji braucht eine Groesse, sonst klebt
+     es mit 16 px in der 60-px-Kachel. */
+  font-size: 26px; line-height: 1;
 }
 .empty-icon svg {
   width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6;
@@ -326,6 +329,27 @@ header.navbar {
 }
 .empty h2 { font-family: 'Zilla Slab', Georgia, serif; font-weight: 600; font-size: var(--fs-title); margin: 0 0 8px; color: var(--label); }
 .empty p { margin: 0; font-size: var(--fs-body); line-height: var(--lh-body); text-wrap: pretty; }
+
+/* Ladezustand: dieselbe Ruhe wie .empty, aber mit Dreher statt Symbol.
+   Markup der Aufrufer: <div class="loading" aria-busy="true"><span class="spinner"></span>Text</div>.
+   Der Ring ist absichtlich klein (18 px) und dreht schnell - das wirkt kuerzer
+   als es dauert, ohne dass sich die Ladezeit aendert. */
+.loading {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  max-width: 420px; margin: 0 auto; padding: 32px 20px;
+  font-size: var(--fs-body); line-height: var(--lh-body);
+  color: var(--label-secondary); text-align: center;
+}
+.spinner {
+  width: 18px; height: 18px; flex: 0 0 auto; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-top-color: currentColor;
+  animation: spinnerSpin 0.62s linear infinite;
+}
+@keyframes spinnerSpin { to { transform: rotate(360deg); } }
+/* Gleiches Verhalten wie der Schalter "Reduziert" im Haus: der Dreher steht,
+   der Bogen bleibt sichtbar und der Text daneben sagt, was geladen wird. */
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
 
 /* ===================== FAB ===================== */
 .fab {
@@ -717,6 +741,16 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
   transform: translate(-50%, -50%);
 }
 .app-logo.egg svg { animation: logoFlip 0.85s cubic-bezier(0.3, 0.9, 0.3, 1); }
+/* Mega-Egg (5x tippen): die Drehung bekommt einen Farb-Glow. Der Hue-Wechsel
+   laeuft ueber den Filter, damit keine neuen Farb-Tokens noetig sind. */
+.app-logo.egg-super svg { animation: logoFlip 0.85s cubic-bezier(0.3, 0.9, 0.3, 1), eggGlow 1.4s ease-out; }
+@keyframes eggGlow {
+  0% { filter: drop-shadow(0 0 0 transparent) hue-rotate(0deg) saturate(1); }
+  22% { filter: drop-shadow(0 0 10px var(--accent-2)) hue-rotate(45deg) saturate(1.7); }
+  68% { filter: drop-shadow(0 0 16px var(--accent-2)) hue-rotate(-35deg) saturate(1.9); }
+  100% { filter: drop-shadow(0 0 0 transparent) hue-rotate(0deg) saturate(1); }
+}
+@media (prefers-reduced-motion: reduce) { .app-logo.egg-super svg { animation: logoFlip 0.85s ease-out; } }
 @keyframes logoFlip {
   0% { transform: rotateY(0deg) scale(1); }
   40% { transform: rotateY(200deg) scale(1.12); }
@@ -2373,7 +2407,14 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
 
 <main class="wrap">
   <section id="continueSection">
-    <h2 class="section-title">Weiterlesen</h2>
+    <div class="section-head">
+      <h2 class="section-title">Weiterlesen</h2>
+      <div class="segmented segmented-compact" id="shelfLimitSegmented" role="group" aria-label="Anzahl der Cover">
+        <button type="button" data-shelf-limit="3">3</button>
+        <button type="button" data-shelf-limit="8" class="active">8</button>
+        <button type="button" data-shelf-limit="alle">Alle</button>
+      </div>
+    </div>
     <div class="shelf" id="shelf"></div>
   </section>
 
@@ -2960,14 +3001,6 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
               <button data-starttab="continue">Weiterlesen</button>
               <button data-starttab="active">Aktiv</button>
               <button data-starttab="all">Alle</button>
-            </div>
-          </div>
-          <div class="seg-field">
-            <span class="seg-label">Regal-Anzahl (Weiterlesen)</span>
-            <div class="segmented" id="shelfLimitSegmented">
-              <button data-shelf-limit="3">3</button>
-              <button data-shelf-limit="8" class="active">8</button>
-              <button data-shelf-limit="alle">Alle</button>
             </div>
           </div>
           <div class="settings-row">
@@ -9012,7 +9045,7 @@ function discoverEndpoint(offset) {
   // Das Filter-Panel wirkt 1:1 auf die Entdecken-Abfrage - ausschliesslich als
   // URL-Parameter, an Ansicht oder Adapter wird nichts veraendert.
   var p = new URLSearchParams();
-  p.set("limit", String(settings.discoverPageSize || 50));
+  p.set("limit", String(discoverPageSize()));
   p.set("offset", String(offset || 0));
   var sort = afVal("fSortBy");
   // Ohne Suchtext ist "relevance" sinnlos -> dann wie bisher nach Folgern.
@@ -9045,9 +9078,14 @@ function discoverEndpoint(offset) {
 }
 // "Entdecken": die aktuell am haeufigsten gefoligten Mangas. Laeuft automatisch,
 // wenn das Katalog-Feld leer ist.
+function discoverPageSize() { return Math.max(1, Math.min(100, Number(settings.discoverPageSize) || 50)); }
 function loadDiscover() {
-  // Platzhalter-Karten waehrend des Ladens (CSS .api-skeleton).
   var el = document.getElementById("apiResults");
+  var pageSize = discoverPageSize();
+  // Platzhalter-Karten waehrend des Ladens (CSS .api-skeleton). Sie liegen im
+  // selben Raster wie die echten Cover, damit beim Einsetzen nichts springt.
+  // Acht Karten fuellen bei 390 px knapp zwei Reihen - mehr waeren in der
+  // kurzen Ladezeit nur ein Flackern.
   if (el) {
     var sk = "";
     for (var i = 0; i < 8; i++) sk += '<div class="api-skeleton" style="aspect-ratio:2/3;"></div>';
@@ -9058,13 +9096,11 @@ function loadDiscover() {
   var reqId = ++discoverRequestId;
   apiChapterManga = null; apiChapterList = [];
   var wrap = document.getElementById("apiChaptersWrap"); if (wrap) wrap.style.display = "none";
-  var el = document.getElementById("apiResults");
-  if (el) el.innerHTML = '<div class="loading" aria-busy="true"><span class="spinner"></span>Beliebte Titel werden geladen \u2026</div>';
   setApiStatus("Beliebte Titel werden geladen \u2026");
   return mdApi(endpoint).then(function (res) {
     if (reqId !== discoverRequestId) return;
     var list = (res && res.data) || [];
-    hasMoreDiscover = list.length >= 20;
+    hasMoreDiscover = list.length >= pageSize;
     apiResults = list.map(function (m) {
       return {
         api: "mangadex", id: m.id, title: mdTitleOf(m) || "(ohne Titel)",
@@ -9089,13 +9125,17 @@ function loadMoreDiscover() {
   discoverAutoFailed = false;
   var btn = document.getElementById("apiLoadMoreBtn");
   if (btn) { btn.disabled = true; btn.textContent = "Lade \u2026"; }
-  var nextOffset = discoverOffset + 20;
+  // Schrittweite ist die Seitengroesse, nicht ein fester Wert: sonst
+  // ueberlappt jede Folgeseite die vorige und die Dublettenfilterung wirft
+  // den Grossteil der Antwort weg.
+  var pageSize = discoverPageSize();
+  var nextOffset = discoverOffset + pageSize;
   discoverRequestId++;
   var reqId = discoverRequestId;
   return mdApi(discoverEndpoint(nextOffset)).then(function (res) {
     if (reqId !== discoverRequestId) return;
     var list = (res && res.data) || [];
-    hasMoreDiscover = list.length >= 20;
+    hasMoreDiscover = list.length >= pageSize;
     var newItems = list.map(function (m) {
       return {
         api: "mangadex", id: m.id, title: mdTitleOf(m) || "(ohne Titel)",
