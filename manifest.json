@@ -1,0 +1,41 @@
+{
+  "name": "MangaLounge",
+  "short_name": "MangaLounge",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0B09",
+  "theme_color": "#A6392A",
+  "icons": [
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Weiterlesen",
+      "short_name": "Weiterlesen",
+      "url": "./index.html?action=continue"
+    },
+    {
+      "name": "Zuletzt aktualisiert",
+      "short_name": "Neueste",
+      "url": "./index.html?action=recent"
+    },
+    {
+      "name": "Bibliothek durchsuchen",
+      "short_name": "Suche",
+      "url": "./index.html?action=search"
+    }
+  ]
+}
