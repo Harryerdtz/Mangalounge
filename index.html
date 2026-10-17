@@ -2373,7 +2373,14 @@ header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
 
 <main class="wrap">
   <section id="continueSection">
-    <h2 class="section-title">Weiterlesen</h2>
+    <div class="section-head">
+      <h2 class="section-title">Weiterlesen</h2>
+      <div class="segmented segmented-compact" id="shelfLimitSegmented" role="group" aria-label="Anzahl der Cover">
+        <button type="button" data-shelf-limit="3">3</button>
+        <button type="button" data-shelf-limit="8" class="active">8</button>
+        <button type="button" data-shelf-limit="alle">Alle</button>
+      </div>
+    </div>
     <div class="shelf" id="shelf"></div>
   </section>
 
@@ -4609,13 +4616,17 @@ function coverOrInitial(item, cls) {
 }
 
 function renderShelf() {
+  var seg = document.getElementById("shelfLimitSegmented");
+  if (seg) seg.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", String(b.getAttribute("data-shelf-limit")) === String(settings.shelfLimit || 8)); });
   var wrap = document.getElementById("continueSection");
   var showShelf = !searchTerm.trim() && activeStatus === "alle" && activeTags.length === 0 && activeType === "alle" && activeSmartFolder === "keine" && state.length > 0;
   wrap.style.display = showShelf ? "" : "none";
   if (!showShelf) return;
+  var limit = settings.shelfLimit || 8;
   var items = state.slice()
     .filter(function (it) { return it.status !== "abgeschlossen"; })
-    .sort(function (a, b) { return new Date(b.lastUpdated) - new Date(a.lastUpdated); }).slice(0, 8);
+    .sort(function (a, b) { return new Date(b.lastUpdated) - new Date(a.lastUpdated); });
+  if (limit !== "alle") items = items.slice(0, Number(limit) || 8);
   var html = "";
   items.forEach(function (item) {
     var chapterLabel = (item.chapter === null || item.chapter === undefined) ? "\u2014" : item.chapter;
@@ -6859,6 +6870,17 @@ document.getElementById("hapticSegmented").addEventListener("click", function (e
   settings.hapticStrength = btn.getAttribute("data-haptic"); saveSettings(); triggerHaptic("heavy"); renderSettingsUI();
 });
 document.getElementById("shelfToggle").addEventListener("change", function (e) { settings.hideShelf = !e.target.checked; saveSettings(); applyCustomization(); });
+// Regal-Anzahl (3 / 8 / Alle) umschalten.
+var shelfSeg = document.getElementById("shelfLimitSegmented");
+if (shelfSeg) shelfSeg.addEventListener("click", function (e) {
+  var btn = e.target.closest && e.target.closest("[data-shelf-limit]");
+  if (!btn) return;
+  triggerHaptic();
+  settings.shelfLimit = btn.getAttribute("data-shelf-limit");
+  saveSettings();
+  shelfSeg.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", b === btn); });
+  renderShelf();
+});
 document.getElementById("showProgressToggle").addEventListener("change", function (e) { settings.showProgress = e.target.checked; saveSettings(); applyCustomization(); });
 document.getElementById("showBadgesToggle").addEventListener("change", function (e) { settings.showBadges = e.target.checked; saveSettings(); applyCustomization(); });
 document.getElementById("coverZoomToggle").addEventListener("change", function (e) { settings.coverZoom = e.target.checked; saveSettings(); applyCustomization(); });
@@ -8986,7 +9008,7 @@ function discoverEndpoint(offset) {
   // Das Filter-Panel wirkt 1:1 auf die Entdecken-Abfrage - ausschliesslich als
   // URL-Parameter, an Ansicht oder Adapter wird nichts veraendert.
   var p = new URLSearchParams();
-  p.set("limit", "20");
+  p.set("limit", String(settings.discoverPageSize || 50));
   p.set("offset", String(offset || 0));
   var sort = afVal("fSortBy");
   // Ohne Suchtext ist "relevance" sinnlos -> dann wie bisher nach Folgern.
@@ -9020,6 +9042,13 @@ function discoverEndpoint(offset) {
 // "Entdecken": die aktuell am haeufigsten gefoligten Mangas. Laeuft automatisch,
 // wenn das Katalog-Feld leer ist.
 function loadDiscover() {
+  // Platzhalter-Karten waehrend des Ladens (CSS .api-skeleton).
+  var el = document.getElementById("apiResults");
+  if (el) {
+    var sk = "";
+    for (var i = 0; i < 8; i++) sk += '<div class="api-skeleton" style="aspect-ratio:2/3;"></div>';
+    el.innerHTML = '<div class="api-grid">' + sk + '</div>';
+  }
   discoverOffset = 0;
   var endpoint = discoverEndpoint(0);
   var reqId = ++discoverRequestId;
@@ -9699,7 +9728,8 @@ function renderApiResults(items) {
     });
   })();
   if (apiMode === "discover" && hasMoreDiscover) {
-    el.insertAdjacentHTML("beforeend", '<div class="api-loadmore"><button id="apiLoadMoreBtn" class="btn-ghost" type="button">Mehr laden</button></div>');
+    var hint = settings.endlessScroll === false ? "Tippe auf Mehr laden." : "Weitere Titel laden sich beim Scrollen von selbst.";
+    el.insertAdjacentHTML("beforeend", '<div class="api-loadmore"><p class="api-loadmore-hint">' + hint + '</p><button id="apiLoadMoreBtn" class="btn-ghost" type="button">Mehr laden</button></div>');
     var lm = document.getElementById("apiLoadMoreBtn");
     if (lm) {
       lm.addEventListener("click", function () { loadMoreDiscover(); });
