@@ -243,7 +243,7 @@ header.navbar {
   background: var(--bg-elevated); border: 1px solid var(--separator); }
 .shelf-cover { width: 100%; height: 100%; object-fit: cover; display: block; }
 .shelf-cover-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-  font-family: 'Zilla Slab', Georgia, serif; font-size: 30px; color: var(--accent-2); }
+  font-family: 'Zilla Slab', Georgia, serif; font-size: 30px; color: var(--accent-2-text, var(--accent-2)); }
 .shelf-chapter-pill {
   position: absolute; left: 6px; bottom: 6px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
   color: #fff; background: rgba(0,0,0,0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
@@ -262,7 +262,7 @@ header.navbar {
 .row:last-child { border-bottom: none; }
 .row-cover {
   width: 44px; height: 58px; border-radius: 8px; flex-shrink: 0; object-fit: cover; background: var(--fill-tertiary);
-  display: flex; align-items: center; justify-content: center; font-family: 'Zilla Slab', Georgia, serif; color: var(--accent-2); font-size: 16px;
+  display: flex; align-items: center; justify-content: center; font-family: 'Zilla Slab', Georgia, serif; color: var(--accent-2-text, var(--accent-2)); font-size: 16px;
 }
 .row-content { flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
 .row-title { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -270,11 +270,11 @@ header.navbar {
 .row-notes { font-size: 12px; color: var(--label-secondary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-notes a { color: var(--accent-text); }
 .row-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
-.tag-pill { font-size: 10.5px; color: var(--accent-2); background: var(--fill-tertiary); border-radius: 999px; padding: 2px 7px; }
+.tag-pill { font-size: 10.5px; color: var(--accent-2-text, var(--accent-2)); background: var(--fill-tertiary); border-radius: 999px; padding: 2px 7px; }
 .row-trailing { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-.chapter-num { color: var(--accent-2); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; }
+.chapter-num { color: var(--accent-2-text, var(--accent-2)); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 15px; }
 .plus1-chip { min-height: 38px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--separator);
-  background: var(--fill-tertiary); color: var(--accent-2); font-weight: 700; font-size: 13px; }
+  background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2)); font-weight: 700; font-size: 13px; }
 
 .empty { padding: 60px 18px; text-align: center; color: var(--label-secondary); }
 .empty h2 { font-family: 'Zilla Slab', Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 6px; color: var(--label); }
@@ -390,7 +390,7 @@ header.navbar {
 
 /* Modul 3: KI-Metadaten */
 .ai-meta-row { display: flex; gap: 8px; margin-bottom: 8px; }
-.score-badge { font-size: 12px; font-weight: 600; color: var(--accent-2); background: var(--fill-tertiary); padding: 3px 9px; border-radius: 999px; }
+.score-badge { font-size: 12px; font-weight: 600; color: var(--accent-2-text, var(--accent-2)); background: var(--fill-tertiary); padding: 3px 9px; border-radius: 999px; }
 .score-badge:empty, .origin-badge:empty { display: none; }
 .origin-badge { font-size: 11px; color: var(--label-secondary); background: var(--fill-tertiary); padding: 3px 9px; border-radius: 999px; }
 .synopsis { font-size: 13px; color: var(--label-secondary); line-height: 1.45; }
@@ -409,7 +409,7 @@ header.navbar {
   background: var(--bg-elevated); border: 1px solid var(--separator); }
 .grid-cover-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .grid-cover-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-  font-family: 'Zilla Slab', Georgia, serif; font-size: 26px; color: var(--accent-2); }
+  font-family: 'Zilla Slab', Georgia, serif; font-size: 26px; color: var(--accent-2-text, var(--accent-2)); }
 .grid-chapter-badge { position: absolute; right: 6px; top: 6px; padding: 3px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
   color: #fff; background: rgba(0,0,0,0.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .grid-title { font-size: 12.5px; font-weight: 500; margin-top: 6px; line-height: 1.25;
@@ -433,7 +433,7 @@ header.navbar {
   flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; padding: 6px 4px; min-height: 3em; white-space: normal;
 }
-.insight-num { display: block; font-size: 20px; font-weight: 700; color: var(--accent-2); }
+.insight-num { display: block; font-size: 20px; font-weight: 700; color: var(--accent-2-text, var(--accent-2)); }
 .insight-label { display: block; font-size: 10.5px; color: var(--label-tertiary); margin-top: 2px; line-height: 1.2; white-space: normal; }
 .recommendations-list { display: grid; gap: 6px; margin-top: 10px; }
 .recommendation-item { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--separator); border-radius: var(--radius-s); background: var(--fill-tertiary); }
@@ -516,7 +516,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
   border-radius: var(--radius-m);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Zilla Slab', Georgia, serif; font-size: 54px;
-  background: var(--bg-elevated); color: var(--accent-2);
+  background: var(--bg-elevated); color: var(--accent-2-text, var(--accent-2));
   box-shadow: 0 16px 40px rgba(0,0,0,0.5);
   border: 2px solid var(--separator);
 }
@@ -558,7 +558,7 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 @keyframes syncSpin { to { transform: rotate(360deg); } }
 /* Statuszeile unter den Fakten: wann zuletzt mit AniList abgeglichen */
 .detail-sync-line { font-size: 11.5px; color: var(--label-tertiary); margin-top: 8px; min-height: 16px; }
-.detail-sync-line.syncing { color: var(--accent-2); }
+.detail-sync-line.syncing { color: var(--accent-2-text, var(--accent-2)); }
 .detail-sync-line.syncing::before {
   content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px;
   border-radius: 50%; background: var(--accent); vertical-align: middle;
@@ -576,18 +576,18 @@ canvas#compressCanvas, canvas#glowCanvas, canvas#storyCanvas { display: none; }
 .detail-status-pill {
   flex-shrink: 0;
   padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
-  background: var(--fill-tertiary); color: var(--accent-2);
+  background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2));
 }
 .detail-progress-big {
   margin: 14px 0 6px; padding: 12px 14px;
   background: var(--bg-elevated); border: 1px solid var(--separator); border-radius: var(--radius-m);
 }
 .detail-progress-label { font-size: 12px; color: var(--label-tertiary); margin-bottom: 6px; }
-.detail-progress-value { font-size: 18px; font-weight: 700; color: var(--accent-2); font-variant-numeric: tabular-nums; }
+.detail-progress-value { font-size: 18px; font-weight: 700; color: var(--accent-2-text, var(--accent-2)); font-variant-numeric: tabular-nums; }
 .detail-bump-row { display: flex; gap: 8px; margin-top: 10px; }
 .bump-btn {
   flex: 1; min-height: 48px; border-radius: var(--radius-s); border: 1px solid var(--separator);
-  background: var(--fill-tertiary); color: var(--accent-2); font-size: 18px; font-weight: 800;
+  background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2)); font-size: 18px; font-weight: 800;
 }
 .bump-btn:active { background: var(--accent); color: var(--accent-on); border-color: var(--accent); }
 .detail-tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
@@ -736,7 +736,7 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   background: var(--bg-elevated); border: 1px solid var(--separator); border-radius: var(--radius-m);
   padding: 12px 14px; min-height: 3.4em; display: flex; flex-direction: column; justify-content: center;
 }
-.stat-tile .num { font-size: 24px; font-weight: 800; color: var(--accent-2); line-height: 1.1; }
+.stat-tile .num { font-size: 24px; font-weight: 800; color: var(--accent-2-text, var(--accent-2)); line-height: 1.1; }
 .stat-tile .lbl { font-size: 11.5px; color: var(--label-tertiary); margin-top: 3px; white-space: normal; line-height: 1.2; }
 .status-pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 14px 18px; }
 .status-pill {
@@ -1021,7 +1021,7 @@ input[type="range"].reader-range::-moz-range-thumb { width: 22px; height: 22px; 
 .activity-item .act-icon {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  background: var(--fill-tertiary); color: var(--accent-2);
+  background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2));
 }
 .activity-item .act-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .activity-item .act-title { display: block; font-size: 14px; font-weight: 600; color: var(--label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1029,11 +1029,11 @@ input[type="range"].reader-range::-moz-range-thumb { width: 22px; height: 22px; 
 .activity-item .act-time { font-size: 11px; color: var(--label-tertiary); white-space: nowrap; flex-shrink: 0; }
 .activity-empty { color: var(--label-tertiary); font-size: 13.5px; text-align: center; padding: 26px 10px; }
 .activity-item.act-update .act-icon { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent-text); }
-.activity-item.act-added .act-icon { background: var(--fill-tertiary); color: var(--accent-2); }
+.activity-item.act-added .act-icon { background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2)); }
 .activity-item.act-rated .act-icon { background: color-mix(in srgb, #E0A93F 22%, transparent); color: #C58B22; }
 .activity-item.act-status .act-icon { background: color-mix(in srgb, #4C7DBF 20%, transparent); color: #4C7DBF; }
 .activity-item.act-finished .act-icon { background: color-mix(in srgb, #3E9A6A 20%, transparent); color: #3E9A6A; }
-.activity-item.act-linked .act-icon { background: var(--fill-tertiary); color: var(--accent-2); }
+.activity-item.act-linked .act-icon { background: var(--fill-tertiary); color: var(--accent-2-text, var(--accent-2)); }
 .activity-item.act-deleted .act-icon { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
 .activity-item.act-finished .act-title { color: color-mix(in srgb, #3E9A6A 72%, var(--label)); }
 .activity-item:active { transform: scale(0.99); }
@@ -1976,6 +1976,30 @@ header.navbar::after, #settingsOverlay .sheet-sticky::after { height: 28px; }
 /* Vierter Topf im Gerätespeicher: heruntergeladene Kapitel. */
 #settingsOverlay .storage-seg.seg-downloads { background: #34C759; }
 #settingsOverlay .dot-downloads { background: #34C759; }
+/* ===================== KOMPAKTE KOPFZEILE =====================
+   OpenCode setzt .navbar-scrolled ab 40 px Scroll. Hier wird nur verdichtet:
+   nichts verschwindet, jede Flaeche bleibt erreichbar. Die Hoehe sinkt von
+   rund 203 px auf etwa 167 px, damit beim Lesen mehr Inhalt sichtbar ist. */
+.navbar-inner, .searchbar-wrap, .searchbar, .filter-open-btn, .nav-tabs,
+.nav-tabs button, .large-title, .navbar-brand .app-logo svg {
+  transition: padding var(--dur-2) var(--ease-out), height var(--dur-2) var(--ease-out),
+              min-height var(--dur-2) var(--ease-out), margin var(--dur-2) var(--ease-out),
+              font-size var(--dur-2) var(--ease-out), width var(--dur-2) var(--ease-out);
+}
+header.navbar { transition: box-shadow var(--dur-3) var(--ease-out); }
+header.navbar.navbar-scrolled { box-shadow: 0 2px 14px rgba(0, 0, 0, 0.18); }
+header.navbar.navbar-scrolled .navbar-inner { padding-top: 4px; padding-bottom: 0; }
+header.navbar.navbar-scrolled .large-title { font-size: 16px; }
+header.navbar.navbar-scrolled .navbar-brand .app-logo svg { width: 26px; height: 26px; }
+header.navbar.navbar-scrolled .searchbar-wrap { padding-top: 0; padding-bottom: 2px; }
+header.navbar.navbar-scrolled .searchbar { height: 36px; }
+header.navbar.navbar-scrolled .filter-open-btn { margin-top: 4px; min-height: 36px; padding: 6px 12px; }
+header.navbar.navbar-scrolled .nav-tabs { padding-top: 0; padding-bottom: 4px; }
+header.navbar.navbar-scrolled .nav-tabs button { min-height: 30px; }
+@media (prefers-reduced-motion: reduce) {
+  .navbar-inner, .searchbar-wrap, .searchbar, .filter-open-btn, .nav-tabs,
+  .nav-tabs button, .large-title, .navbar-brand .app-logo svg { transition: none; }
+}
 </style>
 </head>
 <body>
